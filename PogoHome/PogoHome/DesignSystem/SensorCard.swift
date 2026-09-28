@@ -29,11 +29,11 @@ struct SensorCard: View {
 
             Text(reading.kind.displayName)
                 .font(.subheadline.weight(.semibold))
-                .lineLimit(1)
+                .lineLimit(2)
 
-            Text("\(contextLabel) · \(reading.timestamp.formatted(.relative(presentation: .numeric)))")
+            Text("\(contextLabel) · \(reading.timestamp.formatted(.relative(presentation: .numeric)))", comment: "Sensor card footer: module or room name · relative update time")
                 .font(.caption2)
-                .lineLimit(1)
+                .lineLimit(3)
                 .foregroundStyle(.secondary)
         }
         .padding(PogoTheme.cardPadding)
@@ -43,17 +43,15 @@ struct SensorCard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(reading.kind.displayName)
         .accessibilityValue(
-            "\(reading.formattedValue), \(reading.status.displayName), 마지막 갱신 \(reading.timestamp.formatted(.relative(presentation: .named))), \(contextLabel)"
+            Text(
+                "\(reading.formattedValue), \(reading.status.displayName), 마지막 갱신 \(reading.timestamp.formatted(.relative(presentation: .named))), \(contextLabel)",
+                comment: "VoiceOver value of a sensor card: value, status, last update (relative time), module or room name"
+            )
         )
     }
 
     private var sensorIcon: some View {
-        Image(systemName: reading.kind.symbolName)
-            .font(.body.weight(.semibold))
-            .foregroundStyle(.white)
-            .frame(width: 36, height: 36)
-            .background(PogoTheme.color(for: reading.kind), in: Circle())
-            .accessibilityHidden(true)
+        IconCircle(systemName: reading.kind.symbolName, diameter: 36, background: PogoTheme.color(for: reading.kind))
     }
 }
 

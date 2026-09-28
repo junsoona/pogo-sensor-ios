@@ -35,7 +35,11 @@ final class PogoSnapshotDecodingTests: XCTestCase {
 
         let sgp41ID = ModuleIdentity.stableUUID(forRawIdentifier: PogoAPIFixtures.sgp41UUID)
         let sgp41 = try XCTUnwrap(snapshot.modules.first { $0.id == sgp41ID })
-        XCTAssertEqual(sgp41.name, "SGP41 가스 센서")
+        // Product names follow the UI language (see ModuleIdentityAndCatalogTests).
+        let sgp41Name = ModuleCatalog.descriptor(forRawIdentifier: PogoAPIFixtures.sgp41UUID, apiRole: nil).displayName
+        XCTAssertEqual(sgp41.name, sgp41Name)
+        XCTAssertEqual(sgp41.hardwareName, sgp41Name)
+        XCTAssertEqual(sgp41.hardwareIdentifier, PogoAPIFixtures.sgp41UUID)
         XCTAssertTrue(sgp41.isOnline)
         XCTAssertEqual(Set(sgp41.readings.map(\.kind)), [.vocRaw, .vocIndex, .noxRaw, .noxIndex])
         XCTAssertEqual(sgp41.readings.first { $0.kind == .vocIndex }?.value, 98)
@@ -43,7 +47,8 @@ final class PogoSnapshotDecodingTests: XCTestCase {
 
         let pms5003ID = ModuleIdentity.stableUUID(forRawIdentifier: PogoAPIFixtures.pms5003UUID)
         let pms5003 = try XCTUnwrap(snapshot.modules.first { $0.id == pms5003ID })
-        XCTAssertEqual(pms5003.name, "PMS5003 미세먼지 센서")
+        XCTAssertEqual(pms5003.name, ModuleCatalog.descriptor(forRawIdentifier: PogoAPIFixtures.pms5003UUID, apiRole: nil).displayName)
+        XCTAssertEqual(pms5003.hardwareIdentifier, PogoAPIFixtures.pms5003UUID)
         XCTAssertEqual(Set(pms5003.readings.map(\.kind)), [.pm1, .pm2_5, .pm10])
         XCTAssertEqual(pms5003.readings.first { $0.kind == .pm2_5 }?.value, 18)
     }

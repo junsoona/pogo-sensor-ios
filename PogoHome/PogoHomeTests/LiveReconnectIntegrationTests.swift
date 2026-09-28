@@ -32,6 +32,7 @@ final class LiveReconnectIntegrationTests: XCTestCase {
         // 2) Prime the *next* GET to return an empty registry (as a just-restarted Linux
         // service would), then simulate the Linux service going down.
         await transport.setSnapshotProvider { PogoAPIFixtures.snapshotJSON(schemaVersion: 1) }
+        let sessionsBeforeRestart = await transport.eventStreamOpenCount
         await transport.finishCurrentEventStream()
 
         try await waitUntil { model.connectionStatus != .connected }
@@ -46,7 +47,7 @@ final class LiveReconnectIntegrationTests: XCTestCase {
 
         // 4) Registry recovers: a topology-only strict subset must not replace the last
         // complete state or claim healthy; the full set is applied once it returns.
-        try await waitUntil { await transport.hasOpenEventStream }
+        try await waitUntil { await transport.hasOpenEventStream(after: sessionsBeforeRestart) }
         await transport.sendLines(PogoAPIFixtures.sseSnapshotEvent(json: PogoAPIFixtures.snapshotJSON(moduleUUID: PogoAPIFixtures.sgp41UUID)))
         try await waitUntil { model.isRegistryRecovering }
         try await waitUntil { model.connectionStatus == .connected }
@@ -118,9 +119,12 @@ final class LiveReconnectIntegrationTests: XCTestCase {
         await transport.setSnapshotProvider {
             PogoAPIFixtures.snapshotJSON(moduleUUID: PogoAPIFixtures.sgp41UUID)
         }
+        let sessionsBeforeRestart = await transport.eventStreamOpenCount
         await transport.finishCurrentEventStream()
 
-        try await waitUntil { await transport.hasOpenEventStream }
+        // Wait for the *reconnected* session: the finished one can still look open until its
+        // termination callback runs, and a heartbeat sent to it would be silently dropped.
+        try await waitUntil { await transport.hasOpenEventStream(after: sessionsBeforeRestart) }
         await transport.sendLine(": heartbeat")
         try await waitUntil { model.isRegistryRecovering && model.connectionStatus == .connected }
         XCTAssertEqual(model.snapshot.modules.count, 2, "last complete values stay visible during recovery")

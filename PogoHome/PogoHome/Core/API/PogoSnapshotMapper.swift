@@ -17,6 +17,26 @@ nonisolated enum PogoSnapshotMapper {
             throw PogoAPIError.unsupportedSchemaVersion(found: dto.schemaVersion, expected: supportedSchemaVersion)
         }
 
+        var powerBases: [PowerBase] = []
+        var seenPowerBases: Set<String> = []
+        for baseDTO in dto.powerBases ?? [] {
+            let raw = baseDTO.uuid.lowercased()
+            guard ModuleIdentity.isValidRawIdentifier(raw) else {
+                throw PogoAPIError.invalidPowerBaseIdentifier(baseDTO.uuid)
+            }
+            guard seenPowerBases.insert(raw).inserted else {
+                throw PogoAPIError.duplicatePowerBaseIdentifier(baseDTO.uuid)
+            }
+            powerBases.append(
+                PowerBase(
+                    hardwareIdentifier: raw,
+                    isOnline: baseDTO.online,
+                    moduleCount: baseDTO.moduleCount ?? 0,
+                    onlineModuleCount: baseDTO.onlineModuleCount ?? 0
+                )
+            )
+        }
+
         var seenIdentifiers: Set<String> = []
         var usedRoomIDs: Set<UUID> = []
         var modules: [SensorModule] = []
@@ -29,6 +49,11 @@ nonisolated enum PogoSnapshotMapper {
             }
             guard seenIdentifiers.insert(raw).inserted else {
                 throw PogoAPIError.duplicateModuleIdentifier(moduleDTO.uuid)
+            }
+
+            let powerBaseRaw = try moduleDTO.powerBaseUUID.map { try validatedPowerBaseIdentifier($0) }
+            let parentRaw = moduleDTO.parentUUID.map { $0.lowercased() }.flatMap {
+                ModuleIdentity.isValidRawIdentifier($0) ? $0 : nil
             }
 
             let descriptor = ModuleCatalog.descriptor(forRawIdentifier: raw, apiRole: moduleDTO.role)
@@ -48,11 +73,15 @@ nonisolated enum PogoSnapshotMapper {
                 SensorModule(
                     id: ModuleIdentity.stableUUID(forRawIdentifier: raw),
                     name: descriptor.displayName,
+                    hardwareName: descriptor.displayName,
+                    hardwareIdentifier: raw,
                     roomID: descriptor.room.id,
                     readings: readings,
                     isOnline: moduleDTO.online,
                     lastSeen: generatedAt,
-                    roleDescription: descriptor.roleDescription
+                    roleDescription: descriptor.roleDescription,
+                    powerBaseIdentifier: powerBaseRaw,
+                    parentIdentifier: parentRaw
                 )
             )
         }
@@ -61,7 +90,30 @@ nonisolated enum PogoSnapshotMapper {
             .filter { usedRoomIDs.contains($0.id) }
             .sorted { $0.sortOrder < $1.sortOrder }
 
-        return HomeSnapshot(timestamp: generatedAt, rooms: rooms, modules: modules)
+        return HomeSnapshot(
+            timestamp: generatedAt,
+            rooms: rooms,
+            modules: modules,
+            powerBases: powerBases,
+            reportsPowerBases: dto.powerBases != nil,
+            hubSettings: hubSettingsSignal(dto)
+        )
+    }
+
+    /// `nil` unless the hub offers settings sharing (`settings_api` 1). An unknown state is treated
+    /// as unavailable rather than guessed.
+    private static func hubSettingsSignal(_ dto: PogoSnapshotDTO) -> HubSettingsSignal? {
+        guard dto.settingsAPI == 1 else { return nil }
+        let state = dto.settingsState.flatMap(HubSettingsSignal.State.init(rawValue:)) ?? .unavailable
+        return HubSettingsSignal(state: state, revision: state == .ready ? dto.settingsRevision : nil)
+    }
+
+    private static func validatedPowerBaseIdentifier(_ value: String) throws -> String {
+        let raw = value.lowercased()
+        guard ModuleIdentity.isValidRawIdentifier(raw) else {
+            throw PogoAPIError.invalidPowerBaseIdentifier(value)
+        }
+        return raw
     }
 
     /// Decodes raw JSON `Data` into a `HomeSnapshot`, wrapping JSON errors in

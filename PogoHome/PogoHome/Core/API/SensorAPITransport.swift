@@ -80,14 +80,14 @@ nonisolated struct URLSessionSensorAPITransport: SensorAPITransport {
     /// server might reasonably omit.
     private static func validate(_ response: URLResponse, expectingContentTypePrefix expected: String) throws {
         guard let http = response as? HTTPURLResponse else {
-            throw PogoAPIError.transport("응답이 HTTP 응답이 아닙니다")
+            throw PogoAPIError.transport(String(localized: "응답이 HTTP 응답이 아닙니다", comment: "Network error detail"))
         }
         guard (200..<300).contains(http.statusCode) else {
             throw PogoAPIError.transport("HTTP \(http.statusCode)")
         }
         if let contentType = http.value(forHTTPHeaderField: "Content-Type"), !contentType.isEmpty {
             guard contentType.lowercased().hasPrefix(expected) else {
-                throw PogoAPIError.transport("예상하지 못한 Content-Type: \(contentType)")
+                throw PogoAPIError.transport(String(localized: "예상하지 못한 Content-Type: \(contentType)", comment: "Network error detail; Content-Type is an HTTP header name"))
             }
         }
     }

@@ -9,13 +9,40 @@ nonisolated struct PogoSnapshotDTO: Decodable, Hashable, Sendable {
     let schemaVersion: Int
     let generatedAtUnixMs: Int64
     let registryGeneration: Int
+    /// Added to API v1 by the multi-Power-Base milestone (additive; `schema_version` stays 1).
+    /// `nil` when the bridge predates it — distinct from `[]`, "no Power Base heard from yet".
+    let powerBases: [PogoPowerBaseDTO]?
     let modules: [PogoModuleDTO]
+    /// Added by the settings-sharing revision (additive): `1` when the hub offers shared home
+    /// settings, with `settings_state` (`ready`/`uninitialized`/`unavailable`) and the current
+    /// `settings_revision`. All `nil` from a hub without it.
+    let settingsAPI: Int?
+    let settingsState: String?
+    let settingsRevision: String?
 
     enum CodingKeys: String, CodingKey {
         case schemaVersion = "schema_version"
         case generatedAtUnixMs = "generated_at_unix_ms"
         case registryGeneration = "registry_generation"
+        case powerBases = "power_bases"
         case modules
+        case settingsAPI = "settings_api"
+        case settingsState = "settings_state"
+        case settingsRevision = "settings_revision"
+    }
+}
+
+nonisolated struct PogoPowerBaseDTO: Decodable, Hashable, Sendable {
+    /// The Base's eFuse EUI-64 as 16 lowercase hex digits.
+    let uuid: String
+    let online: Bool
+    let moduleCount: Int?
+    let onlineModuleCount: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case uuid, online
+        case moduleCount = "module_count"
+        case onlineModuleCount = "online_module_count"
     }
 }
 
@@ -25,6 +52,11 @@ nonisolated struct PogoModuleDTO: Decodable, Hashable, Sendable {
     /// is validated and mapped separately by `ModuleIdentity` rather than parsed with
     /// `UUID(uuidString:)`.
     let uuid: String
+    /// The Power Base this module is docked under (multi-Power-Base milestone; optional so an
+    /// older bridge's snapshot still decodes).
+    let powerBaseUUID: String?
+    /// The module's POGO parent: its Power Base, or the upstream module.
+    let parentUUID: String?
     let online: Bool
     let depth: Int
     let role: String?
@@ -35,6 +67,8 @@ nonisolated struct PogoModuleDTO: Decodable, Hashable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case uuid, online, depth, role
+        case powerBaseUUID = "power_base_uuid"
+        case parentUUID = "parent_uuid"
         case sensorBitmap = "sensor_bitmap"
         case generation
         case lastSeq = "last_seq"
@@ -105,6 +139,8 @@ nonisolated enum PogoAPIError: Error, Equatable, Sendable {
     case unsupportedSchemaVersion(found: Int, expected: Int)
     case invalidModuleIdentifier(String)
     case duplicateModuleIdentifier(String)
+    case invalidPowerBaseIdentifier(String)
+    case duplicatePowerBaseIdentifier(String)
     case malformedJSON(String)
     case transport(String)
 }
@@ -113,15 +149,19 @@ nonisolated extension PogoAPIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case let .unsupportedSchemaVersion(found, expected):
-            return "지원하지 않는 schema_version입니다 (수신: \(found), 지원: \(expected))."
+            return String(localized: "지원하지 않는 schema_version입니다 (수신: \(found), 지원: \(expected)).", comment: "API error; schema_version is a technical field name, do not translate it")
         case let .invalidModuleIdentifier(raw):
-            return "모듈 UUID 형식이 올바르지 않습니다: \(raw)"
+            return String(localized: "모듈 UUID 형식이 올바르지 않습니다: \(raw)", comment: "API error")
         case let .duplicateModuleIdentifier(raw):
-            return "중복된 모듈 UUID가 있습니다: \(raw)"
+            return String(localized: "중복된 모듈 UUID가 있습니다: \(raw)", comment: "API error")
+        case let .invalidPowerBaseIdentifier(raw):
+            return String(localized: "Power Base UUID 형식이 올바르지 않습니다: \(raw)", comment: "API error")
+        case let .duplicatePowerBaseIdentifier(raw):
+            return String(localized: "중복된 Power Base UUID가 있습니다: \(raw)", comment: "API error")
         case let .malformedJSON(detail):
-            return "손상된 JSON 응답입니다: \(detail)"
+            return String(localized: "손상된 JSON 응답입니다: \(detail)", comment: "API error")
         case let .transport(detail):
-            return "네트워크 오류: \(detail)"
+            return String(localized: "네트워크 오류: \(detail)", comment: "API error")
         }
     }
 }

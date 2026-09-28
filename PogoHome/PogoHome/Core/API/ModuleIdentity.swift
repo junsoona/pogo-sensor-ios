@@ -17,7 +17,13 @@ nonisolated enum ModuleIdentity {
     /// Derives a stable `UUID` for a raw wire identifier via SHA-256, namespaced so it
     /// can never collide with UUIDs derived for an unrelated purpose elsewhere in the app.
     static func stableUUID(forRawIdentifier raw: String) -> UUID {
-        let digest = SHA256.hash(data: Data("pogohome.module.v1:\(raw.lowercased())".utf8))
+        stableUUID(forRawIdentifier: raw, namespace: "pogohome.module.v1")
+    }
+
+    /// `namespace` keeps identifiers derived for different kinds of hardware (modules, Power
+    /// Bases) apart even if their raw identifiers were ever equal.
+    static func stableUUID(forRawIdentifier raw: String, namespace: String) -> UUID {
+        let digest = SHA256.hash(data: Data("\(namespace):\(raw.lowercased())".utf8))
         let bytes = Array(digest.prefix(16))
         return UUID(uuid: (
             bytes[0], bytes[1], bytes[2], bytes[3],

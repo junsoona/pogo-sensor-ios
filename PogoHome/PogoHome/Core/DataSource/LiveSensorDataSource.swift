@@ -189,7 +189,7 @@ final class LiveSensorDataSource: SensorDataSource {
 
     private nonisolated static func describe(_ error: Error) -> String {
         if let apiError = error as? PogoAPIError {
-            return apiError.errorDescription ?? "알 수 없는 오류"
+            return apiError.errorDescription ?? String(localized: "알 수 없는 오류", comment: "Fallback error description")
         }
         return (error as NSError).localizedDescription
     }

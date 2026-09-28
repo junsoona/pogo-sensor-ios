@@ -58,6 +58,30 @@ nonisolated enum HomeHealthEvaluator {
     }
 }
 
+/// Why there is nothing to show yet: no module has been received from the current source.
+/// Refines `HomeHealthState.waitingForData` for the Dashboard, so a source that is still being
+/// reached, one that can't be reached, and one that answered without modules read differently.
+nonisolated enum HomeDataWait: Equatable, Sendable {
+    /// Connecting for the first time to this source.
+    case connecting
+    /// The source couldn't be reached; it's being retried.
+    case unreachable
+    /// Connected, but no module has been reported yet.
+    case noModulesYet
+}
+
+nonisolated extension HomeHealthEvaluator {
+    /// `nil` once any module is on screen — then `evaluate` alone describes the state.
+    static func dataWait(snapshot: HomeSnapshot, connectionStatus: DataSourceConnectionStatus) -> HomeDataWait? {
+        guard snapshot.modules.isEmpty else { return nil }
+        switch connectionStatus {
+        case .idle, .connecting: return .connecting
+        case .reconnecting, .failed: return .unreachable
+        case .connected: return .noModulesYet
+        }
+    }
+}
+
 extension HomeHealthState {
     /// True only when the connection and registry are current enough for per-module online
     /// badges and counts to be stated as facts.

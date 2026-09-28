@@ -2,46 +2,88 @@ import SwiftUI
 
 struct ModuleDetailView: View {
     @Environment(AppModel.self) private var appModel
-    let module: SensorModule
-    let room: Room?
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.detailPlacement) private var placement
+    let moduleID: UUID
+    @State private var isEditing = false
+
+    private var module: SensorModule? { appModel.module(with: moduleID) }
+    private var room: Room? {
+        guard let module else { return nil }
+        return appModel.room(with: module.roomID)
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: PogoTheme.sectionSpacing) {
-                header
+        Group {
+            if module != nil {
+                ScrollView {
+                    details
+                }
+                .screenBackground()
+            } else {
+                // Reached only if the module genuinely isn't in `appModel.snapshot` right now
+                // (e.g. it was removed, or a navigation value outlived its module) — every
+                // entry point that can push a module destination must land here instead of a
+                // blank screen, never silently render nothing.
+                CenteredEmptyState {
+                    ContentUnavailableView(
+                        "기기를 찾을 수 없습니다",
+                        systemImage: "questionmark.circle",
+                        description: Text("이 기기는 더 이상 등록되어 있지 않거나 아직 동기화되지 않았습니다.")
+                    )
+                }
+            }
+        }
+        .detailTitle(module?.name ?? String(localized: "device.detail.fallbackTitle", defaultValue: "기기", comment: "Title of a device screen whose device no longer exists (singular)")) {
+            if module != nil {
+                Button("편집") { isEditing = true }
+            }
+        }
+        .sheet(isPresented: $isEditing) {
+            ModuleEditorSheet(moduleID: moduleID)
+        }
+    }
 
-                VStack(alignment: .leading, spacing: 12) {
-                    HomeSectionHeader(title: "센서", subtitle: "\(module.readings.count)개")
-                    LazyVGrid(
-                        columns: [GridItem(.adaptive(minimum: 160), spacing: PogoTheme.gridSpacing)],
-                        spacing: PogoTheme.gridSpacing
-                    ) {
-                        ForEach(module.sortedReadings) { reading in
-                            SensorCard(reading: reading, contextLabel: room?.name ?? module.name)
-                        }
+    private var details: some View {
+        let module = module!
+        return VStack(alignment: .leading, spacing: PogoTheme.sectionSpacing) {
+            header
+
+            VStack(alignment: .leading, spacing: 12) {
+                HomeSectionHeader(
+                    title: "센서",
+                    subtitle: String(localized: "sensors.count", defaultValue: "\(module.readings.count)개", comment: "Number of sensors (plural)")
+                )
+                LazyVGrid(
+                    columns: PogoTheme.cardColumns(for: dynamicTypeSize),
+                    spacing: PogoTheme.gridSpacing
+                ) {
+                    ForEach(module.sortedReadings) { reading in
+                        SensorCard(reading: reading, contextLabel: room?.name ?? module.name)
                     }
                 }
-
-                diagnosticsSection
             }
-            .padding()
+
+            diagnosticsSection
         }
-        .navigationTitle(module.name)
-        .navigationBarTitleDisplayMode(.inline)
-        .background(PogoTheme.canvas)
+        .padding()
     }
 
     private var header: some View {
-        HStack(spacing: 12) {
-            Image(systemName: room?.symbolName ?? "square.grid.2x2")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(width: 48, height: 48)
-                .background(.blue, in: Circle())
+        let module = module!
+        // The status badge moves under the name at accessibility sizes instead of squeezing it.
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+            : AnyLayout(HStackLayout(spacing: 12))
+        return layout {
+            IconCircle(systemName: SymbolAvailability.resolvedName(for: room?.symbolName ?? "square.grid.2x2"), diameter: 48, relativeTo: .title3)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(module.name)
-                    .font(.title2.weight(.bold))
+                // Beside the device list the pane's header already names it.
+                if placement == .screen {
+                    Text(module.name)
+                        .font(.title2.weight(.bold))
+                }
                 if let room {
                     Text(room.name)
                         .font(.subheadline)
@@ -53,7 +95,9 @@ struct ModuleDetailView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            Spacer(minLength: 0)
+            if !dynamicTypeSize.isAccessibilitySize {
+                Spacer(minLength: 0)
+            }
             StatusBadge(
                 status: appModel.health.isCurrentStateVerified
                     ? module.isOnline ? .normal : .unavailable
@@ -66,18 +110,39 @@ struct ModuleDetailView: View {
     /// Technical diagnostics kept visually separate from user-facing info: monospaced
     /// UUID, exact timestamps, and connectivity, in a distinctly styled block.
     private var diagnosticsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let module = module!
+        return VStack(alignment: .leading, spacing: 12) {
             HomeSectionHeader(title: "기술 정보")
 
             VStack(alignment: .leading, spacing: 10) {
-                diagnosticRow(label: "모듈 UUID", value: module.id.uuidString, monospaced: true)
+                diagnosticRow(label: "제품 이름", value: module.hardwareName)
+                if let identifier = module.hardwareIdentifier {
+                    diagnosticRow(label: "하드웨어 ID", value: identifier, monospaced: true)
+                }
+                diagnosticRow(label: "앱 내부 ID", value: module.id.uuidString, monospaced: true)
                 diagnosticRow(
                     label: "연결 상태",
                     value: appModel.health.isCurrentStateVerified
-                        ? module.isOnline ? "온라인" : "오프라인"
-                        : "확인 중"
+                        ? module.isOnline
+                            ? String(localized: "온라인", comment: "Connection state value")
+                            : appModel.snapshot.isOfflineBecausePowerBaseIsOffline(module)
+                                ? String(localized: "오프라인 (Power Base 연결 끊김)", comment: "Connection state value: offline because its Power Base is offline")
+                                : String(localized: "오프라인", comment: "Connection state value")
+                        : String(localized: "확인 중", comment: "Connection state value: being checked")
                 )
                 diagnosticRow(label: "마지막 수신", value: module.lastSeen.formatted(date: .abbreviated, time: .standard))
+                if let base = appModel.snapshot.powerBase(for: module) {
+                    diagnosticRow(
+                        label: "Power Base",
+                        value: "\(base.shortLabel) · \(PowerBaseConnectionText.summary(of: base))"
+                    )
+                    diagnosticRow(label: "Power Base ID", value: base.hardwareIdentifier, monospaced: true)
+                } else if let identifier = module.powerBaseIdentifier {
+                    diagnosticRow(label: "Power Base ID", value: identifier, monospaced: true)
+                }
+                if let position = PowerBaseConnectionText.chainPosition(of: module, in: appModel.snapshot) {
+                    diagnosticRow(label: "모듈 연결 위치", value: position)
+                }
             }
             .padding(PogoTheme.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -92,7 +157,7 @@ struct ModuleDetailView: View {
         }
     }
 
-    private func diagnosticRow(label: String, value: String, monospaced: Bool = false) -> some View {
+    private func diagnosticRow(label: LocalizedStringKey, value: String, monospaced: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label)
                 .font(.caption)
@@ -108,8 +173,8 @@ struct ModuleDetailView: View {
 #Preview {
     NavigationStack {
         ModuleDetailView(
-            module: MockSensorFixtures.modules(referenceDate: MockSensorFixtures.previewReferenceDate)[0],
-            room: MockSensorFixtures.livingRoom
+            moduleID: MockSensorFixtures.modules(referenceDate: MockSensorFixtures.previewReferenceDate)[0].id
         )
+        .environment(AppModel.preview)
     }
 }

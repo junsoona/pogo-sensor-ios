@@ -64,6 +64,8 @@ final class MockSensorDataSource: SensorDataSource {
             return SensorModule(
                 id: module.id,
                 name: module.name,
+                hardwareName: module.hardwareName,
+                hardwareIdentifier: module.hardwareIdentifier,
                 roomID: module.roomID,
                 readings: updatedReadings,
                 isOnline: module.isOnline,

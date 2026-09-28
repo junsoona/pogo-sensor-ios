@@ -3,6 +3,10 @@ import XCTest
 
 @MainActor
 final class SensorKindTests: XCTestCase {
+    /// Fixed number formatting; the raw/index unit labels are localized, so those expectations
+    /// read `unit` (see LocalizationCatalogTests for locale-specific formatting).
+    private static let posix = Locale(identifier: "en_US_POSIX")
+
     func testAllTenKindsExistWithUniqueIdentifiers() {
         XCTAssertEqual(SensorKind.allCases.count, 10)
         XCTAssertEqual(Set(SensorKind.allCases.map(\.id)).count, 10)
@@ -17,30 +21,30 @@ final class SensorKindTests: XCTestCase {
     }
 
     func testTemperatureFormat() {
-        XCTAssertEqual(SensorKind.temperature.formattedValue(23.4), "23.4 °C")
+        XCTAssertEqual(SensorKind.temperature.formattedValue(23.4, locale: Self.posix), "23.4 °C")
     }
 
     func testHumidityFormat() {
-        XCTAssertEqual(SensorKind.humidity.formattedValue(48.0), "48.0 %")
+        XCTAssertEqual(SensorKind.humidity.formattedValue(48.0, locale: Self.posix), "48.0 %")
     }
 
     func testIlluminanceFormat() {
-        XCTAssertEqual(SensorKind.illuminance.formattedValue(120.0), "120 lx")
+        XCTAssertEqual(SensorKind.illuminance.formattedValue(120.0, locale: Self.posix), "120 lx")
     }
 
     func testParticulateMatterFormats() {
-        XCTAssertEqual(SensorKind.pm1.formattedValue(4.0), "4.0 µg/m³")
-        XCTAssertEqual(SensorKind.pm2_5.formattedValue(7.0), "7.0 µg/m³")
-        XCTAssertEqual(SensorKind.pm10.formattedValue(11.0), "11.0 µg/m³")
+        XCTAssertEqual(SensorKind.pm1.formattedValue(4.0, locale: Self.posix), "4.0 µg/m³")
+        XCTAssertEqual(SensorKind.pm2_5.formattedValue(7.0, locale: Self.posix), "7.0 µg/m³")
+        XCTAssertEqual(SensorKind.pm10.formattedValue(11.0, locale: Self.posix), "11.0 µg/m³")
     }
 
     func testVOCFormats() {
-        XCTAssertEqual(SensorKind.vocRaw.formattedValue(120.0), "120 Raw")
-        XCTAssertEqual(SensorKind.vocIndex.formattedValue(85.0), "85 Index")
+        XCTAssertEqual(SensorKind.vocRaw.formattedValue(120.0, locale: Self.posix), "120 \(SensorKind.vocRaw.unit)")
+        XCTAssertEqual(SensorKind.vocIndex.formattedValue(85.0, locale: Self.posix), "85 \(SensorKind.vocIndex.unit)")
     }
 
     func testNOxFormats() {
-        XCTAssertEqual(SensorKind.noxRaw.formattedValue(60.0), "60 Raw")
-        XCTAssertEqual(SensorKind.noxIndex.formattedValue(40.0), "40 Index")
+        XCTAssertEqual(SensorKind.noxRaw.formattedValue(60.0, locale: Self.posix), "60 \(SensorKind.noxRaw.unit)")
+        XCTAssertEqual(SensorKind.noxIndex.formattedValue(40.0, locale: Self.posix), "40 \(SensorKind.noxIndex.unit)")
     }
 }

@@ -13,11 +13,11 @@ nonisolated enum DataSourceConnectionStatus: Equatable, Sendable {
 
     var displayText: String {
         switch self {
-        case .idle: return "대기 중"
-        case .connecting: return "연결 중…"
-        case .connected: return "연결됨"
-        case let .reconnecting(attempt): return "재연결 중 (\(attempt)회)…"
-        case let .failed(message): return "오류: \(message)"
+        case .idle: return String(localized: "대기 중", comment: "Connection status")
+        case .connecting: return String(localized: "연결 중…", comment: "Connection status")
+        case .connected: return String(localized: "연결됨", comment: "Connection status")
+        case let .reconnecting(attempt): return String(localized: "재연결 중 (\(attempt)회)…", comment: "Connection status with attempt number")
+        case let .failed(message): return String(localized: "오류: \(message)", comment: "Connection status with an error description")
         }
     }
 }

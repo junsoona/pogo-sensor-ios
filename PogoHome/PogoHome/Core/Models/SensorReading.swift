@@ -14,11 +14,11 @@ nonisolated enum SensorStatus: String, CaseIterable, Hashable, Sendable {
 
     var displayName: String {
         switch self {
-        case .normal: return "정상"
-        case .conditioning: return "보정 중"
-        case .stale: return "업데이트 지연"
-        case .unavailable: return "사용 불가"
-        case .error: return "오류"
+        case .normal: return String(localized: "정상", comment: "Sensor status")
+        case .conditioning: return String(localized: "보정 중", comment: "Sensor status: warming up / calibrating")
+        case .stale: return String(localized: "업데이트 지연", comment: "Sensor status: no fresh reading")
+        case .unavailable: return String(localized: "사용 불가", comment: "Sensor status")
+        case .error: return String(localized: "오류", comment: "Sensor status")
         }
     }
 

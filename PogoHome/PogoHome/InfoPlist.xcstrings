@@ -1,0 +1,98 @@
+{
+  "sourceLanguage" : "ko",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jogakbo Home"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jogakbo Home"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조각보 홈"
+          }
+        }
+      }
+    },
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jogakbo Home"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jogakbo Home"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조각보 홈"
+          }
+        }
+      }
+    },
+    "NSHomeKitUsageDescription" : {
+      "comment" : "Privacy - HomeKit Usage Description",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jogakbo Home needs access to Apple Home to show the status of the Matter and HomeKit devices you added there, and to turn supported devices such as lights, switches and outlets on and off."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jogakbo Home necesita acceso a Apple Home para mostrar el estado de los dispositivos Matter y HomeKit que añadiste y para encender y apagar los dispositivos compatibles, como luces, interruptores y enchufes."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조각보 홈 앱은 Apple 홈에 추가한 Matter·HomeKit 기기의 상태를 표시하고, 조명·스위치·콘센트 등 지원되는 기기를 켜고 끄기 위해 Apple 홈 접근 권한이 필요합니다."
+          }
+        }
+      }
+    },
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Privacy - Local Network Usage Description",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jogakbo Home needs local network access to find the Linux sensor hub on your network and to talk to it."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jogakbo Home necesita acceso a la red local para encontrar el hub de sensores Linux de tu red y comunicarse con él."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조각보 홈 앱은 같은 네트워크에 있는 Linux 센서 허브를 찾거나 허브와 통신하기 위해 로컬 네트워크 접근 권한이 필요합니다."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

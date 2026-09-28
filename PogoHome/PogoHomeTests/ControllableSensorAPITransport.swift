@@ -8,7 +8,7 @@ import Foundation
 /// real time (to simulate heartbeats arriving on a schedule). Snapshot GETs are served by a
 /// closure the test supplies, so it can hand back different bodies (including an empty
 /// registry) across calls.
-actor ControllableSensorAPITransport: SensorAPITransport {
+actor ControllableSensorAPITransport {
     typealias SnapshotProvider = @Sendable () async throws -> Data
 
     private var snapshotProvider: SnapshotProvider
@@ -73,5 +73,23 @@ actor ControllableSensorAPITransport: SensorAPITransport {
 
     /// Whether an SSE session is currently open and being consumed — lets a test wait for
     /// "the reconnect loop has opened its connection" without a fixed sleep.
+    ///
+    /// Only reliable for the *first* connection: right after `finishCurrentEventStream()` the
+    /// finished session stays `current` until its asynchronous termination callback clears
+    /// it, so this can still report the old session. Use `hasOpenEventStream(after:)` to wait
+    /// for a reconnect.
     var hasOpenEventStream: Bool { current != nil }
+
+    /// Whether a session opened *after* the first `sessionCount` sessions is currently open —
+    /// checked atomically on the actor, so a line sent right after this returns `true` reaches
+    /// the new session instead of being dropped on the just-finished one.
+    func hasOpenEventStream(after sessionCount: Int) -> Bool {
+        guard let current else { return false }
+        return current.id > sessionCount
+    }
 }
+
+// Declared here rather than on the actor: with default MainActor isolation, the compiler can
+// infer `nonisolated` from this `nonisolated` protocol and attach it to the actor itself (an
+// error that only shows up for some file batchings). On an extension it is valid.
+extension ControllableSensorAPITransport: SensorAPITransport {}

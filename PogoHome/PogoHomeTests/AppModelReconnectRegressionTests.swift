@@ -42,22 +42,34 @@ final class AppModelReconnectRegressionTests: XCTestCase {
         XCTAssertEqual(model.health, .recoveringRegistry)
     }
 
-    func testStrictSubsetWithReadingsIsStillHeldUntilLastCompleteSetReturns() async throws {
+    /// Per the PogoHome API v1 contract (see `docs/pogohome-api-v1.md`), a module absent
+    /// from the snapshot's `modules` array — not merely reported `online: false` — means the
+    /// Linux Registry has confirmed its removal (a real POGO detach), never a communication
+    /// gap. The remaining module here still carries its own last-good reading, so this
+    /// snapshot is complete, not transitional, and the removal must apply immediately rather
+    /// than being held like the genuinely-incomplete ("topology, no sample yet") cases above.
+    /// This supersedes the old pre-milestone behavior (a previous version of this test)
+    /// where any shrinkage was always treated as an in-progress Linux registry rebuild.
+    func testModuleAbsentFromACompleteSnapshotIsAppliedAsRemovalImmediately() async throws {
         let complete = makeCompleteSnapshot(moduleIDs: [UUID(), UUID()])
         let source = RaceableDataSource(initial: complete)
         let model = AppModel(dataSource: source)
         model.start()
         try await waitUntil { model.health == .healthy }
 
-        let partial = HomeSnapshot(timestamp: Date(), rooms: complete.rooms, modules: [complete.modules[0]])
-        source.updatesContinuation?.yield(partial)
-        try await waitUntil { model.isRegistryRecovering }
+        let afterRemoval = HomeSnapshot(timestamp: Date(), rooms: complete.rooms, modules: [complete.modules[0]])
+        source.updatesContinuation?.yield(afterRemoval)
+        try await waitUntil { model.snapshot.modules.count == 1 }
 
-        XCTAssertEqual(model.snapshot, complete)
-        XCTAssertEqual(model.health, .recoveringRegistry)
+        XCTAssertEqual(model.snapshot, afterRemoval)
+        XCTAssertFalse(model.isRegistryRecovering)
+        XCTAssertEqual(model.health, .healthy)
     }
 
-    func testFullSetAfterPartialRecoveryIsAppliedAndClearsRecovery() async throws {
+    /// A module reappearing under the same UUID after being removed (re-approved after
+    /// re-docking to POGO) is just another complete incoming snapshot — no special-casing
+    /// needed, and no lingering "recovering" state from the removal in between.
+    func testModuleReappearingAfterRemovalIsAppliedAsFreshState() async throws {
         let ids = [UUID(), UUID()]
         let initial = makeCompleteSnapshot(moduleIDs: ids)
         let source = RaceableDataSource(initial: initial)
@@ -66,12 +78,13 @@ final class AppModelReconnectRegressionTests: XCTestCase {
         try await waitUntil { model.health == .healthy }
 
         source.updatesContinuation?.yield(HomeSnapshot(timestamp: Date(), rooms: initial.rooms, modules: [initial.modules[0]]))
-        try await waitUntil { model.isRegistryRecovering }
+        try await waitUntil { model.snapshot.modules.count == 1 }
 
-        let recovered = makeCompleteSnapshot(moduleIDs: ids, value: 99)
-        source.updatesContinuation?.yield(recovered)
-        try await waitUntil { !model.isRegistryRecovering && model.snapshot == recovered }
+        let reregistered = makeCompleteSnapshot(moduleIDs: ids, value: 99)
+        source.updatesContinuation?.yield(reregistered)
+        try await waitUntil { model.snapshot == reregistered }
 
+        XCTAssertFalse(model.isRegistryRecovering)
         XCTAssertEqual(model.health, .healthy)
     }
 

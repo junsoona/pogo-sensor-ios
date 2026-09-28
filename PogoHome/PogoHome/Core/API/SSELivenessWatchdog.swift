@@ -94,7 +94,7 @@ extension SSELivenessWatchdog.LivenessError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .idleTimeout:
-            return "센서 허브와의 연결이 응답하지 않습니다 (연결 상태 확인 시간 초과)"
+            return String(localized: "센서 허브와의 연결이 응답하지 않습니다 (연결 상태 확인 시간 초과)", comment: "Live connection error")
         }
     }
 }
