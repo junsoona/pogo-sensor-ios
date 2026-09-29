@@ -137,3 +137,64 @@ nonisolated struct AppleHomeValueCheckSummary: Hashable, Sendable {
         )
     }
 }
+
+/// The Dashboard Apple Home card's verdict: HomeKit's connection state
+/// (`AppleHomeStatusSummary`) and PogoHome's value reads (`AppleHomeValueCheckSummary`) together.
+/// Only the verdict is combined — both counts stay as reported, one reason per accessory
+/// (`AppleHomeIssueList`), so nothing is counted twice and HomeKit's "responding" is never
+/// overridden: a value read that failed on a responding accessory needs attention, but the
+/// accessory is still counted as responding.
+nonisolated enum AppleHomeCardVerdict: Equatable, Sendable {
+    /// Every count the card shows for a readable Apple Home.
+    struct Counts: Equatable, Sendable {
+        let total: Int
+        let notResponding: Int
+        let readFailed: Int
+        let retrying: Int
+        let checking: Int
+
+        /// Listed accessories HomeKit reports as responding — including any whose value read failed.
+        var responding: Int { total - notResponding }
+    }
+
+    /// Apple Home can't be read (off, loading, denied, restricted, unsupported).
+    case unavailable(AppleHomeAccessState)
+    case noHome
+    case noDevices
+    /// An accessory doesn't respond, or a value read failed with no automatic retry left.
+    case needsAttention(Counts)
+    /// Nothing needs attention; at least one read is being retried automatically.
+    case retrying(Counts)
+    /// Nothing needs attention or is retried; first reads are still running.
+    case checking(Counts)
+    /// Every listed accessory responds and nothing is pending or failed.
+    case fine(total: Int)
+
+    static func evaluate(summary: AppleHomeStatusSummary, valueCheck: AppleHomeValueCheckSummary?) -> AppleHomeCardVerdict {
+        let total: Int
+        let notResponding: Int
+        switch summary {
+        case let .unavailable(state): return .unavailable(state)
+        case .noHome: return .noHome
+        case .noDevices: return .noDevices
+        case let .allResponding(count):
+            total = count
+            notResponding = 0
+        case let .someNotResponding(count, listed):
+            total = listed
+            notResponding = count
+        }
+        let valueCheck = valueCheck ?? AppleHomeValueCheckSummary(checking: 0, failed: 0)
+        let counts = Counts(
+            total: total,
+            notResponding: notResponding,
+            readFailed: valueCheck.failed,
+            retrying: valueCheck.retrying,
+            checking: valueCheck.checking
+        )
+        if counts.notResponding > 0 || counts.readFailed > 0 { return .needsAttention(counts) }
+        if counts.retrying > 0 { return .retrying(counts) }
+        if counts.checking > 0 { return .checking(counts) }
+        return .fine(total: total)
+    }
+}

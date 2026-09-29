@@ -13,11 +13,13 @@ enum PogoTheme {
 
     /// Card grid columns: two-up (on an iPhone) at regular text sizes, one full-width column at
     /// accessibility sizes, where a ~165pt-wide card can no longer fit its value and labels.
-    static func cardColumns(for dynamicTypeSize: DynamicTypeSize, minimumWidth: CGFloat = 160) -> [GridItem] {
+    /// `alignment` places a card in its cell; `nil` keeps `GridItem`'s default (centered), which
+    /// drops a shorter card to the middle of a taller row.
+    static func cardColumns(for dynamicTypeSize: DynamicTypeSize, minimumWidth: CGFloat = 160, alignment: Alignment? = nil) -> [GridItem] {
         if dynamicTypeSize.isAccessibilitySize {
-            return [GridItem(.flexible(), spacing: gridSpacing)]
+            return [GridItem(.flexible(), spacing: gridSpacing, alignment: alignment)]
         }
-        return [GridItem(.adaptive(minimum: minimumWidth), spacing: gridSpacing)]
+        return [GridItem(.adaptive(minimum: minimumWidth), spacing: gridSpacing, alignment: alignment)]
     }
 
     /// Narrowest content width that gets a list next to a detail (`AdaptiveSplitLayout`): an

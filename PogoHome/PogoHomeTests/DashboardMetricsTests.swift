@@ -211,6 +211,92 @@ final class DashboardMetricsTests: XCTestCase {
         XCTAssertTrue(online.allSatisfy { pogoIDs.contains($0.id) })
     }
 
+    // MARK: - Apple Home card verdict
+
+    private typealias Verdict = AppleHomeCardVerdict
+
+    private func verdict(_ summary: AppleHomeStatusSummary, checking: Int = 0, retrying: Int = 0, failed: Int = 0) -> Verdict {
+        Verdict.evaluate(summary: summary, valueCheck: AppleHomeValueCheckSummary(checking: checking, retrying: retrying, failed: failed))
+    }
+
+    private func counts(total: Int, notResponding: Int = 0, readFailed: Int = 0, retrying: Int = 0, checking: Int = 0) -> Verdict.Counts {
+        Verdict.Counts(total: total, notResponding: notResponding, readFailed: readFailed, retrying: retrying, checking: checking)
+    }
+
+    /// Green only when every device responds and no read is pending or failed.
+    func testTheAppleHomeCardIsFineOnlyWithNothingPendingOrFailed() {
+        XCTAssertEqual(verdict(.allResponding(total: 42)), .fine(total: 42))
+        XCTAssertEqual(Verdict.evaluate(summary: .allResponding(total: 42), valueCheck: nil), .fine(total: 42))
+    }
+
+    /// The Mac case: HomeKit reports all 42 as responding while 5 value reads failed for good.
+    func testAFailedValueReadNeedsAttentionEvenWhenHomeKitReportsEveryDeviceResponding() {
+        let result = verdict(.allResponding(total: 42), failed: 5)
+        XCTAssertEqual(result, .needsAttention(counts(total: 42, readFailed: 5)))
+        guard case let .needsAttention(counts) = result else { return XCTFail() }
+        XCTAssertEqual(counts.responding, 42, "HomeKit's responding count is shown as reported, not flipped")
+    }
+
+    func testNotRespondingNeedsAttention() {
+        XCTAssertEqual(verdict(.someNotResponding(notResponding: 2, total: 42)), .needsAttention(counts(total: 42, notResponding: 2)))
+    }
+
+    /// Reads still under way are shown as such — never as a failure, and never as fine.
+    func testReadsInProgressAreNeitherFineNorFailures() {
+        XCTAssertEqual(verdict(.allResponding(total: 42), retrying: 5), .retrying(counts(total: 42, retrying: 5)))
+        XCTAssertEqual(verdict(.allResponding(total: 42), checking: 3), .checking(counts(total: 42, checking: 3)))
+        XCTAssertEqual(
+            verdict(.allResponding(total: 42), checking: 3, retrying: 5),
+            .retrying(counts(total: 42, retrying: 5, checking: 3)),
+            "a retry is the more telling of the two"
+        )
+    }
+
+    /// Attention wins over reads in progress, and every count stays on the card.
+    func testEveryCountStaysSeparateWhenSeveralApply() {
+        XCTAssertEqual(
+            verdict(.someNotResponding(notResponding: 2, total: 42), checking: 1, retrying: 3, failed: 5),
+            .needsAttention(counts(total: 42, notResponding: 2, readFailed: 5, retrying: 3, checking: 1))
+        )
+        XCTAssertEqual(
+            verdict(.allResponding(total: 42), checking: 1, retrying: 3, failed: 5),
+            .needsAttention(counts(total: 42, readFailed: 5, retrying: 3, checking: 1))
+        )
+    }
+
+    /// Unavailable, no access, no home and no devices keep their own states, whatever reads say.
+    func testStatesWithoutReadableDevicesAreKept() {
+        for state in [AppleHomeAccessState.off, .loading, .denied, .restricted, .unsupported] {
+            XCTAssertEqual(verdict(.unavailable(state), failed: 5), .unavailable(state), "\(state)")
+        }
+        XCTAssertEqual(verdict(.noHome, retrying: 1), .noHome)
+        XCTAssertEqual(verdict(.noDevices, checking: 1), .noDevices)
+    }
+
+    /// From real accessories: a device that doesn't respond is counted once, as not responding,
+    /// even with a read error left over; a responding one whose read failed counts as responding.
+    @MainActor
+    func testTheCardVerdictCountsEachDeviceOnce() {
+        let accessories = [
+            accessory("정상"),
+            accessory("응답 없음, 이전 오류", reachable: false, error: "late", read: false),
+            accessory("실패", error: "late", read: false),
+            accessory("실패 2", error: "late", read: false),
+            accessory("재시도", autoRead: .waiting(nextAttempt: 2, maxAttempts: 3), read: false),
+            accessory("첫 읽기", autoRead: .reading(attempt: 1, maxAttempts: 3), read: false),
+        ]
+        let model = AppleHomeModel(provider: ScriptedAppleHomeProvider(snapshot: F.ready(accessories)), defaults: makeIsolatedDefaults())
+        model.enable()
+        let layout = model.layout(pogo: HomeSnapshot(timestamp: now, rooms: [], modules: []))
+        let issues = AppleHomeIssueList.evaluate(layout.visibleAccessories)
+
+        XCTAssertEqual(
+            Verdict.evaluate(summary: AppleHomeStatusSummary.evaluate(state: .ready, layout: layout), valueCheck: AppleHomeValueCheckSummary.evaluate(issues)),
+            .needsAttention(counts(total: 6, notResponding: 1, readFailed: 2, retrying: 1, checking: 1))
+        )
+        XCTAssertEqual(issues.issues.count, 5, "the card's counts add up to the list it opens")
+    }
+
     // MARK: - Detail navigation
 
     /// The lists open the existing detail screens through the existing routes, with the row's

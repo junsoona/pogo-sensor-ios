@@ -30,7 +30,8 @@ struct AppleHomeRoomsSection: View {
                 ForEach(layout.homes) { home in
                     VStack(alignment: .leading, spacing: 10) {
                         AppleHomeHomeHeader(group: home)
-                        LazyVGrid(columns: PogoTheme.cardColumns(for: dynamicTypeSize), spacing: PogoTheme.gridSpacing) {
+                        // Top-aligned and row-filling, like the POGO room cards above.
+                        LazyVGrid(columns: PogoTheme.cardColumns(for: dynamicTypeSize, alignment: .top), spacing: PogoTheme.gridSpacing) {
                             ForEach(home.rooms) { room in
                                 NavigationLink(value: AppleHomeRoute.room(room.id)) {
                                     AppleHomeRoomCard(room: room)
@@ -125,7 +126,7 @@ private struct AppleHomeRoomCard: View {
         }
         .padding(PogoTheme.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(minHeight: 142, alignment: .topLeading)
+        .frame(minHeight: 142, maxHeight: .infinity, alignment: .topLeading)
         .background(PogoTheme.tile, in: RoundedRectangle(cornerRadius: PogoTheme.cardCornerRadius, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: AppleHomeRoomText.name(of: room)))

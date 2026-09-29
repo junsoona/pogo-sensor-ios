@@ -1,19 +1,25 @@
 import SwiftUI
 
 /// The Dashboard's Apple Home status, next to (never merged into) the POGO sensor status: says
-/// whether Apple Home can be read at all, and if so how many listed devices respond. Green only
-/// for a readable Apple Home whose every listed device responds.
+/// whether Apple Home can be read at all, and if so how its listed devices are doing. The verdict
+/// (headline, icon, color) weighs HomeKit's connection state and PogoHome's value reads together
+/// (`AppleHomeCardVerdict`); green only when every listed device responds and no value read is
+/// pending or failed.
 ///
-/// "Responding" is HomeKit's reachability. Value reads are a separate line (`valueCheck`): a
-/// responding accessory whose value read timed out is counted there, never as not responding.
+/// "Responding" is HomeKit's reachability, shown as HomeKit reports it. A responding accessory
+/// whose last value read failed is counted as a read failure — and still as responding.
 struct AppleHomeStatusCard: View {
     let summary: AppleHomeStatusSummary
     var valueCheck: AppleHomeValueCheckSummary?
     /// The card opens the list of the devices it counts (`AppleHomeIssuesView`).
     var showsDisclosure = false
 
+    private var verdict: AppleHomeCardVerdict {
+        AppleHomeCardVerdict.evaluate(summary: summary, valueCheck: valueCheck)
+    }
+
     private var headline: String {
-        switch summary {
+        switch verdict {
         case let .unavailable(state):
             switch state {
             case .off: return String(localized: "Apple 홈 연결 꺼짐", comment: "Dashboard Apple Home status headline")
@@ -23,59 +29,85 @@ struct AppleHomeStatusCard: View {
             }
         case .noHome: return String(localized: "Apple 홈에 집이 없음", comment: "Apple Home notice title")
         case .noDevices: return String(localized: "Apple 홈 기기 없음", comment: "Dashboard Apple Home status headline")
-        case .allResponding: return String(localized: "Apple 홈 기기가 모두 응답합니다", comment: "Dashboard Apple Home status headline")
-        case .someNotResponding: return String(localized: "응답하지 않는 Apple 홈 기기가 있습니다", comment: "Dashboard Apple Home status headline")
+        case .needsAttention:
+            return String(localized: "확인이 필요한 Apple 홈 기기가 있습니다", comment: "Dashboard Apple Home status headline: a device doesn't respond or its last value read failed")
+        case .retrying:
+            return String(localized: "Apple 홈 기기 값을 다시 읽는 중입니다", comment: "Dashboard Apple Home status headline: value reads are being retried automatically; nothing has failed for good")
+        case .checking:
+            return String(localized: "Apple 홈 기기 값을 확인하는 중입니다", comment: "Dashboard Apple Home status headline: first value reads are running")
+        case .fine: return String(localized: "Apple 홈 기기가 모두 응답합니다", comment: "Dashboard Apple Home status headline")
         }
     }
 
-    private var detail: String {
-        switch summary {
+    /// The detail line, as separate parts: each count the verdict rests on, then HomeKit's
+    /// responding count.
+    private var detailParts: [String] {
+        switch verdict {
         case .unavailable:
-            return String(localized: "Apple 홈 기기 상태를 알 수 없으며, 조각보 센서 상태에는 포함되지 않습니다.", comment: "Dashboard Apple Home status detail: Apple Home can't be read")
+            return [String(localized: "Apple 홈 기기 상태를 알 수 없으며, 조각보 센서 상태에는 포함되지 않습니다.", comment: "Dashboard Apple Home status detail: Apple Home can't be read")]
         case .noHome, .noDevices:
-            return String(localized: "표시할 Apple 홈 기기가 없습니다.", comment: "Dashboard Apple Home status detail")
-        case let .allResponding(total):
-            return String(localized: "응답함 \(total)/\(total)", comment: "Dashboard Apple Home status: responding devices / listed devices")
-        case let .someNotResponding(notResponding, total):
-            return String(localized: "응답 없음 \(notResponding) · 전체 \(total)", comment: "Dashboard Apple Home status: devices not responding · listed devices")
+            return [String(localized: "표시할 Apple 홈 기기가 없습니다.", comment: "Dashboard Apple Home status detail")]
+        case let .fine(total):
+            return [String(localized: "응답함 \(total)/\(total)", comment: "Dashboard Apple Home status: responding devices / listed devices")]
+        case let .needsAttention(counts), let .retrying(counts), let .checking(counts):
+            return issueParts(counts) + [
+                String(localized: "HomeKit 기준 응답함 \(counts.responding)/\(counts.total)", comment: "Dashboard Apple Home status: devices HomeKit reports as responding / listed devices (a device whose value read failed can still respond)")
+            ]
         }
     }
 
-    /// Only for a readable Apple Home, and only when something is pending or failed.
-    private var valueCheckText: String? {
-        guard let valueCheck else { return nil }
-        switch summary {
-        case .allResponding, .someNotResponding: break
-        case .unavailable, .noHome, .noDevices: return nil
+    /// The same parts for VoiceOver: "42 of 42" rather than "42 slash 42".
+    private var accessibilityDetailParts: [String] {
+        switch verdict {
+        case .unavailable, .noHome, .noDevices:
+            return detailParts
+        case let .fine(total):
+            return [respondingForVoiceOver(total: total, responding: total)]
+        case let .needsAttention(counts), let .retrying(counts), let .checking(counts):
+            return issueParts(counts) + [respondingForVoiceOver(total: counts.total, responding: counts.responding)]
         }
+    }
+
+    private func respondingForVoiceOver(total: Int, responding: Int) -> String {
+        String(localized: "HomeKit 기준 \(total)개 중 \(responding)개 응답함", comment: "VoiceOver, Dashboard Apple Home status: listed devices, of which HomeKit reports this many as responding")
+    }
+
+    /// One part per kind the card counts, in the order of the list it opens (`AppleHomeIssuesView`).
+    private func issueParts(_ counts: AppleHomeCardVerdict.Counts) -> [String] {
         var parts: [String] = []
-        // Worded like the sections of the list the card opens (`AppleHomeIssueText`).
-        if valueCheck.failed > 0 {
-            parts.append(AppleHomeIssueText.title(.readFailed, count: valueCheck.failed))
+        if counts.notResponding > 0 {
+            parts.append(String(localized: "응답 없음 \(counts.notResponding)개", comment: "Dashboard Apple Home status: number of devices HomeKit reports as not responding"))
         }
-        if valueCheck.retrying > 0 {
-            parts.append(AppleHomeIssueText.title(.retrying, count: valueCheck.retrying))
+        if counts.readFailed > 0 {
+            parts.append(String(localized: "값 읽기 실패 \(counts.readFailed)개", comment: "Dashboard Apple Home status: number of devices whose last value read failed with no retry left (they may still respond)"))
         }
-        if valueCheck.checking > 0 {
-            parts.append(AppleHomeIssueText.title(.checking, count: valueCheck.checking))
+        if counts.retrying > 0 {
+            parts.append(String(localized: "다시 읽는 중 \(counts.retrying)개", comment: "Dashboard Apple Home status: number of devices whose value read is being retried automatically"))
         }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+        if counts.checking > 0 {
+            parts.append(String(localized: "값 확인 중 \(counts.checking)개", comment: "Dashboard Apple Home status: number of devices whose first value read is running"))
+        }
+        return parts
     }
 
     private var symbol: String {
-        switch summary {
-        case .allResponding: return "checkmark.circle.fill"
-        case .someNotResponding: return "exclamationmark.triangle.fill"
+        switch verdict {
+        case .fine: return "checkmark.circle.fill"
+        case .needsAttention: return "exclamationmark.triangle.fill"
+        case .retrying: return "arrow.triangle.2.circlepath"
+        case .checking: return "hourglass"
         case .unavailable(.denied), .unavailable(.restricted): return "hand.raised.fill"
         case .unavailable, .noHome, .noDevices: return "homekit"
         }
     }
 
+    /// Like the POGO card (`HomeStatusCard`): green only for `.fine`, orange for what needs
+    /// attention, gray while something is still being read or can't be known.
     private var tint: Color {
-        switch summary {
-        case .allResponding: return .green
-        case .someNotResponding: return .orange
-        case .unavailable, .noHome, .noDevices: return .gray
+        switch verdict {
+        case .fine: return .green
+        case .needsAttention: return .orange
+        case .retrying, .checking, .unavailable, .noHome, .noDevices: return .gray
         }
     }
 
@@ -86,14 +118,10 @@ struct AppleHomeStatusCard: View {
                 DashboardSourceCaption(text: String(localized: "Apple 홈", comment: "Dashboard status source: Apple Home"), symbol: "homekit")
                 Text(headline)
                     .font(.subheadline.weight(.semibold))
-                Text(detail)
+                Text(verbatim: detailParts.joined(separator: " · "))
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                if let valueCheckText {
-                    Text(valueCheckText)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                    .accessibilityLabel(Text(verbatim: accessibilityDetailParts.joined(separator: ", ")))
             }
             Spacer(minLength: 0)
             if showsDisclosure {

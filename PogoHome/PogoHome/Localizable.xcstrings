@@ -1,6 +1,159 @@
 {
   "sourceLanguage" : "ko",
   "strings" : {
+    "확인이 필요한 Apple 홈 기기가 있습니다" : {
+      "comment" : "Dashboard Apple Home status headline: a device doesn't respond or its last value read failed",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some Apple Home devices need attention"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algunos dispositivos de Apple Home requieren atención"
+          }
+        }
+      }
+    },
+    "Apple 홈 기기 값을 다시 읽는 중입니다" : {
+      "comment" : "Dashboard Apple Home status headline: value reads are being retried automatically; nothing has failed for good",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading Apple Home values again"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volviendo a leer los valores de Apple Home"
+          }
+        }
+      }
+    },
+    "Apple 홈 기기 값을 확인하는 중입니다" : {
+      "comment" : "Dashboard Apple Home status headline: first value reads are running",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking Apple Home values"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando los valores de Apple Home"
+          }
+        }
+      }
+    },
+    "응답 없음 %lld개" : {
+      "comment" : "Dashboard Apple Home status: number of devices HomeKit reports as not responding",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not responding: %lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin respuesta: %lld"
+          }
+        }
+      }
+    },
+    "값 읽기 실패 %lld개" : {
+      "comment" : "Dashboard Apple Home status: number of devices whose last value read failed with no retry left (they may still respond)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Value reads failed: %lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecturas de valores fallidas: %lld"
+          }
+        }
+      }
+    },
+    "다시 읽는 중 %lld개" : {
+      "comment" : "Dashboard Apple Home status: number of devices whose value read is being retried automatically",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading again: %lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volviendo a leer: %lld"
+          }
+        }
+      }
+    },
+    "값 확인 중 %lld개" : {
+      "comment" : "Dashboard Apple Home status: number of devices whose first value read is running",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading values: %lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leyendo valores: %lld"
+          }
+        }
+      }
+    },
+    "HomeKit 기준 응답함 %lld/%lld" : {
+      "comment" : "Dashboard Apple Home status: devices HomeKit reports as responding / listed devices (a device whose value read failed can still respond)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Responding per HomeKit: %1$lld/%2$lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Responden según HomeKit: %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "HomeKit 기준 %lld개 중 %lld개 응답함" : {
+      "comment" : "VoiceOver, Dashboard Apple Home status: listed devices, of which HomeKit reports this many as responding",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$lld of %1$lld responding per HomeKit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%2$lld de %1$lld responden según HomeKit"
+          }
+        }
+      }
+    },
     "‘%@’에 있는 기기는 미지정 공간으로 이동합니다." : {
       "comment" : "Delete-room confirmation; the room name is user data",
       "localizations" : {
@@ -7627,23 +7780,6 @@
         }
       }
     },
-    "응답 없음 %lld · 전체 %lld" : {
-      "comment" : "Dashboard Apple Home status: devices not responding · listed devices",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not responding: %1$lld of %2$lld"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sin respuesta: %1$lld de %2$lld"
-          }
-        }
-      }
-    },
     "응답이 HTTP 응답이 아닙니다" : {
       "comment" : "Network error detail",
       "localizations" : {
@@ -7657,23 +7793,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "La respuesta no es una respuesta HTTP"
-          }
-        }
-      }
-    },
-    "응답하지 않는 Apple 홈 기기가 있습니다" : {
-      "comment" : "Dashboard Apple Home status headline",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Some Apple Home devices aren't responding"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Algunos dispositivos de Apple Home no responden"
           }
         }
       }

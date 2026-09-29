@@ -545,6 +545,7 @@ private struct AppleHomeIssueRow: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .padding(.vertical, PlatformSupport.isMacCatalyst ? 8 : 0)
     }
 }
 

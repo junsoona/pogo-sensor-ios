@@ -184,8 +184,11 @@ private struct RoomsGrid: View {
                             title: "내 방",
                             subtitle: String(localized: "rooms.count", defaultValue: "\(snapshot.visibleRooms.count)개", comment: "Number of rooms (plural)")
                         )
+                        // Top-aligned, and each card fills its row's height (`RoomCard`): an
+                        // empty room next to one with sensors and warnings keeps the same top
+                        // edge and icon line instead of being centered in the taller row.
                         LazyVGrid(
-                            columns: PogoTheme.cardColumns(for: dynamicTypeSize),
+                            columns: PogoTheme.cardColumns(for: dynamicTypeSize, alignment: .top),
                             spacing: PogoTheme.gridSpacing
                         ) {
                             ForEach(snapshot.visibleRooms) { room in
@@ -406,7 +409,9 @@ private struct RoomCard: View {
         }
         .padding(PogoTheme.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(minHeight: 142, alignment: .topLeading)
+        // No fixed height: a long name or large text grows the card (and its row); a shorter
+        // card beside it stretches to the row's height.
+        .frame(minHeight: 142, maxHeight: .infinity, alignment: .topLeading)
         .background(PogoTheme.tile, in: RoundedRectangle(cornerRadius: PogoTheme.cardCornerRadius, style: .continuous))
         .accessibilityElement(children: .combine)
     }
