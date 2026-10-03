@@ -10,6 +10,7 @@
 		000000000000000000000421 /* PogoHomeWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 000000000000000000000420 /* PogoHomeWidgets.appex */; platformFilters = (ios, maccatalyst, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		000000000000000000000621 /* PogoHomeWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 000000000000000000000620 /* PogoHomeWatch.app */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		000000000000000000000821 /* PogoHomeWatchWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 000000000000000000000820 /* PogoHomeWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		0000000000000000000B0001 /* PowerBaseBLEKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0000000000000000000B0002 /* PowerBaseBLEKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -273,6 +274,7 @@
 		000000000000000130000000 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				0000000000000000000B0001 /* PowerBaseBLEKit in Frameworks */,
 			);
 		};
 		000000000000000230000000 /* Frameworks */ = {
@@ -353,6 +355,9 @@
 				000000000000000000000010 /* PogoHome */,
 			);
 			name = PogoHome;
+			packageProductDependencies = (
+				0000000000000000000B0002 /* PowerBaseBLEKit */,
+			);
 			productName = MyApp;
 			productReference = 000000000000000000000120 /* Jogakbo Home.app */;
 			productType = "com.apple.product-type.application";
@@ -502,6 +507,9 @@
 			);
 			mainGroup = 000000000000000000000001;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0000000000000000000B0003 /* XCLocalSwiftPackageReference "Packages/PowerBaseBLEKit" */,
+			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = 000000000000000000000020 /* Products */;
 			projectDirPath = "";
@@ -762,12 +770,14 @@
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				"EXECUTABLE_NAME[sdk=macosx*]" = PogoHome;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PogoHome/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "조각보 홈";
 				"INFOPLIST_KEY_CFBundleDisplayName[sdk=macosx*]" = "Jogakbo Home";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "조각보 홈 앱의 개발용 등록 시험이 주변의 미등록 Power Base를 찾아 연결하기 위해 Bluetooth를 사용합니다.";
 				INFOPLIST_KEY_NSHomeKitUsageDescription = "조각보 홈 앱은 Apple 홈에 추가한 Matter·HomeKit 기기의 상태를 표시하고, 조명·스위치·콘센트 등 지원되는 기기를 켜고 끄기 위해 Apple 홈 접근 권한이 필요합니다.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "조각보 홈 앱은 같은 네트워크에 있는 Linux 센서 허브를 찾거나 허브와 통신하기 위해 로컬 네트워크 접근 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -814,6 +824,7 @@
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
+				EXCLUDED_SOURCE_FILE_NAMES = "PowerBaseEnrollment*";
 				"EXECUTABLE_NAME[sdk=macosx*]" = PogoHome;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PogoHome/Info.plist;
@@ -1211,6 +1222,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		0000000000000000000B0003 /* XCLocalSwiftPackageReference "Packages/PowerBaseBLEKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/PowerBaseBLEKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0000000000000000000B0002 /* PowerBaseBLEKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PowerBaseBLEKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 000000000000000000000000 /* Project object */;
 }

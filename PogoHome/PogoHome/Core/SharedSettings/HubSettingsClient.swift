@@ -102,65 +102,22 @@ nonisolated struct URLSessionHubSettingsTransport: HubSettingsTransport {
 
     // MARK: - Requests
 
-    /// `https://<the hub's host and port>/<path>` — the hub's address is `http://…`, the settings API
-    /// is TLS on the same port.
+    private var https: PinnedHubHTTPS { PinnedHubHTTPS(timeout: timeout) }
+
     private func makeRequest(baseURL: URL, path: String, method: String, token: String?) throws -> URLRequest {
-        guard var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false), components.host != nil else {
-            throw HubSettingsError.unreachable("URL")
-        }
-        components.scheme = "https"
-        var basePath = components.percentEncodedPath
-        while basePath.hasSuffix("/") { basePath.removeLast() }
-        components.percentEncodedPath = basePath + "/" + path
-        components.query = nil
-        guard let url = components.url else { throw HubSettingsError.unreachable("URL") }
-        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: timeout)
-        request.httpMethod = method
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        if method == "PUT" || method == "POST" {
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        }
-        if let token {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
-        return request
+        try https.makeRequest(baseURL: baseURL, path: path, method: method, token: token)
     }
 
     private func send(_ request: URLRequest, pinning expected: String) async throws -> (Data, Int) {
-        let delegate = PinnedCertificateDelegate(expectedSHA256: expected)
-        let session = URLSession(configuration: Self.sessionConfiguration(timeout: timeout), delegate: delegate, delegateQueue: nil)
-        defer { session.finishTasksAndInvalidate() }
-        do {
-            return try await Self.perform(request, session: session)
-        } catch {
-            if delegate.sawMismatch { throw HubSettingsError.certificateMismatch }
-            throw error
-        }
+        try await https.send(request, pinning: expected)
     }
 
     private static func perform(_ request: URLRequest, session: URLSession) async throws -> (Data, Int) {
-        do {
-            let (data, response) = try await session.data(for: request)
-            guard let http = response as? HTTPURLResponse else { throw HubSettingsError.unreachable("HTTP") }
-            return (data, http.statusCode)
-        } catch let error as HubSettingsError {
-            throw error
-        } catch let error as URLError {
-            throw HubSettingsError.unreachable(error.code == .timedOut ? "timeout" : "\(error.code.rawValue)")
-        } catch {
-            throw HubSettingsError.unreachable(String(describing: error))
-        }
+        try await PinnedHubHTTPS.perform(request, session: session)
     }
 
     private static func sessionConfiguration(timeout: TimeInterval) -> URLSessionConfiguration {
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.urlCache = nil
-        configuration.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
-        configuration.httpCookieStorage = nil
-        configuration.urlCredentialStorage = nil
-        configuration.timeoutIntervalForRequest = timeout
-        configuration.waitsForConnectivity = false
-        return configuration
+        PinnedHubHTTPS.sessionConfiguration(timeout: timeout)
     }
 
     // MARK: - Responses
@@ -251,8 +208,9 @@ nonisolated struct URLSessionHubSettingsTransport: HubSettingsTransport {
 }
 
 /// Trusts a server only when its leaf certificate hashes to the SHA-256 pinned at pairing. Used by
-/// exactly one short-lived session; nothing else in the app is affected.
-nonisolated final class PinnedCertificateDelegate: NSObject, URLSessionDelegate, @unchecked Sendable {
+/// exactly one short-lived session; nothing else in the app is affected. Never follows a redirect:
+/// the bearer token must not travel to another URL (or over plain HTTP).
+nonisolated final class PinnedCertificateDelegate: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
     private let expectedSHA256: String
     private let lock = NSLock()
     private var mismatch = false
@@ -274,6 +232,13 @@ nonisolated final class PinnedCertificateDelegate: NSObject, URLSessionDelegate,
             return (.cancelAuthenticationChallenge, nil)
         }
         return (.useCredential, URLCredential(trust: trust))
+    }
+
+    func urlSession(
+        _ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest, completionHandler: @escaping @Sendable (URLRequest?) -> Void
+    ) {
+        completionHandler(nil)
     }
 }
 

@@ -47,6 +47,30 @@
         }
       }
     },
+    "NSBluetoothAlwaysUsageDescription" : {
+      "comment" : "Privacy - Bluetooth Always Usage Description (DEBUG builds only: the key is set in the Debug configuration)",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jogakbo Home's development enrollment test uses Bluetooth to find and connect to an unenrolled Power Base nearby."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La prueba de registro para desarrollo de Jogakbo Home usa Bluetooth para buscar un Power Base sin registrar cercano y conectarse a él."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조각보 홈 앱의 개발용 등록 시험이 주변의 미등록 Power Base를 찾아 연결하기 위해 Bluetooth를 사용합니다."
+          }
+        }
+      }
+    },
     "NSHomeKitUsageDescription" : {
       "comment" : "Privacy - HomeKit Usage Description",
       "localizations" : {

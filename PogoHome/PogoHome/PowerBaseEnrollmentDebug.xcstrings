@@ -1,0 +1,2976 @@
+{
+  "sourceLanguage" : "ko",
+  "strings" : {
+    "1. 보드 찾기" : {
+      "comment" : "DEBUG BLE enrollment test: scan section header",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Find the Board"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Buscar la placa"
+          }
+        }
+      }
+    },
+    "2. 보드 확인과 설정 코드" : {
+      "comment" : "DEBUG BLE enrollment test: identity section header",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Board Check and Setup Code"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Comprobación de la placa y código de configuración"
+          }
+        }
+      }
+    },
+    "3. 등록 시험" : {
+      "comment" : "DEBUG BLE enrollment test: run section header",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Enrollment Test"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3. Prueba de registro"
+          }
+        }
+      }
+    },
+    "16자리 16진수만 입력하세요. 구분자(:, -), *, 모두 0인 값은 쓸 수 없습니다." : {
+      "comment" : "DEBUG enrollment test: EUI-64 validation message",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter exactly 16 hex digits. Separators (:, -), * and an all-zero value aren't allowed."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce exactamente 16 dígitos hexadecimales. No se admiten separadores (:, -), * ni un valor todo ceros."
+          }
+        }
+      }
+    },
+    "BLE 등록 시험" : {
+      "comment" : "DEBUG BLE enrollment test: screen title",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BLE Enrollment Test"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba de registro BLE"
+          }
+        }
+      }
+    },
+    "BLE 등록 시험 (DEBUG)" : {
+      "comment" : "DEBUG BLE enrollment test: first section header",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BLE Enrollment Test (DEBUG)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba de registro BLE (DEBUG)"
+          }
+        }
+      }
+    },
+    "BLE 등록 시험 시작" : {
+      "comment" : "DEBUG BLE enrollment test: start button",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start BLE Enrollment Test"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar prueba de registro BLE"
+          }
+        }
+      }
+    },
+    "BLE 시험 화면을 나가면서 진행 중이던 시험을 정리했습니다." : {
+      "comment" : "DEBUG BLE enrollment test: a run was cleaned up when its screen was left",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A test that was under way was cleaned up when the BLE test screen was left."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al salir de la pantalla de la prueba BLE se limpió la prueba que estaba en curso."
+          }
+        }
+      }
+    },
+    "Bluetooth 상태를 확인하는 중입니다." : {
+      "comment" : "DEBUG BLE enrollment test: Bluetooth state unknown",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking the Bluetooth state."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobando el estado de Bluetooth."
+          }
+        }
+      }
+    },
+    "Bluetooth가 꺼져 있습니다. Bluetooth를 켜면 검색을 시작합니다." : {
+      "comment" : "DEBUG BLE enrollment test: Bluetooth off",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth is off. Searching starts when you turn Bluetooth on."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth está desactivado. La búsqueda empieza cuando lo actives."
+          }
+        }
+      }
+    },
+    "Bluetooth가 다시 시작되는 중입니다. 잠시 후 다시 시도하세요." : {
+      "comment" : "DEBUG BLE enrollment test: Bluetooth resetting",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth is restarting. Try again in a moment."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth se está reiniciando. Inténtalo de nuevo en un momento."
+          }
+        }
+      }
+    },
+    "Bluetooth를 사용할 수 있습니다." : {
+      "comment" : "DEBUG BLE enrollment test: Bluetooth on",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth is available."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth está disponible."
+          }
+        }
+      }
+    },
+    "DEBUG 빌드에만 있는 시험 기능이며 출시용 등록 기능이 아닙니다. 보드 준비(시험 펌웨어와 준비 이미지 기록), 설정 코드 생성, Bridge 주소 설정은 컴퓨터에서 미리 해 두어야 합니다." : {
+      "comment" : "DEBUG BLE enrollment test: scope of the test",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A test feature that exists only in DEBUG builds; it is not a registration feature for release. Preparing the board (flashing the test firmware and the prepared image), creating the setup code and setting the Bridge address must be done on a computer beforehand."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Función de prueba que solo existe en compilaciones DEBUG; no es una función de registro para la versión publicada. La preparación de la placa (grabar el firmware de pruebas y la imagen preparada), la creación del código de configuración y la dirección del Bridge deben hacerse antes en un ordenador."
+          }
+        }
+      }
+    },
+    "DEBUG 빌드에만 있는 시험 기능입니다. 아래에 표시되는 PSKd를 여분 보드의 USB 직렬 콘솔에 직접 입력해 허브의 등록 API를 시험합니다. 성공은 Linux Bridge가 heartbeat를 받았다고 허브가 답할 때만 표시합니다. mode 2 시험 펌웨어(pb_join)는 등록을 마치면 heartbeat를 보내고, Joiner만 실행하는 프로브 펌웨어는 보내지 않으므로 Thread에 가입해도 ‘만료’로 끝납니다." : {
+      "comment" : "DEBUG enrollment test: section footer",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A test feature that exists only in DEBUG builds. It tests the hub's enrollment API by typing the PSKd shown below into the spare board's USB serial console. Success is shown only when the hub answers that the Linux Bridge received a heartbeat. The mode 2 bench firmware (pb_join) sends heartbeats once it is enrolled; probe firmware that only runs a Joiner never does, so it ends as “Expired” even after it joins Thread."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Función de prueba que solo existe en compilaciones DEBUG. Prueba la API de registro del hub escribiendo el PSKd que se muestra abajo en la consola serie USB de la placa de repuesto. El éxito solo se muestra cuando el hub responde que el Linux Bridge recibió un heartbeat. El firmware de pruebas en modo 2 (pb_join) envía heartbeats una vez registrado; el firmware sonda que solo ejecuta un Joiner nunca lo hace, así que termina como «Caducada» aunque se una a Thread."
+          }
+        }
+      }
+    },
+    "DEBUG 빌드에만 있습니다. 아래 USB 콘솔 시험과는 별개의 경로이며, 이 화면으로 들어가면 진행 중인 USB 콘솔 시험은 취소됩니다." : {
+      "comment" : "DEBUG BLE enrollment test: entry section footer",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exists only in DEBUG builds. It is a separate path from the USB console test below, and entering this screen cancels a USB console test that is under way."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo existe en compilaciones DEBUG. Es una ruta distinta de la prueba por consola USB de abajo, y al entrar en esta pantalla se cancela una prueba por consola USB en curso."
+          }
+        }
+      }
+    },
+    "EUI-64 (16자리 16진수)" : {
+      "comment" : "DEBUG enrollment test: EUI-64 field label",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EUI-64 (16 hex digits)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EUI-64 (16 dígitos hexadecimales)"
+          }
+        }
+      }
+    },
+    "EUI-64 형식이 올바르지 않아 요청을 보내지 않았습니다." : {
+      "comment" : "DEBUG enrollment test failure",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The EUI-64 isn't valid, so no request was sent."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El EUI-64 no es válido, así que no se envió ninguna solicitud."
+          }
+        }
+      }
+    },
+    "heartbeat 대기 중" : {
+      "comment" : "DEBUG enrollment state waiting_for_heartbeat",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for Heartbeat"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando heartbeat"
+          }
+        }
+      }
+    },
+    "heartbeat 수신" : {
+      "comment" : "DEBUG enrollment state heartbeat_received (the only success)",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heartbeat Received"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heartbeat recibido"
+          }
+        }
+      }
+    },
+    "OTBR이 이 EUI-64의 Thread 가입을 허용했습니다. 아래 PSKd를 보드 직렬 콘솔에 입력하세요. Thread 가입만으로는 성공이 아닙니다." : {
+      "comment" : "DEBUG enrollment state waiting_for_heartbeat, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The OTBR allows this EUI-64 to join Thread. Enter the PSKd below on the board's serial console. Joining Thread alone isn't success."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El OTBR permite que este EUI-64 se una a Thread. Introduce el PSKd de abajo en la consola serie de la placa. Unirse a Thread por sí solo no es un éxito."
+          }
+        }
+      }
+    },
+    "PSKd 복사" : {
+      "comment" : "DEBUG enrollment test: copy button",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy PSKd"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar PSKd"
+          }
+        }
+      }
+    },
+    "USB 콘솔 등록 시험 (DEBUG)" : {
+      "comment" : "DEBUG USB-console enrollment test: section header",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "USB Console Enrollment Test (DEBUG)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba de registro por consola USB (DEBUG)"
+          }
+        }
+      }
+    },
+    "검색 중지" : {
+      "comment" : "DEBUG BLE enrollment test: stop scanning button",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Searching"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener búsqueda"
+          }
+        }
+      }
+    },
+    "광고 이름에 EUI-64가 없습니다. 아래에 직접 입력하세요." : {
+      "comment" : "DEBUG BLE enrollment test: the advertised name carries no EUI-64",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The advertised name has no EUI-64. Type it below."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nombre anunciado no contiene un EUI-64. Escríbelo abajo."
+          }
+        }
+      }
+    },
+    "누르기 전에는 아무것도 시작하지 않습니다. 시작할 때마다 새 가입 코드를 만듭니다." : {
+      "comment" : "DEBUG BLE enrollment test: start button subtitle",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing starts until you press this. Every start creates a new joining code."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada empieza hasta que pulses aquí. Cada inicio crea un código de unión nuevo."
+          }
+        }
+      }
+    },
+    "다른 기기가 시작한 등록 세션이 진행 중입니다(409 enrollment_in_progress). 끝난 뒤 다시 시도하세요." : {
+      "comment" : "DEBUG enrollment error",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An enrollment session started by another device is in progress (409 enrollment_in_progress). Try again after it ends."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hay una sesión de registro iniciada por otro dispositivo en curso (409 enrollment_in_progress). Vuelve a intentarlo cuando termine."
+          }
+        }
+      }
+    },
+    "다시 검색" : {
+      "comment" : "DEBUG BLE enrollment test: scan again button",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Again"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar de nuevo"
+          }
+        }
+      }
+    },
+    "데이터 소스가 바뀌어 시험을 중단했습니다. 원래 허브의 세션과 보드의 요청에 취소를 요청했습니다." : {
+      "comment" : "DEBUG BLE enrollment failure: the app switched source during a run",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The data source changed, so the test was stopped. The original hub was asked to cancel the session and the board to cancel the request."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La fuente de datos cambió, así que la prueba se detuvo. Se pidió al hub original que cancelara la sesión y a la placa que cancelara la solicitud."
+          }
+        }
+      }
+    },
+    "데이터 소스가 바뀌어 진행 중이던 세션을 중단했습니다. 원래 허브에 취소를 요청했고, 전달되지 않았다면 허브의 제한 시간이 지나면 끝납니다." : {
+      "comment" : "DEBUG enrollment test failure: the app switched source during a session",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The data source changed, so the running session was stopped. The original hub was asked to cancel it; if that didn't get through, it ends when the hub's time limit runs out."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La fuente de datos cambió, así que se detuvo la sesión en curso. Se pidió al hub original que la cancelara; si no llegó, terminará cuando se agote el tiempo límite del hub."
+          }
+        }
+      }
+    },
+    "등록 시험 시작" : {
+      "comment" : "DEBUG enrollment test: start button",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Enrollment Test"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar prueba de registro"
+          }
+        }
+      }
+    },
+    "등록 요청을 보냈지만 답을 받지 못했고 보드에 다시 연결하지 못했습니다. 보드는 가입을 진행 중일 수 있습니다. 새 요청으로 다시 시작하지 않고 허브의 답을 계속 확인합니다." : {
+      "comment" : "DEBUG BLE enrollment phase: delivery uncertain, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The enrollment request was sent, but no answer came and the board could not be reached again. The board may be joining. No new request is started; the hub's answer is still being checked."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se envió la solicitud de registro, pero no llegó respuesta y no se pudo volver a conectar con la placa. La placa puede estar uniéndose. No se inicia una solicitud nueva; se sigue comprobando la respuesta del hub."
+          }
+        }
+      }
+    },
+    "만료" : {
+      "comment" : "DEBUG enrollment state expired",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expired"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caducada"
+          }
+        }
+      }
+    },
+    "목록의 이름과 EUI-64는 보드가 광고한 값일 뿐 인증된 정보가 아닙니다. 고르는 데만 쓰입니다." : {
+      "comment" : "DEBUG BLE enrollment test: scan results are hints",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The names and EUI-64s in this list are only what the boards advertise, not authenticated information. They are used for picking a board and nothing else."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los nombres y EUI-64 de esta lista son solo lo que anuncian las placas, no información autenticada. Solo sirven para elegir una placa."
+          }
+        }
+      }
+    },
+    "미등록 상태의 여분 Power Base에 Bluetooth로 일회용 Thread 가입 코드(PSKd)를 전달하는 시험입니다. 보드를 설정 코드로 인증한 뒤 허브에 등록 세션을 만들고, 허브가 가입을 허용하면 보드에 코드를 전달합니다." : {
+      "comment" : "DEBUG BLE enrollment test: what the test does",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A test that hands a single-use Thread joining code (PSKd) to an unenrolled spare Power Base over Bluetooth. The board is authenticated with its setup code, then an enrollment session is created on the hub, and once the hub allows the join the code is handed to the board."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba que entrega por Bluetooth un código de unión a Thread de un solo uso (PSKd) a un Power Base de repuesto sin registrar. Primero se autentica la placa con su código de configuración, luego se crea una sesión de registro en el hub y, cuando el hub permite la unión, se entrega el código a la placa."
+          }
+        }
+      }
+    },
+    "미등록 여분 보드를 Bluetooth로 찾아 설정 코드로 인증하고, 한 번 쓰는 가입 코드를 전달합니다." : {
+      "comment" : "DEBUG BLE enrollment test: entry row subtitle",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finds an unenrolled spare board over Bluetooth, authenticates it with its setup code and hands over a single-use joining code."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Busca por Bluetooth una placa de repuesto sin registrar, la autentica con su código de configuración y le entrega un código de unión de un solo uso."
+          }
+        }
+      }
+    },
+    "보드 인증 중" : {
+      "comment" : "DEBUG BLE enrollment phase: authenticating the board",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authenticating the Board"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autenticando la placa"
+          }
+        }
+      }
+    },
+    "보드 인증을 마쳤고 보드가 알려 준 실제 EUI-64가 예상 값과 같습니다." : {
+      "comment" : "DEBUG BLE enrollment phase: POST in flight, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board is authenticated, and the real EUI-64 it reported matches the expected one."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa está autenticada y el EUI-64 real que indicó coincide con el esperado."
+          }
+        }
+      }
+    },
+    "보드 직렬 콘솔에 입력할 PSKd" : {
+      "comment" : "DEBUG enrollment test: title above the Joiner passphrase",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PSKd to Enter on the Board's Serial Console"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PSKd para introducir en la consola serie de la placa"
+          }
+        }
+      }
+    },
+    "보드 직렬 콘솔의 pb_join status(프로브 펌웨어는 ot eui64)로 확인한 값입니다." : {
+      "comment" : "DEBUG enrollment test: where the EUI-64 comes from; 'pb_join status' and 'ot eui64' are console commands",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The value shown by pb_join status (ot eui64 on probe firmware) on the board's serial console."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El valor que muestra pb_join status (ot eui64 en el firmware sonda) en la consola serie de la placa."
+          }
+        }
+      }
+    },
+    "보드가 Joiner 단계를 마치고 네트워크에 붙는 중입니다. 아직 등록이 끝난 것이 아닙니다." : {
+      "comment" : "DEBUG BLE board progress: attaching, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board finished the Joiner step and is attaching to the network. Enrollment is not finished yet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa terminó el paso de Joiner y se está conectando a la red. El registro aún no ha terminado."
+          }
+        }
+      }
+    },
+    "보드가 Joiner로 Thread 네트워크 가입을 시도하고 있습니다." : {
+      "comment" : "DEBUG BLE board progress: joining, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board is trying to join the Thread network as a Joiner."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa intenta unirse a la red Thread como Joiner."
+          }
+        }
+      }
+    },
+    "보드가 Thread 가입 중" : {
+      "comment" : "DEBUG BLE board progress: joining or attaching",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Board Is Joining Thread"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa se está uniendo a Thread"
+          }
+        }
+      }
+    },
+    "보드가 등록 대기 상태가 아닙니다. (%@)" : {
+      "comment" : "DEBUG BLE enrollment failure: the board is not waiting; the argument is its state",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board is not waiting for enrollment. (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa no está esperando un registro. (%@)"
+          }
+        }
+      }
+    },
+    "보드가 등록 요청을 거부했습니다. (%@) Thread 가입은 시작되지 않았습니다." : {
+      "comment" : "DEBUG BLE enrollment failure: pb-start refused; the argument is the protocol's code name",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board refused the enrollment request. (%@) No Thread join was started."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa rechazó la solicitud de registro. (%@) No se inició ninguna unión a Thread."
+          }
+        }
+      }
+    },
+    "보드가 등록 요청을 받았는지는 끝까지 확인하지 못했습니다." : {
+      "comment" : "DEBUG BLE enrollment outcome: delivery stayed uncertain",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whether the board ever received the enrollment request could not be confirmed."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo confirmar en ningún momento si la placa recibió la solicitud de registro."
+          }
+        }
+      }
+    },
+    "보드가 등록 요청을 받았습니다. Thread 가입이 성공했다는 뜻도, 허브에 등록됐다는 뜻도 아닙니다." : {
+      "comment" : "DEBUG BLE board progress: accepted, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board took the enrollment request. That does not mean it joined Thread, and it does not mean it is enrolled with the hub."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa aceptó la solicitud de registro. Eso no significa que se haya unido a Thread ni que esté registrada en el hub."
+          }
+        }
+      }
+    },
+    "보드가 요청을 받았는지 확인하지 못했습니다" : {
+      "comment" : "DEBUG BLE enrollment phase: pb-start answer lost and board unreachable",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't Confirm That the Board Got the Request"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo confirmar que la placa recibió la solicitud"
+          }
+        }
+      }
+    },
+    "보드가 요청을 받음" : {
+      "comment" : "DEBUG BLE board progress: accepted or queued",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Board Has the Request"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa tiene la solicitud"
+          }
+        }
+      }
+    },
+    "보드가 이 요청을 기억하지 못합니다(다시 시작했을 수 있습니다). 새 요청을 보내지 않고 허브의 답을 계속 확인합니다." : {
+      "comment" : "DEBUG BLE board progress: the board doesn't know the request, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board doesn't remember this request (it may have restarted). No new request is sent; the hub's answer is still being checked."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa no recuerda esta solicitud (puede que se haya reiniciado). No se envía una solicitud nueva; se sigue comprobando la respuesta del hub."
+          }
+        }
+      }
+    },
+    "보드가 이 요청의 취소를 받았습니다." : {
+      "comment" : "DEBUG BLE enrollment clean-up: board took the cancel",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board took the cancel of this request."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa aceptó la cancelación de esta solicitud."
+          }
+        }
+      }
+    },
+    "보드가 인증을 거부했습니다. 설정 코드가 틀렸거나 이 EUI-64의 보드가 아닙니다. 자동으로 다시 시도하지 않습니다. 보드는 한 번 켠 동안 인증이 5회 실패하면 Bluetooth 등록을 닫습니다." : {
+      "comment" : "DEBUG BLE enrollment failure: authentication refused",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board refused the authentication. The setup code is wrong, or this is not the board with this EUI-64. It is not retried automatically. A board closes Bluetooth enrollment after five failed authentications while it stays powered."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa rechazó la autenticación. El código de configuración es incorrecto, o esta no es la placa con este EUI-64. No se reintenta automáticamente. Una placa cierra el registro por Bluetooth tras cinco autenticaciones fallidas mientras sigue encendida."
+          }
+        }
+      }
+    },
+    "보드가 인증을 시작하지 않습니다. 이번 부팅의 Bluetooth 등록이 닫혔거나(인증 5회 실패, 15분 경과) 이 앱의 인증 방식을 받지 않습니다. 보드 전원을 껐다 켠 뒤 다시 시도하세요." : {
+      "comment" : "DEBUG BLE enrollment failure: the board refused to start a handshake",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board does not start an authentication. Bluetooth enrollment is closed for this boot (five failed authentications, or 15 minutes passed), or the board does not accept this app's method. Power the board off and on, then try again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa no inicia la autenticación. El registro por Bluetooth está cerrado en este arranque (cinco autenticaciones fallidas, o pasaron 15 minutos), o la placa no acepta el método de esta app. Apaga y enciende la placa y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "보드가 켜져 있고 가까이 있는지, 미등록 상태인지 확인하세요. 이미 등록된 보드와 전원을 켠 지 15분이 지난 보드는 Bluetooth를 열지 않습니다." : {
+      "comment" : "DEBUG BLE enrollment test: why no board may be found",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check that the board is powered, nearby and not enrolled. A board that is already enrolled, or that has been on for more than 15 minutes, does not open Bluetooth."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprueba que la placa está encendida, cerca y sin registrar. Una placa ya registrada, o que lleva más de 15 minutos encendida, no abre Bluetooth."
+          }
+        }
+      }
+    },
+    "보드는 Thread 가입과 기록을 마쳤다고 답했습니다. 이것만으로는 성공이 아니며, 허브가 이 보드의 첫 신호를 받았다고 답해야 합니다." : {
+      "comment" : "DEBUG BLE board progress: enrolled on the board, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board answered that it joined Thread and recorded it. That alone is not success: the hub must answer that it received this board's first signal."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa respondió que se unió a Thread y lo anotó. Eso por sí solo no es un éxito: el hub debe responder que recibió la primera señal de esta placa."
+          }
+        }
+      }
+    },
+    "보드는 가입했을 수 있으나 허브 확인 시간 만료" : {
+      "comment" : "DEBUG BLE enrollment outcome: expired after delivery",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Board May Have Joined, but the Hub's Time Ran Out"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa puede haberse unido, pero el tiempo del hub se agotó"
+          }
+        }
+      }
+    },
+    "보드를 준비할 때 기록한 값(esptool read-mac)과 같아야 합니다. 이 값이 인증에 쓰이며, 인증 뒤 보드가 알려 주는 실제 EUI-64와 다르면 중단합니다." : {
+      "comment" : "DEBUG BLE enrollment test: where the expected EUI-64 comes from and how it is used",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It must be the value recorded when the board was prepared (esptool read-mac). It is used for authentication, and the test stops if the real EUI-64 the board reports afterwards is different."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debe ser el valor anotado al preparar la placa (esptool read-mac). Se usa para la autenticación, y la prueba se detiene si el EUI-64 real que la placa indica después es distinto."
+          }
+        }
+      }
+    },
+    "보드별 설정 코드" : {
+      "comment" : "DEBUG BLE enrollment test: setup code field title",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Board Setup Code"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código de configuración de la placa"
+          }
+        }
+      }
+    },
+    "보드에 다시 연결하지 못해 등록 요청을 전달하지 못했습니다. Thread 가입은 시작되지 않았습니다." : {
+      "comment" : "DEBUG BLE enrollment failure: could not deliver pb-start",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board could not be reached again, so the enrollment request was not delivered. No Thread join was started."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo volver a conectar con la placa, así que no se entregó la solicitud de registro. No se inició ninguna unión a Thread."
+          }
+        }
+      }
+    },
+    "보드에 등록 요청 전달 중" : {
+      "comment" : "DEBUG BLE enrollment phase: delivering pb-start",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delivering the Enrollment Request to the Board"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entregando la solicitud de registro a la placa"
+          }
+        }
+      }
+    },
+    "보드에 등록 요청을 전달하기 전에 허브의 제한 시간이 끝났습니다. 보드에는 아무것도 보내지 않았습니다." : {
+      "comment" : "DEBUG BLE enrollment outcome: expired before delivery, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub's time limit ended before the enrollment request was delivered to the board. Nothing was sent to the board."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El tiempo límite del hub terminó antes de entregar la solicitud de registro a la placa. No se envió nada a la placa."
+          }
+        }
+      }
+    },
+    "보드에 연결하지 못했거나 연결이 끊겼습니다. (%@) 보드가 켜져 있고 가까이 있는지 확인한 뒤 다시 시도하세요." : {
+      "comment" : "DEBUG BLE enrollment failure: connection; the argument is a technical detail",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't connect to the board, or the connection was lost. (%@) Check that the board is powered and nearby, then try again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo conectar con la placa, o la conexión se perdió. (%@) Comprueba que la placa está encendida y cerca, y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "보드에 연결해 규약 버전을 확인하고 설정 코드로 인증합니다. 허브에는 아직 아무것도 보내지 않았습니다." : {
+      "comment" : "DEBUG BLE enrollment phase: authenticating, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting to the board, checking the protocol version and authenticating with the setup code. Nothing has been sent to the hub yet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conectando con la placa, comprobando la versión del protocolo y autenticando con el código de configuración. Aún no se ha enviado nada al hub."
+          }
+        }
+      }
+    },
+    "보드에 취소 요청을 전달하지 못했습니다. 보드에 진행 중인 시도가 있다면 보드의 제한 시간이 지나면 끝납니다." : {
+      "comment" : "DEBUG BLE enrollment clean-up: board cancel not delivered",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The cancel request could not be delivered to the board. If the board has an attempt under way, it ends when the board's own time limits pass."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo entregar la solicitud de cancelación a la placa. Si la placa tiene un intento en curso, termina cuando pasen sus propios tiempos límite."
+          }
+        }
+      }
+    },
+    "보드가 취소 요청을 받아들이지 않았습니다. (%@) 보드의 시도가 취소됐다고 볼 수 없습니다. 진행 중이라면 보드의 제한 시간이 지나면 끝납니다." : {
+      "comment" : "DEBUG BLE enrollment clean-up: the board refused the cancel; the argument is the protocol's code name",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board did not take the cancel request. (%@) Its attempt can't be considered cancelled. If it is under way, it ends when the board's own time limits pass."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa no aceptó la solicitud de cancelación. (%@) No se puede dar por cancelado su intento. Si está en curso, termina cuando pasen los tiempos límite de la placa."
+          }
+        }
+      }
+    },
+    "보드에 이 요청으로 취소할 수 있는 시도가 없습니다. (%@) 이미 끝났거나 등록을 마친 보드는 그대로 둡니다." : {
+      "comment" : "DEBUG BLE enrollment clean-up: the board answered NO_SUCH_ATTEMPT; the argument is the protocol's code name",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board has no attempt it could cancel under this request. (%@) An attempt that already ended, or a board that is enrolled, is left as it is."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa no tiene ningún intento que pueda cancelar con esta solicitud. (%@) Un intento ya terminado, o una placa ya registrada, se deja como está."
+          }
+        }
+      }
+    },
+    "보드에 취소 요청을 보냈지만 답을 확인하지 못했습니다. 보드가 취소를 받았는지 알 수 없습니다. 진행 중인 시도가 있다면 보드의 제한 시간이 지나면 끝납니다." : {
+      "comment" : "DEBUG BLE enrollment clean-up: board cancel sent, answer lost",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The cancel request was sent to the board, but its answer could not be confirmed. It is unknown whether the board took the cancel. If the board has an attempt under way, it ends when the board's own time limits pass."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se envió la solicitud de cancelación a la placa, pero no se pudo confirmar su respuesta. No se sabe si la placa aceptó la cancelación. Si la placa tiene un intento en curso, termina cuando pasen sus propios tiempos límite."
+          }
+        }
+      }
+    },
+    "보드의 Bluetooth 등록이 닫혀 있어 취소 요청을 받지 않았습니다. (%@) 보드가 등록을 마쳤을 수도 있고, 닫힌 채로 가입 시도를 계속하고 있을 수도 있습니다. 진행 중인 시도는 보드의 제한 시간이 지나면 끝납니다." : {
+      "comment" : "DEBUG BLE enrollment clean-up: the board answered the cancel with CLOSED; the argument is the protocol's code name",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board's Bluetooth enrollment is closed, so it did not take the cancel request. (%@) The board may have enrolled, or it may be carrying on with its joining attempt while closed. An attempt under way ends when the board's own time limits pass."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El registro por Bluetooth de la placa está cerrado, así que no aceptó la solicitud de cancelación. (%@) La placa puede haberse registrado, o puede seguir con su intento de unión estando cerrada. Un intento en curso termina cuando pasen los tiempos límite de la placa."
+          }
+        }
+      }
+    },
+    "보드에는 등록 요청을 보내지 않았으므로 취소할 것이 없습니다." : {
+      "comment" : "DEBUG BLE enrollment clean-up: nothing was sent to the board",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No enrollment request was sent to the board, so there is nothing to cancel there."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se envió ninguna solicitud de registro a la placa, así que no hay nada que cancelar en ella."
+          }
+        }
+      }
+    },
+    "보드에서 다른 등록 시도가 진행 중입니다. 그 시도가 끝난 뒤 다시 시도하세요." : {
+      "comment" : "DEBUG BLE enrollment failure: board busy",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Another enrollment attempt is in progress on the board. Try again when it has ended."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hay otro intento de registro en curso en la placa. Vuelve a intentarlo cuando termine."
+          }
+        }
+      }
+    },
+    "보드와의 Bluetooth 연결이 끊겼고 다시 연결하지 못했습니다. 보드는 등록을 마치면 Bluetooth를 끄므로 정상일 수 있고, 연결이 끊겨도 보드의 가입 시도는 계속됩니다. 허브의 답을 계속 확인합니다." : {
+      "comment" : "DEBUG BLE board progress: link lost, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Bluetooth connection to the board ended and could not be made again. That can be normal, because the board turns Bluetooth off once it is enrolled, and a board keeps trying to join without the connection. The hub's answer is still being checked."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La conexión Bluetooth con la placa terminó y no se pudo restablecer. Puede ser normal, porque la placa apaga Bluetooth al quedar registrada, y una placa sigue intentando unirse sin la conexión. Se sigue comprobando la respuesta del hub."
+          }
+        }
+      }
+    },
+    "보드의 Bluetooth 규약이 이 앱이 아는 것과 다릅니다. (%@) 펌웨어와 앱의 버전을 확인하세요." : {
+      "comment" : "DEBUG BLE enrollment failure: protocol mismatch; the argument is a technical detail",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board's Bluetooth protocol is not the one this app knows. (%@) Check the versions of the firmware and the app."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El protocolo Bluetooth de la placa no es el que conoce esta app. (%@) Comprueba las versiones del firmware y de la app."
+          }
+        }
+      }
+    },
+    "보드의 Bluetooth 등록이 이번 부팅에서 닫혔습니다(등록 완료, 잠금 또는 시간 경과)." : {
+      "comment" : "DEBUG BLE enrollment failure: BLE enrollment closed on the board",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board's Bluetooth enrollment is closed for this boot (enrolled, locked, or the time passed)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El registro por Bluetooth de la placa está cerrado en este arranque (registrada, bloqueada o se agotó el tiempo)."
+          }
+        }
+      }
+    },
+    "보드의 Thread 가입 시도가 등록 없이 끝났습니다. (%@)" : {
+      "comment" : "DEBUG BLE enrollment failure: the board's attempt failed; the argument is the firmware's result name",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The board's attempt to join Thread ended without enrolling. (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El intento de la placa de unirse a Thread terminó sin registro. (%@)"
+          }
+        }
+      }
+    },
+    "보드의 시도가 끝남" : {
+      "comment" : "DEBUG BLE board progress: the board's attempt ended without enrolling",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Board's Attempt Ended"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El intento de la placa terminó"
+          }
+        }
+      }
+    },
+    "복사됨" : {
+      "comment" : "DEBUG enrollment test: the PSKd was copied",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiado"
+          }
+        }
+      }
+    },
+    "상대 기기가 이 EUI-64와 설정 코드의 보드임을 증명하지 못했습니다. 연결을 끊었습니다." : {
+      "comment" : "DEBUG BLE enrollment failure: the board's proof did not verify",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The other device could not prove that it is the board with this EUI-64 and setup code. The connection was closed."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El otro dispositivo no pudo demostrar que es la placa con este EUI-64 y este código de configuración. Se cerró la conexión."
+          }
+        }
+      }
+    },
+    "선택한 보드가 광고하는 EUI-64가 확인한 값과 달라 연결하지 않았습니다. 목록에서 맞는 보드를 고르세요." : {
+      "comment" : "DEBUG BLE enrollment failure: the picked row advertises another EUI-64",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected board advertises another EUI-64 than the one you confirmed, so no connection was made. Pick the right board in the list."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La placa seleccionada anuncia un EUI-64 distinto del que confirmaste, así que no se conectó. Elige la placa correcta en la lista."
+          }
+        }
+      }
+    },
+    "선택한 보드가 광고하는 EUI-64와 다릅니다. 목록에서 맞는 보드를 고르거나 값을 확인하세요." : {
+      "comment" : "DEBUG BLE enrollment test: the entered EUI-64 differs from the picked row's advertised one",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This differs from the EUI-64 the selected board advertises. Pick the right board in the list or check the value."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No coincide con el EUI-64 que anuncia la placa seleccionada. Elige la placa correcta en la lista o comprueba el valor."
+          }
+        }
+      }
+    },
+    "선택한 보드를 더 이상 찾을 수 없습니다. 다시 검색하세요." : {
+      "comment" : "DEBUG BLE enrollment failure: the picked board is unknown",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The selected board can no longer be found. Search again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya no se encuentra la placa seleccionada. Busca de nuevo."
+          }
+        }
+      }
+    },
+    "선택한 허브의 주소를 아직 모릅니다. 허브를 찾은 뒤 다시 시도하세요." : {
+      "comment" : "DEBUG enrollment test: the picked hub has no address",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The chosen hub's address isn't known yet. Find the hub, then try again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no se conoce la dirección del hub elegido. Busca el hub y vuelve a intentarlo."
+          }
+        }
+      }
+    },
+    "설정 코드 (26자)" : {
+      "comment" : "DEBUG BLE enrollment test: setup code field label",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setup code (26 characters)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código de configuración (26 caracteres)"
+          }
+        }
+      }
+    },
+    "설정 코드 형식이 올바르지 않아 아무것도 보내지 않았습니다. A–Z와 2–7로 된 26자여야 합니다." : {
+      "comment" : "DEBUG BLE enrollment failure: malformed setup code",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The setup code is malformed, so nothing was sent. It must be 26 characters of A–Z and 2–7."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El código de configuración no tiene un formato válido, así que no se envió nada. Debe tener 26 caracteres de A–Z y 2–7."
+          }
+        }
+      }
+    },
+    "설정 코드는 A–Z와 2–7로 된 26자입니다. 지금 %lld자가 입력되었거나 쓸 수 없는 문자가 있습니다." : {
+      "comment" : "DEBUG BLE enrollment test: setup code validation; the argument is the number of characters typed",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A setup code is 26 characters of A–Z and 2–7. %lld characters have been entered, or there is a character that can't be used."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un código de configuración tiene 26 caracteres de A–Z y 2–7. Se han introducido %lld caracteres, o hay un carácter que no se puede usar."
+          }
+        }
+      }
+    },
+    "성공은 허브가 이 세션에서 보드의 첫 신호(heartbeat)를 받았다고 답할 때만 표시합니다. 보드의 응답, Bluetooth 연결 종료, Thread 가입은 진행 상황일 뿐입니다. 센서 모듈이 없는 Power Base의 첫 신호는 센서가 정상이라는 뜻이 아닙니다." : {
+      "comment" : "DEBUG BLE enrollment test: what counts as success",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Success is shown only when the hub answers that it received the board's first signal (heartbeat) in this session. The board's answers, the Bluetooth connection ending and joining Thread are only progress. The first signal of a Power Base without sensor modules does not mean that any sensor works."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El éxito solo se muestra cuando el hub responde que recibió la primera señal (heartbeat) de la placa en esta sesión. Las respuestas de la placa, el fin de la conexión Bluetooth y la unión a Thread son solo progreso. La primera señal de un Power Base sin módulos de sensor no significa que algún sensor funcione."
+          }
+        }
+      }
+    },
+    "세션 시작 뒤 Linux Bridge가 이 Power Base의 heartbeat를 받았습니다. 모듈과 센서가 동작하는지는 따로 확인해야 합니다." : {
+      "comment" : "DEBUG enrollment state heartbeat_received, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After the session started, the Linux Bridge received a heartbeat from this Power Base. Whether its modules and sensors work must be checked separately."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Después de iniciarse la sesión, el Linux Bridge recibió un heartbeat de esta Power Base. Hay que comprobar por separado si sus módulos y sensores funcionan."
+          }
+        }
+      }
+    },
+    "세션 취소" : {
+      "comment" : "DEBUG enrollment test: cancel button",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel Session"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar sesión"
+          }
+        }
+      }
+    },
+    "세션은 허브에서 계속 진행됩니다. 약 1초마다 상태를 다시 확인합니다." : {
+      "comment" : "DEBUG enrollment test: a status check failed but the session continues",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The session continues on the hub. The status is checked again about every second."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sesión continúa en el hub. El estado se vuelve a comprobar aproximadamente cada segundo."
+          }
+        }
+      }
+    },
+    "세션이 이미 끝났습니다(409 session_already_final)." : {
+      "comment" : "DEBUG enrollment error",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The session has already ended (409 session_already_final)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sesión ya terminó (409 session_already_final)."
+          }
+        }
+      }
+    },
+    "시뮬레이션 데이터를 쓰는 중이라 시험할 수 없습니다. 설정에서 실제 허브를 선택하세요." : {
+      "comment" : "DEBUG enrollment test: not available with simulated data",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simulated data is in use, so the test isn't available. Choose a real hub in Settings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se están usando datos simulados, así que la prueba no está disponible. Elige un hub real en Ajustes."
+          }
+        }
+      }
+    },
+    "시작할 때마다 새 PSKd를 만듭니다." : {
+      "comment" : "DEBUG enrollment test: start button subtitle",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A new PSKd is created on every start."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se crea un PSKd nuevo en cada inicio."
+          }
+        }
+      }
+    },
+    "시험 취소" : {
+      "comment" : "DEBUG BLE enrollment test: cancel button",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel Test"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar prueba"
+          }
+        }
+      }
+    },
+    "시험을 중단했습니다." : {
+      "comment" : "DEBUG BLE enrollment failure: cancelled before any hub session",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The test was stopped."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La prueba se detuvo."
+          }
+        }
+      }
+    },
+    "신호 세기 %lld dBm" : {
+      "comment" : "DEBUG BLE enrollment test: RSSI of a scan result",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signal strength %lld dBm"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intensidad de señal %lld dBm"
+          }
+        }
+      }
+    },
+    "실패" : {
+      "comment" : "DEBUG enrollment state failed",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fallida"
+          }
+        }
+      }
+    },
+    "아직 찾지 못했습니다. 계속 찾는 중입니다." : {
+      "comment" : "DEBUG BLE enrollment test: scanning for a while without result",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing found yet. Still searching."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no se ha encontrado nada. Se sigue buscando."
+          }
+        }
+      }
+    },
+    "안전한 난수를 만들 수 없어 요청을 보내지 않았습니다." : {
+      "comment" : "DEBUG enrollment test failure",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't generate secure random data, so no request was sent."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudieron generar datos aleatorios seguros, así que no se envió ninguna solicitud."
+          }
+        }
+      }
+    },
+    "앱은 Thread 네트워크 정보(Dataset, Network Key)를 Power Base로 보내지 않습니다. DEBUG 시험이 전달하는 것은 한 번 쓰는 가입 코드(PSKd)뿐입니다." : {
+      "comment" : "DEBUG build: limitation 2, scoped against the DEBUG tests",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app does not send Thread network information (Dataset, Network Key) to a Power Base. The only thing a DEBUG test hands over is a single-use joining code (PSKd)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La app no envía información de la red Thread (Dataset, Network Key) a un Power Base. Lo único que entrega una prueba DEBUG es un código de unión de un solo uso (PSKd)."
+          }
+        }
+      }
+    },
+    "앱의 일반 기능은 Linux Bridge에 등록을 요청하지 않습니다. 허브의 등록 세션 API는 아래 DEBUG 시험에서만, 페어링한 허브에만 사용합니다." : {
+      "comment" : "DEBUG build: limitation 3, scoped against the DEBUG tests",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app's regular features never ask the Linux Bridge to enroll anything. The hub's enrollment session API is used only by the DEBUG tests below, and only with a paired hub."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las funciones normales de la app nunca piden al Linux Bridge que registre nada. La API de sesiones de registro del hub solo la usan las pruebas DEBUG de abajo, y solo con un hub emparejado."
+          }
+        }
+      }
+    },
+    "여분 보드의 EUI-64" : {
+      "comment" : "DEBUG enrollment test: EUI-64 field title",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spare Board's EUI-64"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EUI-64 de la placa de repuesto"
+          }
+        }
+      }
+    },
+    "예상 EUI-64" : {
+      "comment" : "DEBUG BLE enrollment test: expected EUI-64 field title",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expected EUI-64"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EUI-64 esperado"
+          }
+        }
+      }
+    },
+    "원래 허브의 이 세션과 보드의 이 요청에 취소를 요청하고 있습니다. 진행 중이던 요청이 끝날 때까지 잠시 걸릴 수 있습니다." : {
+      "comment" : "DEBUG BLE enrollment phase: cleaning up, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asking the original hub to cancel this session and the board to cancel this request. It may take a moment until a request that was under way has ended."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se pide al hub original que cancele esta sesión y a la placa que cancele esta solicitud. Puede tardar un momento hasta que termine una solicitud que estaba en curso."
+          }
+        }
+      }
+    },
+    "이 EUI-64의 Power Base가 이미 Linux Bridge에 온라인 상태입니다(409 power_base_already_connected)." : {
+      "comment" : "DEBUG enrollment error",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Power Base with this EUI-64 is already online on the Linux Bridge (409 power_base_already_connected)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una Power Base con este EUI-64 ya está en línea en el Linux Bridge (409 power_base_already_connected)."
+          }
+        }
+      }
+    },
+    "이 기기가 선택한 허브와 연결(페어링)되어 있지 않습니다. 설정에서 이 허브에 연결하세요." : {
+      "comment" : "DEBUG enrollment test: this device isn't paired with the hub",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device isn't paired with the chosen hub. Connect to this hub in Settings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este dispositivo no está vinculado con el hub elegido. Conéctate a este hub en Ajustes."
+          }
+        }
+      }
+    },
+    "이 기기가 세션을 취소했습니다. 허브가 Joiner 항목을 지웁니다." : {
+      "comment" : "DEBUG enrollment state cancelled, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device cancelled the session. The hub removes the Joiner entry."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este dispositivo canceló la sesión. El hub elimina la entrada del Joiner."
+          }
+        }
+      }
+    },
+    "이 기기가 이전에 시작한 세션이 아직 진행 중입니다(409 enrollment_in_progress). 그 PSKd는 다시 표시할 수 없으니 취소한 뒤 새로 시작하세요." : {
+      "comment" : "DEBUG enrollment test: this device's earlier session is still running",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A session this device started earlier is still in progress (409 enrollment_in_progress). Its PSKd can't be shown again, so cancel it and start a new one."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una sesión que este dispositivo inició antes sigue en curso (409 enrollment_in_progress). Su PSKd no se puede volver a mostrar, así que cancélala e inicia una nueva."
+          }
+        }
+      }
+    },
+    "이 기기는 Bluetooth LE를 지원하지 않아 이 시험을 할 수 없습니다." : {
+      "comment" : "DEBUG BLE enrollment test: Bluetooth unsupported",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device does not support Bluetooth LE, so this test can't be run on it."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este dispositivo no admite Bluetooth LE, así que esta prueba no se puede hacer en él."
+          }
+        }
+      }
+    },
+    "이 기기에서는 Bluetooth 사용이 제한되어 있어 이 시험을 할 수 없습니다." : {
+      "comment" : "DEBUG BLE enrollment test: Bluetooth restricted",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth use is restricted on this device, so this test can't be run on it."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El uso de Bluetooth está restringido en este dispositivo, así que esta prueba no se puede hacer en él."
+          }
+        }
+      }
+    },
+    "이 기기의 허브 세션이 이미 진행 중입니다" : {
+      "comment" : "DEBUG BLE enrollment phase: a session of this device runs on the hub",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Hub Session of This Device Is Already Running"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya hay en curso una sesión del hub de este dispositivo"
+          }
+        }
+      }
+    },
+    "이 기기의 허브 인증 정보를 읽을 수 없어 요청을 보내지 않았습니다. 설정에서 허브에 다시 연결하세요." : {
+      "comment" : "DEBUG enrollment test failure",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't read this device's hub credentials, so no request was sent. Reconnect to the hub in Settings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudieron leer las credenciales del hub de este dispositivo, así que no se envió ninguna solicitud. Vuelve a conectarte al hub en Ajustes."
+          }
+        }
+      }
+    },
+    "이 문단과 아래 절차는 출시용 앱의 현재 등록 방법입니다. 이 DEBUG 빌드에는 그와 별개로, 미리 준비한 여분 보드로 등록 경로를 확인하는 시험 두 가지(BLE, USB 콘솔)가 맨 아래에 있습니다." : {
+      "comment" : "DEBUG build: separates the Release registration procedure from the DEBUG tests",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This paragraph and the steps below are how the released app registers a Power Base today. Separately, this DEBUG build has two tests at the bottom (BLE and USB console) that check the enrollment path with a spare board prepared in advance."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este párrafo y los pasos siguientes son el método de registro actual de la app publicada. Aparte, esta compilación DEBUG tiene al final dos pruebas (BLE y consola USB) que comprueban la ruta de registro con una placa de repuesto preparada de antemano."
+          }
+        }
+      }
+    },
+    "이 보드는 Joiner를 실행할 수 없는 상태입니다." : {
+      "comment" : "DEBUG BLE enrollment failure: the board cannot run a Joiner",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This board is not able to run a Joiner."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta placa no puede ejecutar un Joiner."
+          }
+        }
+      }
+    },
+    "이 세션의 가입 코드를 이 시험이 확신할 수 없으므로 보드에는 아무것도 보내지 않습니다. 세션이 끝나기를 기다리거나 취소한 뒤 새로 시작하세요." : {
+      "comment" : "DEBUG BLE enrollment phase: earlier hub session, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This test can't be sure of that session's joining code, so nothing is sent to the board. Wait for the session to end, or cancel it and start again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta prueba no puede estar segura del código de unión de esa sesión, así que no se envía nada a la placa. Espera a que la sesión termine, o cancélala y vuelve a empezar."
+          }
+        }
+      }
+    },
+    "이 앱의 Bluetooth 권한이 꺼져 있습니다. 설정 > 개인정보 보호 및 보안 > Bluetooth에서 조각보 홈을 켜세요." : {
+      "comment" : "DEBUG BLE enrollment test, iPhone/iPad: Bluetooth permission denied",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth access is off for this app. Turn on Jogakbo Home in Settings > Privacy & Security > Bluetooth."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El acceso a Bluetooth está desactivado para esta app. Activa Jogakbo Home en Ajustes > Privacidad y seguridad > Bluetooth."
+          }
+        }
+      }
+    },
+    "이 앱의 Bluetooth 권한이 꺼져 있습니다. 시스템 설정 > 개인정보 보호 및 보안 > Bluetooth에서 조각보 홈을 켜세요." : {
+      "comment" : "DEBUG BLE enrollment test, Mac: Bluetooth permission denied",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth access is off for this app. Turn on Jogakbo Home in System Settings > Privacy & Security > Bluetooth."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El acceso a Bluetooth está desactivado para esta app. Activa Jogakbo Home en Ajustes del Sistema > Privacidad y seguridad > Bluetooth."
+          }
+        }
+      }
+    },
+    "이 허브는 Power Base 등록 API를 지원하지 않습니다(404)." : {
+      "comment" : "DEBUG enrollment error",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This hub doesn't support the Power Base enrollment API (404)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este hub no admite la API de registro de Power Base (404)."
+          }
+        }
+      }
+    },
+    "이 허브에서 Power Base 등록이 꺼져 있습니다(404 enrollment_disabled)." : {
+      "comment" : "DEBUG enrollment error",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Power Base enrollment is turned off on this hub (404 enrollment_disabled)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El registro de Power Base está desactivado en este hub (404 enrollment_disabled)."
+          }
+        }
+      }
+    },
+    "이름 없는 보드" : {
+      "comment" : "DEBUG BLE enrollment test: a scan result without an advertised name",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unnamed board"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Placa sin nombre"
+          }
+        }
+      }
+    },
+    "인증된 보드가 알려 준 실제 EUI-64(%@)가 확인한 값과 다릅니다. 다른 보드이므로 중단했습니다." : {
+      "comment" : "DEBUG BLE enrollment failure: the authenticated EUI-64 differs; the argument is the board's EUI-64",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The real EUI-64 the authenticated board reported (%@) differs from the one you confirmed. It is another board, so the test stopped."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El EUI-64 real que indicó la placa autenticada (%@) es distinto del que confirmaste. Es otra placa, así que la prueba se detuvo."
+          }
+        }
+      }
+    },
+    "정리하는 중" : {
+      "comment" : "DEBUG BLE enrollment phase: cleaning up",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning Up"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpiando"
+          }
+        }
+      }
+    },
+    "제한 시간 안에 새 heartbeat가 오지 않았습니다. 허브는 보드의 Thread 가입 여부를 알 수 없습니다. heartbeat를 보내지 않는 Joiner 프로브 펌웨어라면 Thread에 가입했더라도 이 결과가 정상입니다." : {
+      "comment" : "DEBUG enrollment state expired, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No new heartbeat arrived within the time limit. The hub can't tell whether the board joined Thread. With Joiner probe firmware, which never sends heartbeats, this is the expected result even if it joined Thread."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No llegó ningún heartbeat nuevo dentro del tiempo límite. El hub no puede saber si la placa se unió a Thread. Con el firmware sonda Joiner, que nunca envía heartbeats, este es el resultado esperado aunque se haya unido a Thread."
+          }
+        }
+      }
+    },
+    "주변의 미등록 Power Base를 찾는 중입니다." : {
+      "comment" : "DEBUG BLE enrollment test: scanning",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searching for unenrolled Power Bases nearby."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscando Power Bases sin registrar cercanos."
+          }
+        }
+      }
+    },
+    "준비 도구가 이 보드용으로 만든 코드입니다. 앞뒤 공백만 지우고 소문자는 대문자로 바꿔 보냅니다. 화면에 표시하거나 저장·복사·기록하지 않으며, 이 화면을 나가면 지웁니다. Thread 가입 코드(PSKd)와는 다른 값입니다." : {
+      "comment" : "DEBUG BLE enrollment test: how the setup code is handled",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The code the prepare tool made for this board. Only surrounding spaces are removed and lower-case letters are sent as upper case. It is never shown, stored, copied or logged, and it is dropped when you leave this screen. It is not the Thread joining code (PSKd)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El código que la herramienta de preparación creó para esta placa. Solo se quitan los espacios de los extremos y las minúsculas se envían en mayúsculas. Nunca se muestra, guarda, copia ni registra, y se descarta al salir de esta pantalla. No es el código de unión a Thread (PSKd)."
+          }
+        }
+      }
+    },
+    "준비 중" : {
+      "comment" : "DEBUG enrollment state preparing",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparando"
+          }
+        }
+      }
+    },
+    "준비한 보드의 EUI-64와 같은지 확인했습니다" : {
+      "comment" : "DEBUG BLE enrollment test: confirmation toggle for the expected EUI-64",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I checked that this is the prepared board's EUI-64"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "He comprobado que es el EUI-64 de la placa preparada"
+          }
+        }
+      }
+    },
+    "직접 입력한 주소로 연결 중입니다. ‘허브 찾기’로 선택한 허브에서만 시험할 수 있습니다." : {
+      "comment" : "DEBUG enrollment test: not available with a typed address",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected through a typed address. The test works only with a hub chosen in “Find Hubs”."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conectado mediante una dirección escrita. La prueba solo funciona con un hub elegido en «Buscar hubs»."
+          }
+        }
+      }
+    },
+    "찾은 보드가 없습니다. 검색을 시작하세요." : {
+      "comment" : "DEBUG BLE enrollment test: not scanning, nothing found",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No board found. Start a search."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha encontrado ninguna placa. Inicia una búsqueda."
+          }
+        }
+      }
+    },
+    "출시용 앱에는 Bluetooth·QR 코드로 Power Base를 등록하는 기능이 없습니다. 이 DEBUG 빌드에는 아래의 시험 두 가지만 있고, QR 등록은 어디에도 없습니다." : {
+      "comment" : "DEBUG build: limitation 1, scoped against the DEBUG tests",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The released app has no feature that registers a Power Base over Bluetooth or with a QR code. This DEBUG build only has the two tests below, and QR registration exists nowhere."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La app publicada no tiene ninguna función para registrar un Power Base por Bluetooth ni con un código QR. Esta compilación DEBUG solo tiene las dos pruebas de abajo, y el registro por QR no existe en ninguna parte."
+          }
+        }
+      }
+    },
+    "출시용 앱에서 아직 할 수 없는 것" : {
+      "comment" : "DEBUG build: header of the limitations section",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What the Released App Can't Do Yet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lo que la app publicada aún no puede hacer"
+          }
+        }
+      }
+    },
+    "취소됨" : {
+      "comment" : "DEBUG enrollment state cancelled",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelled"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelada"
+          }
+        }
+      }
+    },
+    "허브 기준 약 %lld초 남음" : {
+      "comment" : "DEBUG enrollment test: seconds left in the hub's Joiner window (guidance)",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About %lld s left (per the hub)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quedan unos %lld s (según el hub)"
+          }
+        }
+      }
+    },
+    "허브 내부 오류가 발생했습니다(500)." : {
+      "comment" : "DEBUG enrollment error",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An internal hub error occurred (500)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se produjo un error interno del hub (500)."
+          }
+        }
+      }
+    },
+    "허브 세션 만료" : {
+      "comment" : "DEBUG BLE enrollment outcome: expired before delivery",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hub Session Expired"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesión del hub caducada"
+          }
+        }
+      }
+    },
+    "허브 세션 실패" : {
+      "comment" : "DEBUG BLE enrollment outcome: hub session failed",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hub Session Failed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sesión del hub falló"
+          }
+        }
+      }
+    },
+    "허브(Linux Bridge)가 이 세션을 시작한 뒤 이 Power Base의 첫 신호(heartbeat)를 받았습니다. Power Base가 허브에 닿았다는 뜻이며, 센서 모듈이나 센서가 정상이라는 뜻은 아닙니다." : {
+      "comment" : "DEBUG BLE enrollment outcome: heartbeat_received, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After this session started, the hub (Linux Bridge) received this Power Base's first signal (heartbeat). It means the Power Base reached the hub; it does not mean that its sensor modules or sensors work."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Después de iniciar esta sesión, el hub (Linux Bridge) recibió la primera señal (heartbeat) de este Power Base. Significa que el Power Base llegó al hub; no significa que sus módulos de sensor o sus sensores funcionen."
+          }
+        }
+      }
+    },
+    "허브가 Commissioner를 확인하고 이 EUI-64를 Joiner로 추가하는 중입니다." : {
+      "comment" : "DEBUG enrollment state preparing, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub is checking the Commissioner and adding this EUI-64 as a Joiner."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub está comprobando el Commissioner y añadiendo este EUI-64 como Joiner."
+          }
+        }
+      }
+    },
+    "허브가 Commissioner를 확인하고 이 EUI-64를 Joiner로 추가하는 중입니다. 준비가 끝나기 전에는 보드에 아무것도 보내지 않습니다." : {
+      "comment" : "DEBUG BLE enrollment phase: hub is preparing, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub is checking the Commissioner and adding this EUI-64 as a Joiner. Nothing is sent to the board until that is done."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub está comprobando el Commissioner y añadiendo este EUI-64 como Joiner. No se envía nada a la placa hasta que termine."
+          }
+        }
+      }
+    },
+    "허브가 가입을 허용했습니다. 보드에서 새 challenge를 받아 가입 코드를 전달합니다. 연결이 끊겼다면 먼저 다시 인증합니다." : {
+      "comment" : "DEBUG BLE enrollment phase: delivering, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub allowed the join. A fresh challenge is fetched from the board and the joining code is handed over. If the connection was lost, the board is authenticated again first."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub permitió la unión. Se pide a la placa un challenge nuevo y se le entrega el código de unión. Si la conexión se perdió, antes se vuelve a autenticar la placa."
+          }
+        }
+      }
+    },
+    "허브가 등록 요청을 받았는지 알 수 없습니다. 보드에는 아무것도 보내지 않았습니다. 요청을 자동으로 다시 보내지 않으며, 그동안 새 시험은 시작할 수 없습니다. 같은 요청으로 허브에 다시 묻거나 시험을 취소하세요." : {
+      "comment" : "DEBUG BLE enrollment phase: the POST got no answer, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is unknown whether the hub received the enrollment request. Nothing was sent to the board. The request is not sent again automatically, and no new test can start meanwhile. Ask the hub again with the same request, or cancel the test."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se sabe si el hub recibió la solicitud de registro. No se envió nada a la placa. La solicitud no se reenvía automáticamente, y mientras tanto no se puede iniciar otra prueba. Vuelve a preguntar al hub con la misma solicitud o cancela la prueba."
+          }
+        }
+      }
+    },
+    "허브가 세션을 만들었는지 알 수 없어 취소를 요청하지 못했습니다. 만들어졌다면 허브의 제한 시간이 지나면 끝납니다." : {
+      "comment" : "DEBUG BLE enrollment clean-up: unknown whether a hub session exists",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is unknown whether the hub created a session, so no cancel could be requested. If it did, the session ends when the hub's time limit passes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se sabe si el hub creó una sesión, así que no se pudo pedir la cancelación. Si la creó, la sesión termina cuando pase el tiempo límite del hub."
+          }
+        }
+      }
+    },
+    "허브가 세션을 진행하지 못했습니다. 아래 오류 코드를 확인하세요." : {
+      "comment" : "DEBUG enrollment state failed, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub couldn't carry out the session. Check the error code below."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub no pudo llevar a cabo la sesión. Revisa el código de error de abajo."
+          }
+        }
+      }
+    },
+    "허브가 신호를 받아 등록 확인" : {
+      "comment" : "DEBUG BLE enrollment outcome: heartbeat_received (the only success)",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hub Received the Signal: Enrollment Confirmed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub recibió la señal: registro confirmado"
+          }
+        }
+      }
+    },
+    "허브가 요청 내용을 거부했습니다. (%@)" : {
+      "comment" : "DEBUG enrollment error 400/411/413/422; argument is the hub's code",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub rejected the request's content. (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub rechazó el contenido de la solicitud. (%@)"
+          }
+        }
+      }
+    },
+    "허브가 요청을 거부했습니다(403, %@)." : {
+      "comment" : "DEBUG enrollment error 403; argument is the hub's code",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub refused the request (403, %@)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub rechazó la solicitud (403, %@)."
+          }
+        }
+      }
+    },
+    "허브가 요청을 받아들였을 때만 표시되며, 세션이 끝나거나 이 화면을 나가면 지워집니다. 어디에도 저장하지 않습니다." : {
+      "comment" : "DEBUG enrollment test: how the PSKd is handled",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shown only after the hub accepted the request, and cleared when the session ends or you leave this screen. It's never stored anywhere."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo se muestra después de que el hub acepte la solicitud y se borra cuando termina la sesión o sales de esta pantalla. Nunca se guarda en ningún sitio."
+          }
+        }
+      }
+    },
+    "허브가 이 기기의 인증 정보를 거부했습니다(401). 설정에서 허브에 다시 연결하세요." : {
+      "comment" : "DEBUG enrollment error 401",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub refused this device's credentials (401). Reconnect to the hub in Settings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub rechazó las credenciales de este dispositivo (401). Vuelve a conectarte al hub en Ajustes."
+          }
+        }
+      }
+    },
+    "허브가 이 세션을 취소했고 Joiner 항목을 지웁니다." : {
+      "comment" : "DEBUG BLE enrollment outcome: cancelled, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub cancelled this session and removes the Joiner entry."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub canceló esta sesión y elimina la entrada de Joiner."
+          }
+        }
+      }
+    },
+    "허브가 지금 등록을 처리할 수 없습니다(503, %@). 잠시 후 다시 시도하세요." : {
+      "comment" : "DEBUG enrollment error 503; argument is the hub's reason",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub can't handle enrollment right now (503, %@). Try again shortly."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub no puede gestionar el registro ahora mismo (503, %@). Vuelve a intentarlo en un momento."
+          }
+        }
+      }
+    },
+    "허브에 다시 묻기" : {
+      "comment" : "DEBUG BLE enrollment test: repeat the POST with the same values",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask the Hub Again"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a preguntar al hub"
+          }
+        }
+      }
+    },
+    "허브에 등록 세션을 요청하는 중" : {
+      "comment" : "DEBUG BLE enrollment phase: POST in flight",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requesting an Enrollment Session From the Hub"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitando una sesión de registro al hub"
+          }
+        }
+      }
+    },
+    "허브에 등록 세션을 요청하는 중입니다. PSKd는 허브가 요청을 받아들인 뒤에 표시됩니다." : {
+      "comment" : "DEBUG enrollment test: POST in flight",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requesting an enrollment session from the hub. The PSKd is shown after the hub accepts the request."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitando una sesión de registro al hub. El PSKd se muestra cuando el hub acepta la solicitud."
+          }
+        }
+      }
+    },
+    "허브에 세션 취소 요청이 전달되지 않았습니다. 세션은 허브의 제한 시간이 지나면 끝납니다." : {
+      "comment" : "DEBUG BLE enrollment clean-up: hub cancel not delivered",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The request to cancel the session did not reach the hub. The session ends when the hub's time limit passes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La solicitud de cancelar la sesión no llegó al hub. La sesión termina cuando pase el tiempo límite del hub."
+          }
+        }
+      }
+    },
+    "허브에 세션 취소를 요청하는 중입니다." : {
+      "comment" : "DEBUG enrollment test: DELETE in flight",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asking the hub to cancel the session."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pidiendo al hub que cancele la sesión."
+          }
+        }
+      }
+    },
+    "허브에 연결할 수 없습니다. (%@)" : {
+      "comment" : "DEBUG enrollment error: no answer; argument is a technical detail",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't reach the hub. (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede conectar con el hub. (%@)"
+          }
+        }
+      }
+    },
+    "허브에는 아무것도 보내지 않았습니다." : {
+      "comment" : "DEBUG BLE enrollment failure note: the hub was never contacted",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing was sent to the hub."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se envió nada al hub."
+          }
+        }
+      }
+    },
+    "허브에서 가입 허용 준비 중" : {
+      "comment" : "DEBUG BLE enrollment phase: hub is preparing",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hub Is Preparing to Allow the Join"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub prepara el permiso de unión"
+          }
+        }
+      }
+    },
+    "허브에서 이 세션을 찾을 수 없습니다(404 session_not_found). 허브가 다시 시작되었거나 세션이 잊혔습니다." : {
+      "comment" : "DEBUG enrollment error",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub can't find this session (404 session_not_found). The hub restarted or forgot the session."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub no encuentra esta sesión (404 session_not_found). El hub se reinició o olvidó la sesión."
+          }
+        }
+      }
+    },
+    "허브의 답을 받지 못했습니다" : {
+      "comment" : "DEBUG BLE enrollment phase: the POST got no answer",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Answer From the Hub"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin respuesta del hub"
+          }
+        }
+      }
+    },
+    "허브의 세션과 보드의 요청을 정리합니다." : {
+      "comment" : "DEBUG BLE board progress: attempt ended, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up the hub's session and the board's request."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpiando la sesión del hub y la solicitud de la placa."
+          }
+        }
+      }
+    },
+    "허브의 응답이 API 계약과 맞지 않습니다. (%@)" : {
+      "comment" : "DEBUG enrollment error: malformed answer; argument is a technical detail",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub's reply doesn't match the API contract. (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La respuesta del hub no coincide con el contrato de la API. (%@)"
+          }
+        }
+      }
+    },
+    "허브의 이 세션과 보드의 이 요청에 취소를 요청합니다." : {
+      "comment" : "DEBUG BLE enrollment test: cancel button subtitle",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asks the hub to cancel this session and the board to cancel this request."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pide al hub que cancele esta sesión y a la placa que cancele esta solicitud."
+          }
+        }
+      }
+    },
+    "허브의 이 세션을 취소했습니다." : {
+      "comment" : "DEBUG BLE enrollment clean-up: hub session cancelled",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This session was cancelled on the hub."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta sesión se canceló en el hub."
+          }
+        }
+      }
+    },
+    "허브의 인증서가 페어링할 때와 다릅니다. 안전을 위해 아무것도 보내지 않았습니다. 설정에서 허브에 다시 연결하세요." : {
+      "comment" : "DEBUG enrollment error: pinned certificate mismatch",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub's certificate differs from the one at pairing. For safety, nothing was sent. Reconnect to the hub in Settings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El certificado del hub no coincide con el de la vinculación. Por seguridad, no se envió nada. Vuelve a conectarte al hub en Ajustes."
+          }
+        }
+      }
+    },
+    "허브의 제한 시간 안에 이 보드의 첫 신호가 오지 않았습니다. 보드는 Thread에 가입했을 수 있지만 허브가 확인하지 못했으므로 성공이 아닙니다. 보드의 등록 기록과 Thread 연결은 건드리지 않았습니다." : {
+      "comment" : "DEBUG BLE enrollment outcome: expired after delivery, description",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This board's first signal did not arrive within the hub's time limit. The board may have joined Thread, but the hub did not confirm it, so this is not success. The board's enrollment record and Thread link were not touched."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La primera señal de esta placa no llegó dentro del tiempo límite del hub. La placa puede haberse unido a Thread, pero el hub no lo confirmó, así que no es un éxito. No se tocaron el registro de la placa ni su conexión Thread."
+          }
+        }
+      }
+    },
+    "허브의 제한 시간이 지났을 수 있습니다. 허브의 최종 상태를 기다리는 중입니다." : {
+      "comment" : "DEBUG enrollment test: local countdown ran out; the hub decides the end",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub's time limit may have passed. Waiting for the hub's final state."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puede que haya pasado el tiempo límite del hub. Esperando el estado final del hub."
+          }
+        }
+      }
+    },
+    "허브의 첫 신호를 기다리는 중" : {
+      "comment" : "DEBUG BLE board progress: waiting for the hub's heartbeat",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for the Hub's First Signal"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando la primera señal en el hub"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

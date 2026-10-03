@@ -52,6 +52,12 @@ struct AddDeviceSheet: View {
 struct PowerBaseConnectionView: View {
     @Environment(AppModel.self) private var appModel
     @State private var discovery: PowerBaseDiscovery?
+    #if DEBUG
+    @State private var enrollment: PowerBaseEnrollmentController?
+    @State private var enrollmentEUI64 = ""
+    /// What the clean-up achieved after the BLE test screen was left with a run under way.
+    @State private var bleCleanupReport: PowerBaseEnrollmentBLEController.CleanupReport?
+    #endif
 
     private var snapshot: HomeSnapshot { appModel.snapshot }
 
@@ -61,6 +67,13 @@ struct PowerBaseConnectionView: View {
                 Text("조각보 홈 앱은 아직 Power Base를 직접 등록할 수 없습니다. 새 Power Base는 컴퓨터에서 펌웨어와 설정 이미지를 기록해야 Thread 네트워크와 Linux Bridge에 연결됩니다.")
                     .sheetParagraph()
                     .sheetRowInsets()
+                #if DEBUG
+                Text("이 문단과 아래 절차는 출시용 앱의 현재 등록 방법입니다. 이 DEBUG 빌드에는 그와 별개로, 미리 준비한 여분 보드로 등록 경로를 확인하는 시험 두 가지(BLE, USB 콘솔)가 맨 아래에 있습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG build: separates the Release registration procedure from the DEBUG tests")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .sheetParagraph()
+                    .sheetRowInsets()
+                #endif
             } header: {
                 Text("현재 등록 방법")
             }
@@ -96,6 +109,25 @@ struct PowerBaseConnectionView: View {
             }
             .sheetRowInsets()
 
+            #if DEBUG
+            // In a DEBUG build the three statements of the Release build would contradict the
+            // tests below, so they are worded for what a DEBUG build really has. The Release
+            // wording (the `#else` branch) is unchanged.
+            Section {
+                debugLimitation(Text("출시용 앱에는 Bluetooth·QR 코드로 Power Base를 등록하는 기능이 없습니다. 이 DEBUG 빌드에는 아래의 시험 두 가지만 있고, QR 등록은 어디에도 없습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG build: limitation 1, scoped against the DEBUG tests"))
+                debugLimitation(Text("앱은 Thread 네트워크 정보(Dataset, Network Key)를 Power Base로 보내지 않습니다. DEBUG 시험이 전달하는 것은 한 번 쓰는 가입 코드(PSKd)뿐입니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG build: limitation 2, scoped against the DEBUG tests"))
+                debugLimitation(Text("앱의 일반 기능은 Linux Bridge에 등록을 요청하지 않습니다. 허브의 등록 세션 API는 아래 DEBUG 시험에서만, 페어링한 허브에만 사용합니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG build: limitation 3, scoped against the DEBUG tests"))
+            } header: {
+                Text("출시용 앱에서 아직 할 수 없는 것", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG build: header of the limitations section")
+            }
+            .sheetRowInsets()
+
+            bleTestEntrySection
+
+            if let enrollment {
+                PowerBaseEnrollmentTestSection(controller: enrollment, eui64Input: $enrollmentEUI64)
+            }
+            #else
             Section {
                 limitation("Bluetooth·QR 코드로 Power Base를 등록하는 기능은 아직 없습니다.")
                 limitation("앱에서 Thread 네트워크 정보를 Power Base로 보낼 수 없습니다.")
@@ -104,6 +136,7 @@ struct PowerBaseConnectionView: View {
                 Text("앱에서 아직 할 수 없는 것")
             }
             .sheetRowInsets()
+            #endif
         }
         .sheetListSpacing()
         .navigationTitle("조각보 Power Base 연결")
@@ -112,8 +145,75 @@ struct PowerBaseConnectionView: View {
             if discovery == nil {
                 discovery = PowerBaseDiscovery(baseline: snapshot)
             }
+            #if DEBUG
+            if enrollment == nil {
+                enrollment = PowerBaseEnrollmentController(clipboard: SystemEnrollmentClipboard())
+            }
+            enrollment?.targetDidChange(enrollmentTarget)
+            #endif
         }
+        #if DEBUG
+        // The screen, not a row: list rows come and go while scrolling.
+        .onChange(of: enrollmentTarget) { _, target in enrollment?.targetDidChange(target) }
+        .onDisappear { enrollment?.leave() }
+        #endif
     }
+
+    #if DEBUG
+    /// The source as the enrollment tests see it: only a hub picked in "Find hubs" (by `hub_id`)
+    /// that this device is paired with qualifies.
+    private var enrollmentTarget: PowerBaseEnrollmentController.Target {
+        PowerBaseEnrollmentController.Target(appModel: appModel)
+    }
+
+    /// The way into the BLE test, and what its last clean-up reported. Going there leaves this
+    /// screen, which ends a USB-console test under way (one test at a time; the hub runs one
+    /// session at a time anyway).
+    private var bleTestEntrySection: some View {
+        Section {
+            NavigationLink {
+                PowerBaseEnrollmentBLETestView(onCleanupReport: { bleCleanupReport = $0 })
+            } label: {
+                SheetIconRow(systemImage: "dot.radiowaves.left.and.right", iconStyle: .tint) {
+                    Text("BLE 등록 시험", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment test: screen title")
+                    Text("미등록 여분 보드를 Bluetooth로 찾아 설정 코드로 인증하고, 한 번 쓰는 가입 코드를 전달합니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment test: entry row subtitle")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .sheetParagraph()
+                }
+            }
+            if let report = bleCleanupReport {
+                SheetIconRow(systemImage: "info.circle", iconStyle: .secondary) {
+                    Text("BLE 시험 화면을 나가면서 진행 중이던 시험을 정리했습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment test: a run was cleaned up when its screen was left")
+                        .sheetParagraph()
+                    if !report.eui64.isEmpty {
+                        Text(verbatim: "eui64: \(report.eui64)")
+                            .font(.caption.monospaced())
+                            .foregroundStyle(.secondary)
+                            .sheetParagraph()
+                    }
+                }
+                .accessibilityElement(children: .combine)
+                PowerBaseEnrollmentBLECleanupRows(cleanup: report.cleanup)
+            }
+        } header: {
+            Text("BLE 등록 시험 (DEBUG)", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment test: first section header")
+        } footer: {
+            Text("DEBUG 빌드에만 있습니다. 아래 USB 콘솔 시험과는 별개의 경로이며, 이 화면으로 들어가면 진행 중인 USB 콘솔 시험은 취소됩니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment test: entry section footer")
+                .sheetFooter()
+        }
+        .sheetRowInsets()
+    }
+
+    private func debugLimitation(_ text: Text) -> some View {
+        SheetIconRow(systemImage: "xmark.circle", iconStyle: .secondary) {
+            text
+                .foregroundStyle(.secondary)
+                .sheetParagraph()
+        }
+        .accessibilityElement(children: .combine)
+    }
+    #endif
 
     @ViewBuilder
     private var detectionSection: some View {
@@ -163,6 +263,7 @@ struct PowerBaseConnectionView: View {
         .sheetRowInsets()
     }
 
+    #if !DEBUG
     private func limitation(_ text: LocalizedStringKey) -> some View {
         SheetIconRow(systemImage: "xmark.circle", iconStyle: .secondary) {
             Text(text)
@@ -171,6 +272,7 @@ struct PowerBaseConnectionView: View {
         }
         .accessibilityElement(children: .combine)
     }
+    #endif
 }
 
 #Preview {
