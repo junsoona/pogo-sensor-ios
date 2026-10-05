@@ -178,6 +178,118 @@ final class HarnessInteropTests: XCTestCase {
         let stats = try harness.stats()
         XCTAssertEqual(stats.state, Self.stateEnrolled)
         XCTAssertTrue(stats.servicesAllowed && stats.threadEnabled && stats.marker == 1, "marker, Thread and services are untouched")
+        XCTAssertNil(stats.storedEndpoint, "the first start message delivers no bridge endpoint: a version 1 record")
+        XCTAssertNil(stats.activeEndpoint)
+    }
+
+    // MARK: - pb-start with the bridge endpoint
+
+    /// A made-up Mesh-Local EID inside the harness's network prefix (fd11:2233:4455:0::/64).
+    private func bridgeEndpoint(_ address: String = "fd11:2233:4455:0:8c1f:2e3d:4c5b:6a79", port: Int = 5684) throws -> PowerBaseBLEBridgeEndpoint {
+        try PowerBaseBLEBridgeEndpoint(address: address, port: port)
+    }
+
+    func testTheEndpointStartReachesTheRealBoardCodeWithTheSameAddressAndPort() async throws {
+        let harness = try boot()
+        XCTAssertTrue(try harness.connect(1))
+        let (client, link) = try await authenticatedClient(harness)
+        let capabilities = await client.capabilities()
+        XCTAssertEqual(capabilities, [.bridgeEndpointV1], "the real proto-ver answer lists the capability")
+
+        let endpoint = try bridgeEndpoint()
+        let id = requestID(30)
+        let challenge = try await freshChallenge(client)
+        let accepted = try await client.start(target: fixture.eui64, requestID: id, challenge: challenge, pskd: Self.pskd, endpoint: endpoint)
+        XCTAssertEqual(accepted, .accepted, "the real admission code takes the Swift codec's message")
+        let sent = try XCTUnwrap(link.exchanges.last { $0.endpoint == .start })
+        XCTAssertEqual(sent.request.count, 64 + Self.pskd.count + 16, "64 + PSKd bytes of plaintext, plus the AES-GCM tag")
+        var stats = try harness.stats()
+        XCTAssertEqual(stats.joinerStarts, 0, "accepted is queued, not started")
+        XCTAssertNil(stats.pendingEndpoint, "the BLE callback handed nothing to the controller")
+        XCTAssertNil(stats.storedEndpoint, "and stored nothing")
+
+        let again = try await client.start(target: fixture.eui64, requestID: id, challenge: challenge, pskd: Self.pskd, endpoint: endpoint)
+        XCTAssertEqual(again, .duplicate, "the same request with the same endpoint")
+        let otherAddress = try await client.start(
+            target: fixture.eui64, requestID: id, challenge: challenge, pskd: Self.pskd, endpoint: try bridgeEndpoint("fd11:2233:4455:0:8c1f:2e3d:4c5b:6a7a")
+        )
+        XCTAssertEqual(otherAddress, .requestConflict, "the same request id with another address is not a duplicate")
+        let otherPort = try await client.start(
+            target: fixture.eui64, requestID: id, challenge: challenge, pskd: Self.pskd, endpoint: try bridgeEndpoint(port: 5685)
+        )
+        XCTAssertEqual(otherPort, .requestConflict, "nor with another port")
+        let firstKind = try await client.start(target: fixture.eui64, requestID: id, challenge: challenge, pskd: Self.pskd)
+        XCTAssertEqual(firstKind, .requestConflict, "nor as the first start message")
+
+        XCTAssertEqual(try harness.poll(), .open)
+        stats = try harness.stats()
+        XCTAssertEqual(stats.joinerStarts, 1, "exactly one Joiner")
+        XCTAssertEqual(stats.pskd, Self.pskd)
+        XCTAssertEqual(stats.pendingEndpoint, Harness.Endpoint(address: endpoint.address, port: 5684),
+                       "the controller holds the address and port the Swift client encoded -- byte for byte, port byte order included")
+        XCTAssertNil(stats.storedEndpoint, "still only in RAM")
+        XCTAssertEqual(stats.marker, 0, "no record yet")
+
+        try harness.joinerDone(outcome: 0)
+        try harness.poll()
+        try harness.tick(attached: true, datasetComplete: true)
+        XCTAssertEqual(try harness.poll(), .enrolled)
+        stats = try harness.stats()
+        XCTAssertEqual(stats.state, Self.stateEnrolled)
+        XCTAssertEqual(stats.marker, 1, "a valid record")
+        XCTAssertEqual(stats.storedEndpoint, Harness.Endpoint(address: endpoint.address, port: 5684), "the record holds the delivered endpoint")
+        XCTAssertEqual(stats.activeEndpoint, stats.storedEndpoint, "and that is what the exporter is given")
+        XCTAssertNil(stats.pendingEndpoint)
+        let enrolled = try await client.status(requestID: id)
+        XCTAssertEqual(enrolled.requestPhase, .enrolled, "progress on the board -- never the hub's heartbeat_received")
+    }
+
+    func testAnEndpointAttemptThatDoesNotEnrollLeavesNoEndpointBehind() async throws {
+        let harness = try boot()
+        XCTAssertTrue(try harness.connect(1))
+        let (client, _) = try await authenticatedClient(harness)
+
+        // Cancelled while the Joiner runs.
+        let id = requestID(40)
+        let accepted = try await client.start(
+            target: fixture.eui64, requestID: id, challenge: try await freshChallenge(client), pskd: Self.pskd, endpoint: try bridgeEndpoint()
+        )
+        XCTAssertEqual(accepted, .accepted)
+        try harness.poll()
+        XCTAssertNotNil(try harness.stats().pendingEndpoint)
+        let cancelled = try await client.cancel(target: fixture.eui64, requestID: id)
+        XCTAssertEqual(cancelled, .ok)
+        try harness.poll()
+        var stats = try harness.stats()
+        XCTAssertEqual(stats.state, Self.stateWaiting)
+        XCTAssertNil(stats.pendingEndpoint, "a cancelled attempt's endpoint is dropped")
+        XCTAssertNil(stats.storedEndpoint)
+        XCTAssertEqual(stats.marker, 0)
+
+        // An endpoint outside the network the board then joins.
+        let elsewhere = requestID(41)
+        let other = try await client.start(
+            target: fixture.eui64, requestID: elsewhere, challenge: try await freshChallenge(client), pskd: Self.otherPSKd,
+            endpoint: try bridgeEndpoint("fd99:8877:6655:0:8c1f:2e3d:4c5b:6a79")
+        )
+        XCTAssertEqual(other, .accepted, "a Mesh-Local EID of some network: the format is fine")
+        try harness.poll()
+        try harness.joinerDone(outcome: 0)
+        try harness.poll()
+        try harness.tick(attached: true, datasetComplete: true)
+        XCTAssertEqual(try harness.poll(), .open, "not enrolled: BLE enrollment stays open")
+        stats = try harness.stats()
+        XCTAssertEqual(stats.state, Self.stateWaiting)
+        XCTAssertEqual(stats.last, 5, "dataset_mismatch: the joined network is not the endpoint's")
+        XCTAssertFalse(stats.servicesAllowed)
+        XCTAssertFalse(stats.threadEnabled)
+        XCTAssertNil(stats.storedEndpoint)
+        XCTAssertNil(stats.pendingEndpoint)
+        XCTAssertEqual(stats.marker, 0, "no record")
+        let failed = try await client.status(requestID: elsewhere)
+        XCTAssertEqual(failed.requestPhase, .failed)
+        XCTAssertEqual(failed.requestResult, 5)
+        XCTAssertLessThanOrEqual(failed.lastResult, PowerBaseBLEResult.maximumEnrollResult, "still a version 1 result value")
     }
 
     // MARK: - Wrong credentials
@@ -414,7 +526,7 @@ final class HarnessInteropTests: XCTestCase {
     func testAnotherSecuritySchemeOrPatchIsRefusedBeforeAnyHandshake() async throws {
         let harness = try boot()
         XCTAssertTrue(try harness.connect(1))
-        let real = #"{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":[]},"pb_enroll":{"proto":1}}"#
+        let real = #"{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":[]},"pb_enroll":{"proto":1,"cap":["bridge_endpoint_v1"]}}"#
         let version = try harness.request(session: 1, endpoint: "proto-ver", data: Data("ESP".utf8))
         XCTAssertEqual(version.error, 0)
         XCTAssertEqual(String(decoding: version.response, as: UTF8.self), real, "what the real board answers")

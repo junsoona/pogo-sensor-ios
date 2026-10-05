@@ -6,6 +6,10 @@ import Security
 // components/power_base_ble_enroll/include/power_base_ble_enroll/pb_ble_proto.h and
 // docs/power-base.md "BLE 등록 전달 경로". Every value below is copied from there; nothing is
 // guessed. Every multi-byte integer is big-endian.
+//
+// Two start messages exist on `pb-start`: the first one (0x02, PSKd only) and the one that also
+// carries the Linux bridge endpoint (0x04, capability `bridge_endpoint_v1`). The first keeps its
+// bytes; the app's test sends the second and only to a board that lists the capability.
 
 public enum PowerBaseBLEProtocol {
     public static let version: UInt8 = 1
@@ -125,6 +129,128 @@ public struct PowerBaseBLEChallenge: Equatable, Sendable {
     }
 }
 
+/// Where a board must send its bridge traffic: the hub's OTBR Mesh-Local EID and the Linux bridge's
+/// CoAP ingest port, as the hub's enrollment session reported them. Carried by `pb-start` message
+/// 0x04 (pb_ble_proto.h `PB_BLE_MSG_START_EP_REQ`, capability `bridge_endpoint_v1`).
+///
+/// Only ever built from a value that passed every check below -- the same ones the firmware's
+/// `pb_enroll_bridge_endpoint_check()` and the hub's `ParseMeshLocalEid()` apply -- so nothing
+/// else can be encoded into a request. It is not a secret.
+public struct PowerBaseBLEBridgeEndpoint: Hashable, Sendable {
+    /// Byte [44] of the request: the endpoint format this type is.
+    public static let formatVersion: UInt8 = 1
+    public static let addressLength = 16
+
+    public enum Rejection: Error, Equatable, Sendable {
+        /// Not an IPv6 literal of `0-9 a-f :`: an IPv4 address, a dotted tail, a zone id, brackets,
+        /// a port, a URL, a host name, upper case, whitespace, or a malformed literal.
+        case notAnIPv6Literal
+        case unspecified
+        case loopback
+        /// `::ffff:a.b.c.d` (mapped) or `::a.b.c.d` (compatible).
+        case ipv4Embedded
+        case multicast
+        case linkLocal
+        /// Not inside fd00::/8, where Thread Mesh-Local Prefixes live.
+        case notMeshLocal
+        /// Interface id `0000:00ff:fe00:xxxx`: a Thread RLOC or ALOC, not the EID.
+        case locator
+        /// Not 1…65535.
+        case port
+    }
+
+    /// 16 bytes, network byte order.
+    public let address: Data
+    public let port: UInt16
+
+    public init(addressBytes: Data, port: Int) throws {
+        guard addressBytes.count == Self.addressLength else { throw Rejection.notAnIPv6Literal }
+        let a = [UInt8](addressBytes)
+        if a[0..<10].allSatisfy({ $0 == 0 }) {
+            if a[10...].allSatisfy({ $0 == 0 }) { throw Rejection.unspecified }
+            if a[10..<15].allSatisfy({ $0 == 0 }), a[15] == 1 { throw Rejection.loopback }
+            if (a[10] == 0xff && a[11] == 0xff) || (a[10] == 0 && a[11] == 0) { throw Rejection.ipv4Embedded }
+        }
+        if a[0] == 0xff { throw Rejection.multicast }
+        if a[0] == 0xfe, a[1] & 0xc0 == 0x80 { throw Rejection.linkLocal }
+        guard a[0] == 0xfd else { throw Rejection.notMeshLocal }
+        if a[8] == 0, a[9] == 0, a[10] == 0, a[11] == 0xff, a[12] == 0xfe, a[13] == 0 { throw Rejection.locator }
+        guard (1...65535).contains(port) else { throw Rejection.port }
+        self.address = Data(a)
+        self.port = UInt16(port)
+    }
+
+    /// From the hub's JSON: `address` an IPv6 literal exactly as the hub prints it, `port` a number.
+    public init(address text: String, port: Int) throws {
+        guard let bytes = Self.parseIPv6Literal(text) else { throw Rejection.notAnIPv6Literal }
+        try self.init(addressBytes: bytes, port: port)
+    }
+
+    /// The address as eight groups of lower-case hex, without compression -- for a developer-facing
+    /// display only.
+    public var addressText: String {
+        stride(from: 0, to: Self.addressLength, by: 2)
+            .map { String(UInt16(address[address.startIndex + $0]) << 8 | UInt16(address[address.startIndex + $0 + 1]), radix: 16) }
+            .joined(separator: ":")
+    }
+
+    /// The first 8 bytes: the Mesh-Local Prefix the address lies in.
+    public var meshLocalPrefix: Data { address.prefix(8) }
+
+    /// A strict IPv6 literal reader: `0-9 a-f :` only, at most 39 characters, groups of one to
+    /// four digits, at most one `::`. No zone id, no dotted IPv4 tail, no brackets, no upper case,
+    /// no surrounding whitespace -- so no URL, host name or IPv4 address gets through either.
+    static func parseIPv6Literal(_ text: String) -> Data? {
+        let scalars = Array(text.unicodeScalars)
+        guard (2...39).contains(scalars.count) else { return nil }
+        for scalar in scalars {
+            switch scalar {
+            case "0"..."9", "a"..."f", ":": continue
+            default: return nil
+            }
+        }
+        let halves = text.components(separatedBy: "::")
+        guard halves.count <= 2 else { return nil }
+        func groups(_ part: String) -> [UInt16]? {
+            if part.isEmpty { return [] }
+            var out: [UInt16] = []
+            for piece in part.components(separatedBy: ":") {
+                guard (1...4).contains(piece.count), let value = UInt16(piece, radix: 16) else { return nil }
+                out.append(value)
+            }
+            return out
+        }
+        guard let head = groups(halves[0]) else { return nil }
+        var all: [UInt16]
+        if halves.count == 2 {
+            guard let tail = groups(halves[1]), head.count + tail.count <= 7 else { return nil }
+            all = head + [UInt16](repeating: 0, count: 8 - head.count - tail.count) + tail
+        } else {
+            guard head.count == 8 else { return nil }
+            all = head
+        }
+        var bytes = Data(capacity: 16)
+        for group in all {
+            bytes.append(UInt8(group >> 8))
+            bytes.append(UInt8(group & 0xff))
+        }
+        return bytes
+    }
+}
+
+/// What a board says it can do beyond the first version 1 messages: `pb_enroll.cap` in
+/// `proto-ver`. Read before authentication, so it only decides which message this client sends --
+/// a board that does not list a capability is never sent the message that needs it.
+public struct PowerBaseBLECapabilities: OptionSet, Equatable, Sendable {
+    public let rawValue: UInt8
+    public init(rawValue: UInt8) { self.rawValue = rawValue }
+
+    /// `"bridge_endpoint_v1"`: the board takes `pb-start` with the bridge endpoint (message 0x04).
+    public static let bridgeEndpointV1 = PowerBaseBLECapabilities(rawValue: 0x01)
+
+    static let bridgeEndpointV1Name = "bridge_endpoint_v1"
+}
+
 /// `pb_ble_code_t`. 0x00…0x0f mean the request was honoured.
 public enum PowerBaseBLECode: UInt8, Equatable, Sendable, CaseIterable {
     case ok = 0x00
@@ -145,6 +271,9 @@ public enum PowerBaseBLECode: UInt8, Equatable, Sendable, CaseIterable {
     case closed = 0x1a
     case unavailable = 0x1b
     case internalError = 0x1c
+    /// `pb-start` with the bridge endpoint only: unknown endpoint format, port 0, or an address
+    /// that is not a Thread Mesh-Local EID. Nothing started.
+    case invalidEndpoint = 0x1d
 
     /// The name in pb_ble_proto.h, for a developer-facing display.
     public var name: String {
@@ -165,6 +294,7 @@ public enum PowerBaseBLECode: UInt8, Equatable, Sendable, CaseIterable {
         case .closed: return "CLOSED"
         case .unavailable: return "UNAVAILABLE"
         case .internalError: return "INTERNAL"
+        case .invalidEndpoint: return "INVALID_ENDPOINT"
         }
     }
 }
@@ -277,13 +407,17 @@ public enum PowerBaseBLECodec {
     static let statusRequestType: UInt8 = 0x01
     static let startRequestType: UInt8 = 0x02
     static let cancelRequestType: UInt8 = 0x03
+    /// `pb-start` with the bridge endpoint: a message of its own on the same endpoint.
+    static let startWithEndpointRequestType: UInt8 = 0x04
     static let statusResponseType: UInt8 = 0x81
     static let startResponseType: UInt8 = 0x82
     static let cancelResponseType: UInt8 = 0x83
+    static let startWithEndpointResponseType: UInt8 = 0x84
 
     public static let statusRequestLength = 20
     public static let statusResponseLength = 40
     public static let startRequestFixedLength = 44
+    public static let startWithEndpointRequestFixedLength = 64
     public static let cancelRequestLength = 28
     public static let shortResponseLength = 4
 
@@ -321,6 +455,27 @@ public enum PowerBaseBLECodec {
         return data
     }
 
+    /// The start that also delivers the bridge endpoint (64 + PSKd bytes):
+    /// `[0]` version `[1]` 0x04 `[2]` pskd_len `[3]` 0 `[4..11]` target `[12..27]` request id
+    /// `[28..43]` challenge `[44]` endpoint format (1) `[45]` 0 `[46..47]` port, big-endian
+    /// `[48..63]` IPv6 address `[64..]` PSKd. `nil` for a PSKd outside the Thread alphabet or 6…32.
+    /// The version 1 request above is unchanged; this is another message, not an extension of it.
+    public static func startRequest(
+        target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String,
+        endpoint: PowerBaseBLEBridgeEndpoint
+    ) -> Data? {
+        guard isValidPSKd(pskd) else { return nil }
+        let code = Data(pskd.utf8)
+        var data = Data([PowerBaseBLEProtocol.version, startWithEndpointRequestType, UInt8(code.count), 0])
+        data.append(target.bytes)
+        data.append(requestID.bytes)
+        data.append(challenge.bytes)
+        data.append(contentsOf: [PowerBaseBLEBridgeEndpoint.formatVersion, 0, UInt8(endpoint.port >> 8), UInt8(endpoint.port & 0xff)])
+        data.append(endpoint.address)
+        data.append(code)
+        return data
+    }
+
     /// `[0]` version `[1]` 0x03 `[2..3]` 0 `[4..11]` target `[12..27]` request id.
     public static func cancelRequest(target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID) -> Data {
         var data = Data([PowerBaseBLEProtocol.version, cancelRequestType, 0, 0])
@@ -338,6 +493,8 @@ public enum PowerBaseBLECodec {
         .accepted, .duplicate, .unsupportedVersion, .malformed, .wrongTarget, .challengeInvalid, .challengeExpired,
         .invalidPSKd, .busy, .requestConflict, .notWaiting, .closed, .unavailable, .internalError,
     ]
+    /// The start with the bridge endpoint answers with the same codes, and with `INVALID_ENDPOINT`.
+    static let startWithEndpointCodes: Set<PowerBaseBLECode> = startCodes.union([.invalidEndpoint])
     static let cancelCodes: Set<PowerBaseBLECode> = [.ok, .unsupportedVersion, .malformed, .wrongTarget, .noSuchAttempt, .busy, .closed]
 
     public static func decodeStatusResponse(_ response: Data) throws -> PowerBaseBLEStatus {
@@ -396,6 +553,13 @@ public enum PowerBaseBLECodec {
         try decodeShortResponse(response, type: startResponseType, codes: startCodes)
     }
 
+    /// The answer to the start with the bridge endpoint: its own response type (0x84). A board
+    /// that does not know the message answers with the version 1 type (0x82, `MALFORMED`), which
+    /// this refuses as `.type` -- nothing in it is used.
+    public static func decodeStartWithEndpointResponse(_ response: Data) throws -> PowerBaseBLECode {
+        try decodeShortResponse(response, type: startWithEndpointResponseType, codes: startWithEndpointCodes)
+    }
+
     public static func decodeCancelResponse(_ response: Data) throws -> PowerBaseBLECode {
         try decodeShortResponse(response, type: cancelResponseType, codes: cancelCodes)
     }
@@ -413,7 +577,9 @@ public enum PowerBaseBLECodec {
 }
 
 /// What `proto-ver` must say before any handshake is attempted:
-/// `{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":[]},"pb_enroll":{"proto":1}}`.
+/// `{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":[]},"pb_enroll":{"proto":1}}`, with
+/// an optional `"cap":[…]` list inside `pb_enroll` (firmware that takes the start with the bridge
+/// endpoint lists `"bridge_endpoint_v1"` there; older firmware has no list).
 public enum PowerBaseBLEVersion {
     public enum Failure: Error, Equatable, Sendable {
         case malformed
@@ -433,12 +599,18 @@ public enum PowerBaseBLEVersion {
         }
         struct Enroll: Decodable {
             let proto: Int
+            /// Absent on firmware older than the capability list. A `cap` that is not a list of
+            /// strings makes the whole document malformed.
+            let cap: [String]?
         }
         let prov: Prov
         let pb_enroll: Enroll
     }
 
-    public static func validate(_ response: Data) throws {
+    /// Checks the security scheme and the protocol version exactly as before, and returns what
+    /// the board lists in `pb_enroll.cap`. Names this client does not know are ignored.
+    @discardableResult
+    public static func validate(_ response: Data) throws -> PowerBaseBLECapabilities {
         guard response.count <= PowerBaseBLEProtocol.maximumAttributeLength,
               let document = try? JSONDecoder().decode(Document.self, from: response) else { throw Failure.malformed }
         guard document.prov.sec_ver == 2, !(document.prov.cap ?? []).contains("no_sec") else {
@@ -449,6 +621,11 @@ public enum PowerBaseBLEVersion {
         guard document.pb_enroll.proto == Int(PowerBaseBLEProtocol.version) else {
             throw Failure.enrollmentProtocol(document.pb_enroll.proto)
         }
+        var capabilities: PowerBaseBLECapabilities = []
+        if (document.pb_enroll.cap ?? []).contains(PowerBaseBLECapabilities.bridgeEndpointV1Name) {
+            capabilities.insert(.bridgeEndpointV1)
+        }
+        return capabilities
     }
 }
 

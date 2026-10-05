@@ -124,8 +124,13 @@ final class LifecycleBLEBoardProvider: PowerBaseBLEBoardProviding, PowerBaseBLER
             try await base.status(issueChallenge: issueChallenge, requestID: requestID)
         }
 
-        func start(target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String) async throws -> PowerBaseBLECode {
-            try await base.start(target: target, requestID: requestID, challenge: challenge, pskd: pskd)
+        func capabilities() async -> PowerBaseBLECapabilities { await base.capabilities() }
+
+        func start(
+            target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String,
+            endpoint: PowerBaseBLEBridgeEndpoint
+        ) async throws -> PowerBaseBLECode {
+            try await base.start(target: target, requestID: requestID, challenge: challenge, pskd: pskd, endpoint: endpoint)
         }
 
         func cancel(target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID) async throws -> PowerBaseBLECode {

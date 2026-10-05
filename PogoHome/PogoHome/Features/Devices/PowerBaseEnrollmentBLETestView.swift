@@ -557,6 +557,15 @@ struct PowerBaseEnrollmentBLETestContent: View {
                 }
             }
         }
+        // What this run took from the hub's session and delivers to the board. Read-only: the
+        // address is the hub's, never typed here.
+        if let endpoint = controller.bridgeEndpoint {
+            Text(verbatim: "bridge_endpoint: [\(endpoint.addressText)]:\(endpoint.port)")
+                .font(.caption.monospaced())
+                .foregroundStyle(.secondary)
+                .textSelection(.enabled)
+                .sheetParagraph()
+        }
         sessionDetails(session)
     }
 
@@ -814,6 +823,8 @@ enum PowerBaseEnrollmentBLEText {
             return problem(.closed)
         case .boardUnavailable:
             return problem(.unavailable)
+        case .boardNeedsUpdate:
+            return problem(.needsUpdate)
         case let .hub(error, _):
             return PowerBaseEnrollmentText.error(error)
         case let .boardRefused(code, _):
@@ -824,6 +835,10 @@ enum PowerBaseEnrollmentBLEText {
             return problem(detail)
         case let .boardAttemptFailed(result, _):
             return Text("보드의 Thread 가입 시도가 등록 없이 끝났습니다. (\(PowerBaseBLEResult.name(result)))", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment failure: the board's attempt failed; the argument is the firmware's result name")
+        case .hubEndpoint(.missing, _):
+            return Text("허브가 Joiner를 열었지만 이 세션의 Thread 목적지(bridge_endpoint)를 알려 주지 않았습니다. 보드에는 등록 요청을 보내지 않았고 세션 취소를 요청했습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment failure: the hub waits for the heartbeat without a bridge endpoint")
+        case .hubEndpoint(.changed, _):
+            return Text("허브가 같은 세션에서 처음과 다른 Thread 목적지(bridge_endpoint)를 알려 주었습니다. 바뀐 목적지로는 아무것도 보내지 않았고 세션 취소를 요청했습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment failure: the hub's bridge endpoint changed within one session")
         case .stopped:
             return Text("시험을 중단했습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment failure: cancelled before any hub session")
         case .sourceChanged:
@@ -847,6 +862,8 @@ enum PowerBaseEnrollmentBLEText {
             return Text("보드의 Bluetooth 규약이 이 앱이 아는 것과 다릅니다. (\(detail)) 펌웨어와 앱의 버전을 확인하세요.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment failure: protocol mismatch; the argument is a technical detail")
         case .authenticationFailed:
             return Text("보드가 인증을 거부했습니다. 설정 코드가 틀렸거나 이 EUI-64의 보드가 아닙니다. 자동으로 다시 시도하지 않습니다. 보드는 한 번 켠 동안 인증이 5회 실패하면 Bluetooth 등록을 닫습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment failure: authentication refused")
+        case .needsUpdate:
+            return Text("이 보드의 펌웨어는 허브의 Thread 목적지를 Bluetooth로 받지 못합니다(bridge_endpoint_v1 없음). 보드 펌웨어를 업데이트해야 합니다. 이전 방식의 등록 요청으로 바꿔 보내지 않았습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment failure: the board firmware lacks the bridge endpoint capability")
         }
     }
 
@@ -854,7 +871,7 @@ enum PowerBaseEnrollmentBLEText {
     static func failureNote(_ failure: Controller.Failure) -> Text? {
         switch failure {
         case .connectionFailed, .protocolMismatch, .authenticationFailed, .handshakeRefused, .boardProofMismatch, .differentBoard,
-             .boardNotWaiting, .boardBusy, .boardClosed, .boardUnavailable:
+             .boardNotWaiting, .boardBusy, .boardClosed, .boardUnavailable, .boardNeedsUpdate:
             return Text("허브에는 아무것도 보내지 않았습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment failure note: the hub was never contacted")
         default:
             return nil
@@ -864,7 +881,7 @@ enum PowerBaseEnrollmentBLEText {
     static func cleanup(of failure: Controller.Failure) -> Controller.Cleanup? {
         switch failure {
         case let .boardRefused(_, cleanup), let .boardUnreachable(cleanup), let .boardProblem(_, cleanup), let .boardAttemptFailed(_, cleanup),
-             let .stopped(cleanup):
+             let .hubEndpoint(_, cleanup), let .stopped(cleanup):
             return cleanup
         case let .hub(_, board?):
             return Controller.Cleanup(hub: .notNeeded, board: board)

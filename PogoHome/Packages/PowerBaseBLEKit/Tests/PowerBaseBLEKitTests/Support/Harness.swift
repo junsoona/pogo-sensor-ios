@@ -66,6 +66,17 @@ final class Harness: @unchecked Sendable {
         var servicesAllowed: Bool
         var marker: UInt8
         var pskd: String
+        /// The bridge endpoint the controller holds in RAM for the attempt in progress.
+        var pendingEndpoint: Endpoint?
+        /// The bridge endpoint of an enrolled controller (what the exporter would be given).
+        var activeEndpoint: Endpoint?
+        /// The bridge endpoint in the stored version 2 enrollment record.
+        var storedEndpoint: Endpoint?
+    }
+
+    struct Endpoint: Equatable {
+        var address: Data
+        var port: UInt16
     }
 
     enum CloseReason: UInt8 {
@@ -211,11 +222,16 @@ final class Harness: @unchecked Sendable {
     func stats() throws -> Stats {
         let payload = try command("S").payload
         let bytes = [UInt8](payload)
-        let pskd = String(decoding: bytes[17...].prefix { $0 != 0 }, as: UTF8.self)
+        let pskd = String(decoding: bytes[17..<50].prefix { $0 != 0 }, as: UTF8.self)
+        // present(1) address(16) port(2, big-endian), three times, after the 33-byte PSKd buffer.
+        func endpoint(_ offset: Int) -> Endpoint? {
+            guard bytes.count >= offset + 19, bytes[offset] != 0 else { return nil }
+            return Endpoint(address: Data(bytes[(offset + 1)..<(offset + 17)]), port: UInt16(bytes[offset + 17]) << 8 | UInt16(bytes[offset + 18]))
+        }
         return Stats(
             state: bytes[0], last: bytes[1], attempt: Self.u32(payload, 2), joinerStarts: Self.u32(payload, 6),
             joinerStops: Self.u32(payload, 10), threadEnabled: bytes[14] != 0, servicesAllowed: bytes[15] != 0,
-            marker: bytes[16], pskd: pskd
+            marker: bytes[16], pskd: pskd, pendingEndpoint: endpoint(50), activeEndpoint: endpoint(69), storedEndpoint: endpoint(88)
         )
     }
 

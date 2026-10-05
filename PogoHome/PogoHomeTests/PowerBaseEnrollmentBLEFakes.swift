@@ -24,6 +24,11 @@ nonisolated struct LoggedEnrollmentHub: PowerBaseEnrollmentTransport {
         return try await hub.start(baseURL: baseURL, credential: credential, eui64: eui64, pskd: pskd)
     }
 
+    func startDeliveringBridgeEndpoint(baseURL: URL, credential: HubCredential, eui64: String, pskd: String) async throws -> PowerBaseEnrollmentSession {
+        log.add("hub POST")
+        return try await hub.startDeliveringBridgeEndpoint(baseURL: baseURL, credential: credential, eui64: eui64, pskd: pskd)
+    }
+
     func status(baseURL: URL, credential: HubCredential, sessionID: String) async throws -> PowerBaseEnrollmentSession {
         log.add("hub GET")
         return try await hub.status(baseURL: baseURL, credential: credential, sessionID: sessionID)
@@ -45,6 +50,8 @@ nonisolated final class FakeBoard: @unchecked Sendable {
         let requestID: Data
         let challenge: Data
         let pskd: String
+        /// The bridge endpoint the start carried (every start of the app carries one).
+        let endpoint: PowerBaseBLEBridgeEndpoint
     }
 
     struct CancelCall: Equatable {
@@ -79,6 +86,7 @@ nonisolated final class FakeBoard: @unchecked Sendable {
     private var state = PowerBaseBLEEnrollState.waiting
     private var code = PowerBaseBLECode.ok
     private var joinerUnavailable = false
+    private var boardCapabilities: PowerBaseBLECapabilities = [.bridgeEndpointV1]
     private var foreignAttemptActive = false
     private var attempt: Attempt?
     private var joinerStartCount = 0
@@ -135,6 +143,9 @@ nonisolated final class FakeBoard: @unchecked Sendable {
     func report(eui64 hex: String) { lock.withLock { reportedEUI64 = PowerBaseBLEEUI64(hex: hex)! } }
     func set(state: PowerBaseBLEEnrollState) { lock.withLock { self.state = state } }
     func setJoinerUnavailable() { lock.withLock { joinerUnavailable = true } }
+    /// What the board lists in `proto-ver`. `[]`: firmware from before the bridge endpoint.
+    func set(capabilities: PowerBaseBLECapabilities) { lock.withLock { boardCapabilities = capabilities } }
+    fileprivate var capabilities: PowerBaseBLECapabilities { lock.withLock { boardCapabilities } }
     /// Another client's attempt is in progress.
     func setForeignAttemptActive(_ active: Bool = true) { lock.withLock { foreignAttemptActive = active } }
     func closeEnrollment() { lock.withLock { code = .closed } }
@@ -293,12 +304,15 @@ nonisolated final class FakeBoard: @unchecked Sendable {
     }
 
     fileprivate func start(
-        session: Int, target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge sent: PowerBaseBLEChallenge, pskd: String
+        session: Int, target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge sent: PowerBaseBLEChallenge, pskd: String,
+        endpoint: PowerBaseBLEBridgeEndpoint
     ) async throws -> PowerBaseBLECode {
         log.add("board start")
         try lock.withLock {
             try requireLive(session)
-            startCalls.append(StartCall(session: session, target: target.hex, requestID: requestID.bytes, challenge: sent.bytes, pskd: pskd))
+            // Like the real client: a board without the capability is never sent this message.
+            guard boardCapabilities.contains(.bridgeEndpointV1) else { throw PowerBaseBLEClientError.invalidInput("capability") }
+            startCalls.append(StartCall(session: session, target: target.hex, requestID: requestID.bytes, challenge: sent.bytes, pskd: pskd, endpoint: endpoint))
         }
         await withCheckedContinuation { continuation in
             let held = lock.withLock {
@@ -310,7 +324,7 @@ nonisolated final class FakeBoard: @unchecked Sendable {
         return try lock.withLock {
             if let reaches = loseNextStartAnswer {
                 loseNextStartAnswer = nil
-                if reaches { _ = admit(session: session, target: target, requestID: requestID, challenge: sent, pskd: pskd) }
+                if reaches { _ = admit(session: session, target: target, requestID: requestID, challenge: sent, pskd: pskd, endpoint: endpoint) }
                 liveSession = 0
                 throw PowerBaseBLEClientError.requestFailed(.timeout)
             }
@@ -323,7 +337,7 @@ nonisolated final class FakeBoard: @unchecked Sendable {
             if let repeated = repeatedStart {
                 repeatedStart = nil
                 // The first copy; its answer is the one that never arrives.
-                _ = admit(session: session, target: target, requestID: requestID, challenge: sent, pskd: pskd)
+                _ = admit(session: session, target: target, requestID: requestID, challenge: sent, pskd: pskd, endpoint: endpoint)
                 if let change = repeated.attemptBecomes {
                     attempt?.phase = change.phase
                     attempt?.result = change.result
@@ -333,21 +347,23 @@ nonisolated final class FakeBoard: @unchecked Sendable {
                 if repeated.second == .otherContent {
                     second = PowerBaseBLEChallenge(bytes: Data(sent.bytes.map { $0 ^ 0xFF }), lifetimeSeconds: sent.lifetimeSeconds) ?? sent
                 }
-                let answer = admit(session: session, target: target, requestID: requestID, challenge: second, pskd: pskd)
+                let answer = admit(session: session, target: target, requestID: requestID, challenge: second, pskd: pskd, endpoint: endpoint)
                 // An enrolled board closes BLE enrollment for this boot.
                 if repeated.attemptBecomes?.phase == .enrolled { code = .closed }
                 return answer
             }
-            return admit(session: session, target: target, requestID: requestID, challenge: sent, pskd: pskd)
+            return admit(session: session, target: target, requestID: requestID, challenge: sent, pskd: pskd, endpoint: endpoint)
         }
     }
 
     /// pb_ble_admission.c `start_admit()`, without the checks the codec already makes.
     private func admit(
-        session: Int, target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge sent: PowerBaseBLEChallenge, pskd: String
+        session: Int, target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge sent: PowerBaseBLEChallenge, pskd: String,
+        endpoint: PowerBaseBLEBridgeEndpoint
     ) -> PowerBaseBLECode {
         guard code == .ok else { return .closed }
-        let content = target.bytes + sent.bytes + Data(pskd.utf8)
+        // The endpoint is part of what makes a request "the same request".
+        let content = target.bytes + sent.bytes + Data(pskd.utf8) + endpoint.address + Data([UInt8(endpoint.port >> 8), UInt8(endpoint.port & 0xff)])
         if let attempt, attempt.requestID == requestID.bytes {
             return attempt.isActive && attempt.content == content ? .duplicate : .requestConflict
         }
@@ -398,8 +414,13 @@ nonisolated struct FakeBoardSession: PowerBaseBLEBoardSession {
         return try board.status(session: index, issueChallenge: issueChallenge, requestID: requestID)
     }
 
-    func start(target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String) async throws -> PowerBaseBLECode {
-        try await board.start(session: index, target: target, requestID: requestID, challenge: challenge, pskd: pskd)
+    func capabilities() async -> PowerBaseBLECapabilities { board.capabilities }
+
+    func start(
+        target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String,
+        endpoint: PowerBaseBLEBridgeEndpoint
+    ) async throws -> PowerBaseBLECode {
+        try await board.start(session: index, target: target, requestID: requestID, challenge: challenge, pskd: pskd, endpoint: endpoint)
     }
 
     func cancel(target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID) async throws -> PowerBaseBLECode {

@@ -79,7 +79,7 @@ final class PowerBaseEnrollmentContractTests: XCTestCase {
 
     func testSessionDecodingIsStrictAboutDocumentedFields() throws {
         let session = try URLSessionPowerBaseEnrollmentTransport.decodeSession(Data(sessionJSON.utf8), deviceID: EnrollmentFixtures.deviceID)
-        XCTAssertEqual(session, EnrollmentFixtures.session(.waitingForHeartbeat))
+        XCTAssertEqual(session, EnrollmentFixtures.session(.waitingForHeartbeat, bridgeEndpoint: .none))
 
         // Unknown additional fields are ignored (the API's compatibility policy).
         let extended = sessionJSON.replacingOccurrences(of: "}", with: #","future_field":1}"#)
@@ -114,7 +114,7 @@ final class PowerBaseEnrollmentContractTests: XCTestCase {
         XCTAssertEqual(map(405, ""), .notSupported)
         XCTAssertEqual(map(409, #"{"error":"enrollment_in_progress"}"#), .enrollmentInProgress(ownSession: nil), "another device's session")
         XCTAssertEqual(map(409, #"{"error":"enrollment_in_progress","session":\#(sessionJSON)}"#),
-                       .enrollmentInProgress(ownSession: EnrollmentFixtures.session(.waitingForHeartbeat)), "this device's own session")
+                       .enrollmentInProgress(ownSession: EnrollmentFixtures.session(.waitingForHeartbeat, bridgeEndpoint: .none)), "this device's own session")
         let othersSession = sessionJSON.replacingOccurrences(of: "0123456789abcdef", with: "ffffffffffffffff")
         XCTAssertEqual(map(409, #"{"error":"enrollment_in_progress","session":\#(othersSession)}"#), .enrollmentInProgress(ownSession: nil))
         XCTAssertEqual(map(409, #"{"error":"power_base_already_connected"}"#), .powerBaseAlreadyConnected)

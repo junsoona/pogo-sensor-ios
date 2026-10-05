@@ -1,5 +1,6 @@
 #if DEBUG
 import Foundation
+import PowerBaseBLEKit
 import XCTest
 @testable import PogoHome
 
@@ -17,6 +18,8 @@ nonisolated final class FakeEnrollmentHub: PowerBaseEnrollmentTransport, @unchec
         let sessionID: String?
         let eui64: String?
         let pskd: String?
+        /// A `POST` that asked for the hub's bridge endpoint (`bridge_endpoint_version`).
+        var asksForBridgeEndpoint = false
     }
 
     private let lock = NSLock()
@@ -79,6 +82,16 @@ nonisolated final class FakeEnrollmentHub: PowerBaseEnrollmentTransport, @unchec
 
     func start(baseURL: URL, credential: HubCredential, eui64: String, pskd: String) async throws -> PowerBaseEnrollmentSession {
         record(Call(method: .start, baseURL: baseURL, hubID: credential.hubID, token: credential.token, pinnedCertificate: credential.certificateSHA256, sessionID: nil, eui64: eui64, pskd: pskd))
+        await waitIfHeld { self.holdsStarts }
+        let reply = lock.withLock { startReplies.isEmpty ? nil : startReplies.removeFirst() }
+        guard let reply else { throw PowerBaseEnrollmentError.unreachable("unscripted") }
+        return try reply.get()
+    }
+
+    /// Answered from the same script as `start`: the tests script what the hub says, and read from
+    /// `asksForBridgeEndpoint` which request it was.
+    func startDeliveringBridgeEndpoint(baseURL: URL, credential: HubCredential, eui64: String, pskd: String) async throws -> PowerBaseEnrollmentSession {
+        record(Call(method: .start, baseURL: baseURL, hubID: credential.hubID, token: credential.token, pinnedCertificate: credential.certificateSHA256, sessionID: nil, eui64: eui64, pskd: pskd, asksForBridgeEndpoint: true))
         await waitIfHeld { self.holdsStarts }
         let reply = lock.withLock { startReplies.isEmpty ? nil : startReplies.removeFirst() }
         guard let reply else { throw PowerBaseEnrollmentError.unreachable("unscripted") }
@@ -156,16 +169,36 @@ enum EnrollmentFixtures {
         HubCredential(hubID: hubID, deviceID: deviceID, token: token, certificateSHA256: certificate, pairedAt: Date(timeIntervalSince1970: 0))
     }
 
+    /// The hub's bridge endpoint in every session below that is past `preparing`: a made-up
+    /// Mesh-Local EID and a port that is not the default. A session started without bridge
+    /// endpoint delivery (the USB test) would not have one; the USB controller never reads it.
+    static let bridgeEndpoint = try! PowerBaseBLEBridgeEndpoint(address: "fd11:2233:4455:0:8c1f:2e3d:4c5b:6a79", port: 5701)
+    static let otherBridgeEndpoint = try! PowerBaseBLEBridgeEndpoint(address: "fd11:2233:4455:0:1:2:3:4", port: 5701)
+
+    /// What `bridgeEndpoint:` means in `session(…)`.
+    enum Endpoint {
+        /// As a hub with the feature answers: `null` while `preparing`, the endpoint afterwards.
+        case asTheHubSends
+        case none
+        case some(PowerBaseBLEBridgeEndpoint)
+    }
+
     static func session(
         _ state: PowerBaseEnrollmentSession.State, id: String = sessionID, expiresInMs: Int64 = 118_250,
-        error: String? = nil, joinerEntry: String = "allowed"
+        error: String? = nil, joinerEntry: String = "allowed", bridgeEndpoint: Endpoint = .asTheHubSends
     ) -> PowerBaseEnrollmentSession {
-        PowerBaseEnrollmentSession(
+        let endpoint: PowerBaseBLEBridgeEndpoint?
+        switch bridgeEndpoint {
+        case .asTheHubSends: endpoint = state == .preparing ? nil : Self.bridgeEndpoint
+        case .none: endpoint = nil
+        case let .some(value): endpoint = value
+        }
+        return PowerBaseEnrollmentSession(
             sessionID: id, eui64: eui64, state: state, finished: state.isFinal, joinerEntry: joinerEntry, error: error,
             windowSeconds: 120, createdAtUnixMs: 1_790_000_000_000, expiresAtUnixMs: 1_790_000_120_000,
             expiresInMs: state.isFinal ? 0 : expiresInMs,
             heartbeatReceivedAtUnixMs: state == .heartbeatReceived ? 1_790_000_030_000 : nil,
-            startedByDeviceID: deviceID
+            startedByDeviceID: deviceID, bridgeEndpoint: endpoint
         )
     }
 

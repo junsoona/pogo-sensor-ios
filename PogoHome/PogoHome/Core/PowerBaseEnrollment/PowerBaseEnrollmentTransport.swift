@@ -9,6 +9,10 @@ import Foundation
 nonisolated protocol PowerBaseEnrollmentTransport: Sendable {
     /// `POST /api/v1/power-base-enrollments` → `202` + session.
     func start(baseURL: URL, credential: HubCredential, eui64: String, pskd: String) async throws -> PowerBaseEnrollmentSession
+    /// The same `POST` with `"bridge_endpoint_version": 1`: the hub also establishes its bridge
+    /// endpoint and reports it with the session. A hub that does not know the option answers
+    /// `.bridgeEndpointNotSupported`; nothing is started there.
+    func startDeliveringBridgeEndpoint(baseURL: URL, credential: HubCredential, eui64: String, pskd: String) async throws -> PowerBaseEnrollmentSession
     /// `GET /api/v1/power-base-enrollments/<id>` → `200` + session.
     func status(baseURL: URL, credential: HubCredential, sessionID: String) async throws -> PowerBaseEnrollmentSession
     /// `DELETE /api/v1/power-base-enrollments/<id>` → `200` + session (`cancelled`).
@@ -29,6 +33,18 @@ nonisolated struct URLSessionPowerBaseEnrollmentTransport: PowerBaseEnrollmentTr
         request.httpBody = try Self.startBody(eui64: eui64, pskd: pskd)
         let (data, status) = try await send(request, credential: credential)
         guard status == 202 else { throw Self.error(status: status, data: data, deviceID: credential.deviceID) }
+        let session = try Self.decodeSession(data, deviceID: credential.deviceID)
+        guard session.eui64 == eui64 else { throw PowerBaseEnrollmentError.badResponse("eui64") }
+        return session
+    }
+
+    func startDeliveringBridgeEndpoint(baseURL: URL, credential: HubCredential, eui64: String, pskd: String) async throws -> PowerBaseEnrollmentSession {
+        guard PowerBaseEUI64.normalized(eui64) == eui64 else { throw PowerBaseEnrollmentError.rejected("invalid_eui64") }
+        guard ThreadPSKd.isValid(pskd) else { throw PowerBaseEnrollmentError.rejected("invalid_pskd") }
+        var request = try makeRequest(baseURL: baseURL, path: Self.collectionPath, method: "POST", credential: credential)
+        request.httpBody = try Self.startBody(eui64: eui64, pskd: pskd, bridgeEndpointVersion: PowerBaseEnrollmentBridgeEndpoint.version)
+        let (data, status) = try await send(request, credential: credential)
+        guard status == 202 else { throw Self.bridgeEndpointStartError(status: status, data: data, deviceID: credential.deviceID) }
         let session = try Self.decodeSession(data, deviceID: credential.deviceID)
         guard session.eui64 == eui64 else { throw PowerBaseEnrollmentError.badResponse("eui64") }
         return session
@@ -62,6 +78,24 @@ nonisolated struct URLSessionPowerBaseEnrollmentTransport: PowerBaseEnrollmentTr
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         return try encoder.encode(StartBody(eui64: eui64, pskd: pskd))
+    }
+
+    /// Exactly `{"bridge_endpoint_version":1,"eui64":"…","pskd":"…"}`: the request that also asks
+    /// the hub for its bridge endpoint. It carries no address and no port -- the hub makes both.
+    static func startBody(eui64: String, pskd: String, bridgeEndpointVersion: Int) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return try encoder.encode(BridgeEndpointStartBody(bridge_endpoint_version: bridgeEndpointVersion, eui64: eui64, pskd: pskd))
+    }
+
+    /// The error answers to the request with the option. A hub older than the option accepts
+    /// exactly two fields and answers `400 invalid_request` -- this request is otherwise well
+    /// formed (both values were checked before it left), so that answer means "not supported".
+    static func bridgeEndpointStartError(status: Int, data: Data, deviceID: String) -> PowerBaseEnrollmentError {
+        let code = (try? JSONDecoder().decode(ErrorBody.self, from: data))?.error
+        if status == 400, code == "invalid_request" { return .bridgeEndpointNotSupported }
+        if status == 422, code == "unsupported_bridge_endpoint_version" { return .bridgeEndpointNotSupported }
+        return error(status: status, data: data, deviceID: deviceID)
     }
 
     /// The session's own path. The id comes from the hub's answer and is checked before it is put
@@ -147,6 +181,12 @@ nonisolated struct URLSessionPowerBaseEnrollmentTransport: PowerBaseEnrollmentTr
     }
 
     private struct StartBody: Encodable {
+        let eui64: String
+        let pskd: String
+    }
+
+    private struct BridgeEndpointStartBody: Encodable {
+        let bridge_endpoint_version: Int
         let eui64: String
         let pskd: String
     }

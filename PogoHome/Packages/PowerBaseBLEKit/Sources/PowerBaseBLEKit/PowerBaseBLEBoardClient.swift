@@ -68,6 +68,7 @@ public actor PowerBaseBLEBoardClient {
     private let link: PowerBaseBLELink
     private var handshake: Security2Handshake?
     private var versionChecked = false
+    private var boardCapabilities: PowerBaseBLECapabilities = []
     private var authenticationAttempted = false
     private var closed = false
 
@@ -96,12 +97,15 @@ public actor PowerBaseBLEBoardClient {
             throw PowerBaseBLEClientError.versionUnreadable(Self.linkError(error))
         }
         do {
-            try PowerBaseBLEVersion.validate(response)
+            boardCapabilities = try PowerBaseBLEVersion.validate(response)
         } catch let failure as PowerBaseBLEVersion.Failure {
             throw PowerBaseBLEClientError.unsupportedVersion(failure)
         }
         versionChecked = true
     }
+
+    /// What the board listed in `proto-ver` (`pb_enroll.cap`); empty before `checkVersion()`.
+    public func capabilities() -> PowerBaseBLECapabilities { boardCapabilities }
 
     /// The Security 2 handshake, once. `eui64` is the user name; `setupCode` the password, exactly
     /// as the prepare tool wrote it. Neither is kept after the call.
@@ -198,6 +202,30 @@ public actor PowerBaseBLEBoardClient {
         let response = try await secureExchange(endpoint: .start, plaintext: request)
         do {
             return try PowerBaseBLECodec.decodeStartResponse(response)
+        } catch {
+            discardSession()
+            throw PowerBaseBLEClientError.malformedResponse(Self.codecError(error))
+        }
+    }
+
+    /// Hands the PSKd over together with the Linux bridge endpoint (message 0x04). Only for a board
+    /// that listed `bridge_endpoint_v1`: for any other board nothing is sent and this throws
+    /// `.invalidInput("capability")` -- the first start message is never sent in its place.
+    /// `.accepted` and `.duplicate` mean what they mean for the first start: the board took the
+    /// request, nothing more.
+    public func start(
+        target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String,
+        endpoint: PowerBaseBLEBridgeEndpoint
+    ) async throws -> PowerBaseBLECode {
+        guard boardCapabilities.contains(.bridgeEndpointV1) else { throw PowerBaseBLEClientError.invalidInput("capability") }
+        guard let request = PowerBaseBLECodec.startRequest(
+            target: target, requestID: requestID, challenge: challenge, pskd: pskd, endpoint: endpoint
+        ) else {
+            throw PowerBaseBLEClientError.invalidInput("pskd")
+        }
+        let response = try await secureExchange(endpoint: .start, plaintext: request)
+        do {
+            return try PowerBaseBLECodec.decodeStartWithEndpointResponse(response)
         } catch {
             discardSession()
             throw PowerBaseBLEClientError.malformedResponse(Self.codecError(error))

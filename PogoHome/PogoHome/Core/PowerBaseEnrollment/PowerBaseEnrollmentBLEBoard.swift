@@ -35,8 +35,15 @@ nonisolated struct PowerBaseBLEDiscoveredBoard: Identifiable, Equatable, Sendabl
 
 /// An authenticated Security 2 session with one connected board.
 nonisolated protocol PowerBaseBLEBoardSession: Sendable {
+    /// What the board listed in `proto-ver` before the handshake (`pb_enroll.cap`).
+    func capabilities() async -> PowerBaseBLECapabilities
     func status(issueChallenge: Bool, requestID: PowerBaseBLERequestID?) async throws -> PowerBaseBLEStatus
-    func start(target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String) async throws -> PowerBaseBLECode
+    /// `pb-start` with the hub's bridge endpoint (message 0x04). The test sends no other start:
+    /// the first start message (PSKd only) is never used in its place.
+    func start(
+        target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String,
+        endpoint: PowerBaseBLEBridgeEndpoint
+    ) async throws -> PowerBaseBLECode
     func cancel(target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID) async throws -> PowerBaseBLECode
     /// Drops the session keys and ends the connection.
     func close() async

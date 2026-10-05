@@ -13,15 +13,19 @@ import PowerBaseBLEKit
 ///
 /// 1. **Authenticate the board.** Security 2 with the EUI-64 the tester confirmed as the user
 ///    name and the board's setup code as the password, once. Then `pb-status` inside the session
-///    must report that same EUI-64. The advertised name is only how the tester picked a row.
-/// 2. **Ask the hub.** `POST` with the authenticated EUI-64 and a fresh PSKd -- only to the paired
-///    hub picked in "Find hubs", with this device's own credential and the certificate pinned at
-///    pairing (the same rules and transport as the USB test).
+///    must report that same EUI-64. The advertised name is only how the tester picked a row. The
+///    board must list the `bridge_endpoint_v1` capability; one that does not needs newer
+///    firmware, and the run ends here -- before any hub session exists.
+/// 2. **Ask the hub.** `POST` with the authenticated EUI-64, a fresh PSKd and the request for the
+///    hub's bridge endpoint -- only to the paired hub picked in "Find hubs", with this device's own
+///    credential and the certificate pinned at pairing (the same rules and transport as the USB
+///    test). A hub that does not deliver bridge endpoints refuses that request; the run ends.
 /// 3. **Wait for the hub.** Nothing goes to the board while the session is `preparing`. If the
 ///    session ends first, nothing goes to the board at all.
-/// 4. **Deliver.** Once the hub says `waiting_for_heartbeat`: a fresh challenge from the current
-///    Security 2 session (authenticating again first if the connection was lost meanwhile), then
-///    `pb-start` with that PSKd and one request id. Exactly one start per run, whatever the UI does.
+/// 4. **Deliver.** Once the hub says `waiting_for_heartbeat` *with its bridge endpoint*: a fresh
+///    challenge from the current Security 2 session (authenticating again first if the connection
+///    was lost meanwhile), then `pb-start` with that PSKd, that endpoint and one request id.
+///    Exactly one start per run, whatever the UI does.
 /// 5. **Follow.** The board's `ACCEPTED`, `joining`, `attaching` and `enrolled` are progress. The
 ///    only success is the hub's `heartbeat_received` for this session.
 ///
@@ -53,6 +57,14 @@ import PowerBaseBLEKit
 ///   when the other fails, and what could not be delivered is reported, not hidden. A board that
 ///   is already enrolled is never touched by this (`pb-cancel` cannot remove its marker, Dataset
 ///   or Thread link).
+/// - **The bridge endpoint is the hub's, once.** The address and port the board is given are the
+///   ones in the authenticated answer of this run's own session on the hub it was started on,
+///   strictly decoded, and kept together with that hub, that session id and that EUI-64 from the
+///   first answer that carries them. Nothing is typed, guessed from the hub's Wi-Fi address, its
+///   API URL or Bonjour, or taken from a prepared image. A `waiting_for_heartbeat` answer without
+///   an endpoint, or a later answer with another one, ends the run with a clean-up; a start is
+///   never sent again with a different endpoint. A board or a hub without the feature is told
+///   apart and reported -- the first start message (PSKd only) is never used instead.
 /// - **Secrets stay in memory.** The setup code and the PSKd live only in the run and are
 ///   dropped with it. They are never shown, copied, logged, stored or put into an error. Swift and
 ///   the Security 2 code release their copies; nothing here can overwrite them.
@@ -189,6 +201,9 @@ final class PowerBaseEnrollmentBLEController {
         case boardClosed
         /// The board cannot run a Joiner.
         case boardUnavailable
+        /// The board's firmware does not take the bridge endpoint (no `bridge_endpoint_v1` in
+        /// `proto-ver`). Nothing was sent to the hub, and no start of any kind to the board.
+        case boardNeedsUpdate
 
         // A hub session existed; `cleanup` says what became of it and of the board's attempt.
         case hub(PowerBaseEnrollmentError, board: BoardCancel?)
@@ -198,9 +213,20 @@ final class PowerBaseEnrollmentBLEController {
         case boardProblem(Problem, cleanup: Cleanup)
         /// The board's attempt ended without enrolling (`result` is a `pb_enroll_result_t`).
         case boardAttemptFailed(result: UInt8, cleanup: Cleanup)
+        /// The hub's session cannot be used to deliver a bridge endpoint (see `EndpointProblem`).
+        case hubEndpoint(EndpointProblem, cleanup: Cleanup)
         /// Cancelled before any hub session existed.
         case stopped(Cleanup)
         case sourceChanged
+    }
+
+    /// Why this run's hub session gives no bridge endpoint to deliver.
+    nonisolated enum EndpointProblem: Equatable, Sendable {
+        /// The hub reached `waiting_for_heartbeat` without a bridge endpoint.
+        case missing
+        /// A later answer of the same session carries another endpoint (or none) than the one
+        /// this run took from it. Nothing is sent with the new one.
+        case changed
     }
 
     /// A problem with the board found while a hub session already existed.
@@ -212,6 +238,8 @@ final class PowerBaseEnrollmentBLEController {
         case unavailable
         case protocolMismatch(String)
         case authenticationFailed
+        /// The board (after connecting again) does not list the bridge endpoint capability.
+        case needsUpdate
     }
 
     /// What a clean-up after leaving the screen or switching the source did, for the screen that
@@ -238,6 +266,8 @@ final class PowerBaseEnrollmentBLEController {
     /// The app is in the background: no Bluetooth command and no request to the hub is started
     /// until it is active again.
     private(set) var isSuspended = false
+    /// The hub's bridge endpoint this run took from its session, for display. Not a secret.
+    var bridgeEndpoint: PowerBaseBLEBridgeEndpoint? { run?.bluetooth?.endpoint?.endpoint }
 
     var ineligibility: Ineligibility? { target.ineligibility }
 
@@ -272,12 +302,23 @@ final class PowerBaseEnrollmentBLEController {
         var bluetooth: Bluetooth?
     }
 
+    /// The hub's bridge endpoint together with what it belongs to: the hub the run was started
+    /// on, the session whose authenticated answer carried it, and the board it is for.
+    private struct BoundEndpoint: Equatable {
+        let hubID: String
+        let sessionID: String
+        let eui64: String
+        let endpoint: PowerBaseBLEBridgeEndpoint
+    }
+
     private struct Bluetooth {
         let boardID: UUID
         let eui64: PowerBaseBLEEUI64
         let setupCode: String
         var pskd: String?
         var requestID: PowerBaseBLERequestID?
+        /// Set once, from the first answer of this run's session that carries an endpoint.
+        var endpoint: BoundEndpoint?
         var board: (any PowerBaseBLEBoardSession)?
         /// A `pb-start` left this device: the board may have an attempt under this request id.
         var startSent = false
@@ -630,6 +671,13 @@ final class PowerBaseEnrollmentBLEController {
             fail(current, Self.failure(for: problem))
             return nil
         }
+        // A board that cannot take the bridge endpoint is not sent the first start message
+        // instead, and no hub session is made for it.
+        guard await board.capabilities().contains(.bridgeEndpointV1) else {
+            if isCurrent(current) { fail(current, .boardNeedsUpdate) }
+            return nil
+        }
+        guard isCurrent(current) else { return nil }
 
         // Only now, with the right board on the line, are the secrets for the hub made.
         guard let pskd = ThreadPSKd.generate(randomBytes: randomBytes), let requestID = PowerBaseBLERequestID.random(randomBytes) else {
@@ -650,7 +698,9 @@ final class PowerBaseEnrollmentBLEController {
         // In a task of its own: ending the run cancels the driver, and a POST cut off half-way
         // would leave a session nobody knows the id of. This one always runs to its answer.
         let post = Task { [transport, eui64 = bluetooth.eui64.hex] in
-            try await transport.start(baseURL: run.baseURL, credential: run.credential, eui64: eui64, pskd: pskd)
+            // Always the request that asks for the hub's bridge endpoint. A hub that refuses it
+            // is not asked again without it.
+            try await transport.startDeliveringBridgeEndpoint(baseURL: run.baseURL, credential: run.credential, eui64: eui64, pskd: pskd)
         }
         let result = await post.result
         guard isCurrent(current) else {
@@ -696,12 +746,19 @@ final class PowerBaseEnrollmentBLEController {
                 return
             }
             expiresAround = now().addingTimeInterval(TimeInterval(session.expiresInMs) / 1000)
-            guard let bluetooth = run?.bluetooth else {
+            guard run?.bluetooth != nil else {
                 phase = .earlierHubSession(session)
                 guard let next = await nextHubState(current, after: session) else { return }
                 session = next
                 continue
             }
+            // The session's bridge endpoint: taken once, and every later answer must still
+            // carry exactly it. Otherwise nothing (more) is sent and the run cleans up.
+            if let problem = bindEndpoint(from: session) {
+                endWithCleanup(current, .hubEndpoint(problem, cleanup: Self.pendingCleanup))
+                return
+            }
+            guard let bluetooth = run?.bluetooth else { return }
 
             switch (session.state, bluetooth.delivery) {
             case (.waitingForHeartbeat, .notSent):
@@ -740,6 +797,27 @@ final class PowerBaseEnrollmentBLEController {
             guard let next = await nextHubState(current, after: session) else { return }
             session = next
         }
+    }
+
+    /// Reads the bridge endpoint of a not yet final answer of this run's session. The first answer
+    /// that carries one binds it -- to the hub the run was started on, the session and the board.
+    /// Returns what is wrong, if anything: no endpoint although the hub already waits for the
+    /// heartbeat, or an answer that no longer carries the bound endpoint for the bound session
+    /// and board.
+    private func bindEndpoint(from session: PowerBaseEnrollmentSession) -> EndpointProblem? {
+        guard let run, let bluetooth = run.bluetooth else { return nil }
+        if let bound = bluetooth.endpoint {
+            let same = session.bridgeEndpoint == bound.endpoint && session.sessionID == bound.sessionID
+                && session.eui64 == bound.eui64 && run.hubID == bound.hubID
+            return same ? nil : .changed
+        }
+        guard let endpoint = session.bridgeEndpoint else {
+            // `preparing` may come without one; a hub that waits for the heartbeat must have it.
+            return session.state == .waitingForHeartbeat ? .missing : nil
+        }
+        guard session.eui64 == bluetooth.eui64.hex, session.sessionID == run.sessionID else { return .changed }
+        self.run?.bluetooth?.endpoint = BoundEndpoint(hubID: run.hubID, sessionID: session.sessionID, eui64: session.eui64, endpoint: endpoint)
+        return nil
     }
 
     /// Waits a poll interval (and for the app to be active) and asks the hub. `nil`: the run is no
@@ -794,6 +872,9 @@ final class PowerBaseEnrollmentBLEController {
         var conflicted = false
         while true {
             guard isCurrent(current), let bluetooth = run?.bluetooth, let requestID = bluetooth.requestID, let pskd = bluetooth.pskd else { return .stale }
+            // Only ever the endpoint bound from this run's session; every round and every
+            // repetition of the start carries the same one.
+            guard let endpoint = bluetooth.endpoint?.endpoint else { return .failed(.protocolMismatch("bridge_endpoint"), nil) }
             if wasInterrupted(since: turn) { return .postponed }
 
             // A session: the one from step 1, or a new one if that connection is gone.
@@ -843,12 +924,18 @@ final class PowerBaseEnrollmentBLEController {
             if conflicted { return .failed(nil, .requestConflict) }
             if let problem = Self.problem(in: status, expected: bluetooth.eui64) { return .failed(problem, nil) }
             guard let challenge = status.challenge else { return .failed(.protocolMismatch("challenge"), nil) }
+            // A session opened again must be with firmware that takes the endpoint too.
+            guard await board.capabilities().contains(.bridgeEndpointV1) else {
+                guard isCurrent(current) else { return .stale }
+                return bluetooth.startSent ? .uncertain : .failed(.needsUpdate, nil)
+            }
+            guard isCurrent(current) else { return .stale }
             if wasInterrupted(since: turn) { return .postponed }
 
             run?.bluetooth?.startSent = true
             let code: PowerBaseBLECode
             do {
-                code = try await board.start(target: bluetooth.eui64, requestID: requestID, challenge: challenge, pskd: pskd)
+                code = try await board.start(target: bluetooth.eui64, requestID: requestID, challenge: challenge, pskd: pskd, endpoint: endpoint)
             } catch {
                 guard isCurrent(current) else { return .stale }
                 // The answer is lost; the board may have the request. The next round asks it by
@@ -1129,6 +1216,7 @@ final class PowerBaseEnrollmentBLEController {
             case .boardUnreachable: self.phase = .failed(.boardUnreachable(cleanup: cleanup))
             case let .boardProblem(problem, _): self.phase = .failed(.boardProblem(problem, cleanup: cleanup))
             case let .boardAttemptFailed(result, _): self.phase = .failed(.boardAttemptFailed(result: result, cleanup: cleanup))
+            case let .hubEndpoint(problem, _): self.phase = .failed(.hubEndpoint(problem, cleanup: cleanup))
             case let .hub(error, _): self.phase = .failed(.hub(error, board: cleanup.board))
             default: self.phase = .failed(failure)
             }
@@ -1327,6 +1415,7 @@ final class PowerBaseEnrollmentBLEController {
         case .unavailable: return .boardUnavailable
         case let .protocolMismatch(detail): return .protocolMismatch(detail)
         case .authenticationFailed: return .authenticationFailed
+        case .needsUpdate: return .boardNeedsUpdate
         }
     }
 

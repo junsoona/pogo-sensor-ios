@@ -1,5 +1,6 @@
 #if DEBUG
 import Foundation
+import PowerBaseBLEKit
 import Security
 
 // The hub's Power Base enrollment API ("Power Base enrollment" in the firmware repository's
@@ -62,6 +63,43 @@ nonisolated enum PowerBaseEnrollmentSessionID {
     }
 }
 
+/// The hub's `bridge_endpoint` of a session started with bridge endpoint delivery: where the Power
+/// Base must send its bridge traffic -- the hub's OTBR Mesh-Local EID and the Linux bridge's
+/// ingest port. The hub makes it; this device never chooses, types or derives one.
+///
+/// Decoding is strict: format version exactly 1, `address` an IPv6 literal that is a Thread
+/// Mesh-Local EID, `port` 1…65535 (`PowerBaseBLEBridgeEndpoint`). An IPv4 address, an
+/// IPv4-mapped or -compatible address, the unspecified address, loopback, multicast, link-local,
+/// a zone id, a URL, a host name, an RLOC/ALOC or another format version makes the whole session
+/// answer unusable -- nothing of it is delivered to a board.
+nonisolated enum PowerBaseEnrollmentBridgeEndpoint {
+    /// What the app asks for in the `POST` and the only `version` it reads.
+    static let version = 1
+
+    private enum CodingKeys: String, CodingKey {
+        case version, address, port
+    }
+
+    /// The value of a `bridge_endpoint` key: `nil` for JSON `null` (not established yet).
+    static func decodeIfPresent<Key: CodingKey>(
+        from container: KeyedDecodingContainer<Key>, forKey key: Key
+    ) throws -> PowerBaseBLEBridgeEndpoint? {
+        guard container.contains(key), try !container.decodeNil(forKey: key) else { return nil }
+        let object = try container.nestedContainer(keyedBy: CodingKeys.self, forKey: key)
+        let version = try object.decode(Int.self, forKey: .version)
+        guard version == Self.version else {
+            throw DecodingError.dataCorruptedError(forKey: .version, in: object, debugDescription: "bridge_endpoint version")
+        }
+        let address = try object.decode(String.self, forKey: .address)
+        let port = try object.decode(Int.self, forKey: .port)
+        do {
+            return try PowerBaseBLEBridgeEndpoint(address: address, port: port)
+        } catch {
+            throw DecodingError.dataCorruptedError(forKey: .address, in: object, debugDescription: "bridge_endpoint")
+        }
+    }
+}
+
 /// One enrollment session as the hub reports it. Decoding is strict about the documented fields
 /// (all required, with their types; `state` one of the six documented values; ids well formed)
 /// and ignores unknown additional ones, as the API's compatibility policy asks.
@@ -104,6 +142,10 @@ nonisolated struct PowerBaseEnrollmentSession: Equatable, Sendable, Decodable {
     let expiresInMs: Int64
     let heartbeatReceivedAtUnixMs: Int64?
     let startedByDeviceID: String
+    /// The hub's bridge endpoint for this session. `nil`: the key is absent (a session started
+    /// without bridge endpoint delivery) or `null` (not established yet -- possible while
+    /// `preparing`, and for a session that ended before it was).
+    let bridgeEndpoint: PowerBaseBLEBridgeEndpoint?
 
     enum CodingKeys: String, CodingKey {
         case sessionID = "session_id"
@@ -118,12 +160,13 @@ nonisolated struct PowerBaseEnrollmentSession: Equatable, Sendable, Decodable {
         case expiresInMs = "expires_in_ms"
         case heartbeatReceivedAtUnixMs = "heartbeat_received_at_unix_ms"
         case startedByDeviceID = "started_by_device_id"
+        case bridgeEndpoint = "bridge_endpoint"
     }
 
     init(
         sessionID: String, eui64: String, state: State, finished: Bool, joinerEntry: String, error: String?,
         windowSeconds: Int, createdAtUnixMs: Int64, expiresAtUnixMs: Int64, expiresInMs: Int64,
-        heartbeatReceivedAtUnixMs: Int64?, startedByDeviceID: String
+        heartbeatReceivedAtUnixMs: Int64?, startedByDeviceID: String, bridgeEndpoint: PowerBaseBLEBridgeEndpoint? = nil
     ) {
         self.sessionID = sessionID
         self.eui64 = eui64
@@ -137,6 +180,7 @@ nonisolated struct PowerBaseEnrollmentSession: Equatable, Sendable, Decodable {
         self.expiresInMs = expiresInMs
         self.heartbeatReceivedAtUnixMs = heartbeatReceivedAtUnixMs
         self.startedByDeviceID = startedByDeviceID
+        self.bridgeEndpoint = bridgeEndpoint
     }
 
     init(from decoder: Decoder) throws {
@@ -167,7 +211,9 @@ nonisolated struct PowerBaseEnrollmentSession: Equatable, Sendable, Decodable {
             expiresAtUnixMs: try container.decode(Int64.self, forKey: .expiresAtUnixMs),
             expiresInMs: expiresInMs,
             heartbeatReceivedAtUnixMs: try container.decode(Int64?.self, forKey: .heartbeatReceivedAtUnixMs),
-            startedByDeviceID: try container.decode(String.self, forKey: .startedByDeviceID)
+            startedByDeviceID: try container.decode(String.self, forKey: .startedByDeviceID),
+            // Absent or `null`: none. Present: every field checked, or the answer is refused.
+            bridgeEndpoint: try PowerBaseEnrollmentBridgeEndpoint.decodeIfPresent(from: container, forKey: .bridgeEndpoint)
         )
     }
 }
@@ -193,6 +239,11 @@ nonisolated enum PowerBaseEnrollmentError: Error, Equatable, Sendable {
     case sessionAlreadyFinal(PowerBaseEnrollmentSession)
     /// `400`/`411`/`413`/`422` with the hub's code (`invalid_eui64`, `invalid_pskd`, …).
     case rejected(String)
+    /// The hub does not deliver bridge endpoints: it refused the request that asked for one
+    /// (`400 invalid_request` from a bridge older than the option, which accepts exactly two
+    /// fields, or `422 unsupported_bridge_endpoint_version`). No session exists. The app does not
+    /// ask again without the option and does not make up an address.
+    case bridgeEndpointNotSupported
     /// `503` with the hub's reason (`startup`, `stopping`, `auth_unavailable`, …).
     case unavailable(String)
     /// `500 internal_error`.
