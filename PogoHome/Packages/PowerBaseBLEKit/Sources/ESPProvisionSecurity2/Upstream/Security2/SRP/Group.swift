@@ -1,4 +1,3 @@
-#if DEBUG // PogoHome: compiled into DEBUG builds only (see VENDORED.md)
 // Copyright (C) 2016 Bouke Haarsma
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -258,4 +257,3 @@ public enum Group {
         }
     }
 }
-#endif

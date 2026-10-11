@@ -54,6 +54,7 @@ final class LifecycleBLEBoardProvider: PowerBaseBLEBoardProviding, PowerBaseBLER
 
     func activate() {}
     func startScanning() { onChange?() }
+    func resumeScanning() { onChange?() }
     func stopScanning() {}
     func shutdown() { lifecycle.shutdown() }
 
@@ -135,6 +136,10 @@ final class LifecycleBLEBoardProvider: PowerBaseBLEBoardProviding, PowerBaseBLER
 
         func cancel(target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID) async throws -> PowerBaseBLECode {
             try await base.cancel(target: target, requestID: requestID)
+        }
+
+        func releaseReceipt(target: PowerBaseBLEEUI64) async throws -> PowerBaseBLEReleaseReceipt? {
+            try await base.releaseReceipt(target: target)
         }
 
         func close() async {

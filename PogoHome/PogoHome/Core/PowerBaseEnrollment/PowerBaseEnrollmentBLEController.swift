@@ -1,12 +1,18 @@
-#if DEBUG
 import Foundation
 import Observation
 import PowerBaseBLEKit
 
-/// The DEBUG-only "BLE 등록 시험": hands a one-time Thread Joiner passphrase (PSKd) to an unenrolled
-/// spare Power Base over Bluetooth, after the hub the app follows agreed to let that board join,
-/// and shows what the board and the hub report until the hub's session ends. Not a registration
-/// feature; the USB-console test (`PowerBaseEnrollmentController`) is untouched and separate.
+/// Power Base enrollment over Bluetooth: hands a one-time Thread Joiner passphrase (PSKd) to an
+/// unenrolled Power Base, after the hub the app follows agreed to let that board join, and reports
+/// what the board and the hub say until the hub's session ends. It drives the product enrollment
+/// screen (`PowerBaseSetupView`, with `requireManagement`) and the DEBUG "BLE 등록 시험" alike;
+/// the DEBUG USB-console test (`PowerBaseEnrollmentController`) is separate.
+///
+/// With `requireManagement` (the product screen) the run also needs the hub's management
+/// credential -- what later lets the hub unenroll this board (firmware repository,
+/// docs/power-base-management.md): the board must list `mgmt_v1`, the hub must issue a credential
+/// with the session, and the one `pb-start` carries it (message 0x06). A board or a hub without it
+/// ends the run before anything is started; the run never falls back to a start without it.
 ///
 /// The order, which nothing in the UI can change (firmware repository, docs/power-base.md "앱이
 /// 지켜야 할 순서"):
@@ -68,11 +74,17 @@ import PowerBaseBLEKit
 /// - **Secrets stay in memory.** The setup code and the PSKd live only in the run and are
 ///   dropped with it. They are never shown, copied, logged, stored or put into an error. Swift and
 ///   the Security 2 code release their copies; nothing here can overwrite them.
+/// - **Looking is not asking.** With `automaticSearch` (the product screen) the controller starts
+///   using Bluetooth and scans by itself while the screen is on show, the app is in the
+///   foreground, the hub can be used and nothing is under way or waiting to be read ("Automatic
+///   search" below). That finds boards and nothing else: no connection, no handshake, no hub
+///   session and no start ever follows from it -- those begin with `start`, which only a tap
+///   calls.
 @MainActor
 @Observable
 final class PowerBaseEnrollmentBLEController {
-    typealias Target = PowerBaseEnrollmentController.Target
-    typealias Ineligibility = PowerBaseEnrollmentController.Ineligibility
+    typealias Target = PowerBaseHubTarget
+    typealias Ineligibility = PowerBaseHubIneligibility
 
     /// What became of the request to the board to cancel this run's attempt.
     nonisolated enum BoardCancel: Equatable, Sendable {
@@ -227,6 +239,9 @@ final class PowerBaseEnrollmentBLEController {
         /// A later answer of the same session carries another endpoint (or none) than the one
         /// this run took from it. Nothing is sent with the new one.
         case changed
+        /// The hub accepted the session but its answer carried no usable management credential
+        /// (only when the run requires one). Nothing was sent to the board.
+        case managementMissing
     }
 
     /// A problem with the board found while a hub session already existed.
@@ -261,6 +276,9 @@ final class PowerBaseEnrollmentBLEController {
     private(set) var availability: PowerBaseBLEAvailability = .unknown
     private(set) var boards: [PowerBaseBLEDiscoveredBoard] = []
     private(set) var isScanning = false
+    /// Bluetooth is in use for this screen: `activate()` was called (by the automatic search or
+    /// by the user). From then on the screen shows what Bluetooth says.
+    private(set) var usesBluetooth = false
     /// Scanning has gone on for a while without finding any board.
     private(set) var foundNothingSoFar = false
     /// The app is in the background: no Bluetooth command and no request to the hub is started
@@ -319,6 +337,9 @@ final class PowerBaseEnrollmentBLEController {
         var requestID: PowerBaseBLERequestID?
         /// Set once, from the first answer of this run's session that carries an endpoint.
         var endpoint: BoundEndpoint?
+        /// The hub's management credential for this run's session, from the answer to its `POST`.
+        /// Memory only; dropped with the run. Never shown, copied, logged or stored.
+        var management: PowerBaseBLEManagementCredential?
         var board: (any PowerBaseBLEBoardSession)?
         /// A `pb-start` left this device: the board may have an attempt under this request id.
         var startSent = false
@@ -338,6 +359,13 @@ final class PowerBaseEnrollmentBLEController {
     private let leaveGrace: Duration
     private let quietScanPeriod: Duration
     private let maxReconnects: Int
+    /// The run must deliver the hub's management credential (the product screen).
+    private let requireManagement: Bool
+    /// Where a release receipt found on the board is handed in (the product screen); `nil`:
+    /// receipts are not looked for.
+    private let receiptRelay: PowerBaseRemovalTransport?
+    /// How many receipts this controller relayed to the hub, for tests and logs.
+    private(set) var relayedReceipts = 0
     private let randomBytes: (Int) -> [UInt8]?
     private let now: () -> Date
     /// Called when a clean-up that no screen shows any more (leaving, another source) is done.
@@ -350,7 +378,19 @@ final class PowerBaseEnrollmentBLEController {
     private var monitor: Task<Void, Never>?
     private var leaveTask: Task<Void, Never>?
     private var quietScanTask: Task<Void, Never>?
+    /// The screen looks for boards by itself ("Automatic search").
+    private let searchesAutomatically: Bool
+    /// Between the screen's appearing and its really being left (`leave()`).
+    private var isOnScreen = false
+    /// This appearance of the screen has not had its search yet (it appeared in the background,
+    /// or while the hub could not be used).
+    private var owesAutomaticSearch = false
+    /// The automatic search was stopped because the app went to the background; it goes on, with
+    /// what it had found, when the app is back.
+    private var searchPausedForBackground = false
     private var resumeWaiters: [CheckedContinuation<Void, Never>] = []
+    /// How many steps of the run wait for the foreground right now. For tests.
+    var foregroundWaiters: Int { resumeWaiters.count }
     /// How often the app went to the background. A delivery compares it to tell that the app was
     /// away in between, even if it is back by now.
     private var suspensions = 0
@@ -367,9 +407,15 @@ final class PowerBaseEnrollmentBLEController {
         leaveGrace: Duration = .milliseconds(600),
         quietScanPeriod: Duration = .seconds(8),
         maxReconnects: Int = 3,
+        requireManagement: Bool = false,
+        automaticSearch: Bool = false,
+        receiptRelay: PowerBaseRemovalTransport? = nil,
         randomBytes: @escaping (Int) -> [UInt8]? = SecureRandomBytes.system,
         now: @escaping () -> Date = Date.init
     ) {
+        self.searchesAutomatically = automaticSearch
+        self.requireManagement = requireManagement
+        self.receiptRelay = receiptRelay
         self.provider = provider
         self.transport = transport
         self.credentials = credentials
@@ -385,19 +431,38 @@ final class PowerBaseEnrollmentBLEController {
     // MARK: - Bluetooth and scanning
 
     /// Starts using Bluetooth (the system asks for permission the first time). Does not scan.
+    /// Calling it again changes nothing: the provider is activated once.
     func activate() {
+        guard !usesBluetooth else { return }
+        usesBluetooth = true
         provider.onChange = { [weak self] in self?.providerDidChange() }
         provider.activate()
         providerDidChange()
     }
 
-    /// Looks for boards. Ignored while a run is under way.
+    /// Looks for boards, forgetting the ones seen so far. Ignored while a run is under way.
     func startScanning() {
         guard !isBusy else { return }
+        owesAutomaticSearch = false
+        searchPausedForBackground = false
         isScanning = true
         foundNothingSoFar = false
         provider.startScanning()
         providerDidChange()
+        startQuietScanTimer()
+    }
+
+    func stopScanning() {
+        searchPausedForBackground = false
+        isScanning = false
+        foundNothingSoFar = false
+        quietScanTask?.cancel()
+        quietScanTask = nil
+        provider.stopScanning()
+    }
+
+    /// After a while without a board, the screen says what to check.
+    private func startQuietScanTimer() {
         quietScanTask?.cancel()
         let period = quietScanPeriod
         quietScanTask = Task { [weak self] in
@@ -406,18 +471,54 @@ final class PowerBaseEnrollmentBLEController {
         }
     }
 
-    func stopScanning() {
-        isScanning = false
-        foundNothingSoFar = false
-        quietScanTask?.cancel()
-        quietScanTask = nil
-        provider.stopScanning()
-    }
-
     private func providerDidChange() {
+        let previous = availability
         availability = provider.availability
         boards = provider.boards
         if !boards.isEmpty { foundNothingSoFar = false }
+        // Bluetooth came on -- switched on, or allowed at last -- while the screen waits for it:
+        // the search starts (again) without a tap, with a full "nothing found yet" period.
+        if previous != .poweredOn, availability == .poweredOn, mayAutomaticSearch {
+            startScanning()
+        }
+    }
+
+    // MARK: - Automatic search
+    //
+    // The product screen ("Power Base 추가") does not wait for a "find" button. Entering it is the
+    // user asking to look: the controller starts using Bluetooth (the system's permission
+    // question comes then, the first time) and scans. What it must never do is decided here, in
+    // one place, and not by a view that happens to be drawn:
+    //
+    // - Only discovery. Nothing here connects, authenticates, asks the hub or starts anything.
+    // - Once per appearance. A view that is rebuilt, a sheet over the screen (the QR camera, the
+    //   photo picker) that goes away, a second `onAppear`: none of them starts another search or
+    //   activates Bluetooth again, so the list and the selection made in it stay.
+    // - Never in the background, and never over a run, a question to the user or a result: only
+    //   while the phase is `idle` and the hub can be used.
+    // - It ends when the screen is really left.
+
+    /// A search may be started without a tap right now.
+    private var mayAutomaticSearch: Bool {
+        searchesAutomatically && isOnScreen && !isSuspended && phase == .idle && ineligibility == nil
+    }
+
+    /// Starts the search this appearance still owes, or goes on with the one the background
+    /// paused -- when this is a moment for it. Otherwise nothing happens (and it stays owed).
+    private func searchAutomaticallyIfDue() {
+        guard mayAutomaticSearch, !isScanning else { return }
+        if searchPausedForBackground {
+            activate()
+            searchPausedForBackground = false
+            isScanning = true
+            provider.resumeScanning()
+            providerDidChange()
+            startQuietScanTimer()
+        } else if owesAutomaticSearch {
+            activate()
+            // `activate()` may itself have started it (Bluetooth was on already).
+            if !isScanning { startScanning() }
+        }
     }
 
     // MARK: - Source
@@ -432,6 +533,7 @@ final class PowerBaseEnrollmentBLEController {
             self.run?.baseURL = address
             return
         }
+        defer { automaticSearchFollowsTarget() }
         guard newTarget.hubID != previous.hubID || ineligibility != nil else { return }
         if isBusy {
             abandon(showing: .failed(.sourceChanged))
@@ -442,12 +544,32 @@ final class PowerBaseEnrollmentBLEController {
         }
     }
 
+    /// A hub that cannot be used has no list of boards to show: the automatic search stops, and
+    /// is owed again for when a usable hub is back.
+    private func automaticSearchFollowsTarget() {
+        guard searchesAutomatically, isOnScreen else { return }
+        if ineligibility != nil {
+            if isScanning || searchPausedForBackground {
+                stopScanning()
+                owesAutomaticSearch = true
+            }
+        } else {
+            searchAutomaticallyIfDue()
+        }
+    }
+
     // MARK: - Lifecycle of the screen and the app
 
-    /// The screen is visible (again).
+    /// The screen is visible (again). The first time, and after it was really left, this is
+    /// where the automatic search begins; a screen that only came back from under a sheet, or
+    /// was rebuilt, starts nothing.
     func screenDidAppear() {
         leaveTask?.cancel()
         leaveTask = nil
+        guard !isOnScreen else { return }
+        isOnScreen = true
+        owesAutomaticSearch = searchesAutomatically
+        searchAutomaticallyIfDue()
     }
 
     /// The screen went away. Treated as leaving only if it does not come back within a moment: a
@@ -465,6 +587,8 @@ final class PowerBaseEnrollmentBLEController {
     func leave() {
         leaveTask?.cancel()
         leaveTask = nil
+        isOnScreen = false
+        owesAutomaticSearch = false
         stopScanning()
         if isBusy {
             abandon(showing: .idle)
@@ -483,6 +607,15 @@ final class PowerBaseEnrollmentBLEController {
         suspensions += 1
         // Only closed when a hub loop will open it again.
         boardGateClosed = run?.sessionID != nil
+        // The automatic search rests with the app. What it found stays on the list.
+        if searchesAutomatically, isScanning {
+            quietScanTask?.cancel()
+            quietScanTask = nil
+            isScanning = false
+            foundNothingSoFar = false
+            provider.stopScanning()
+            searchPausedForBackground = true
+        }
     }
 
     /// Back in the foreground: the run carries on with what it kept, asking the hub first.
@@ -492,6 +625,7 @@ final class PowerBaseEnrollmentBLEController {
         let waiters = resumeWaiters
         resumeWaiters = []
         waiters.forEach { $0.resume() }
+        searchAutomaticallyIfDue()
     }
 
     /// Waits until the app is in the foreground. `false`: run `current` ended meanwhile (ending
@@ -633,6 +767,17 @@ final class PowerBaseEnrollmentBLEController {
         }
     }
 
+    /// The user has read how the last run ended and wants the start of the screen back. Nothing of
+    /// the ended run is kept or reused: another attempt is a new run. Ignored while one is under
+    /// way.
+    func acknowledgeResult() {
+        guard !isBusy else { return }
+        phase = .idle
+        boardProgress = nil
+        expiresAround = nil
+        pollProblem = nil
+    }
+
     // MARK: - Step 1 and 2: the board, then the hub
 
     private func isCurrent(_ current: Int) -> Bool {
@@ -677,7 +822,40 @@ final class PowerBaseEnrollmentBLEController {
             if isCurrent(current) { fail(current, .boardNeedsUpdate) }
             return nil
         }
+        // Nor is a board that cannot take the management credential enrolled without it.
+        if requireManagement, !(await board.capabilities().contains(.managementV1)) {
+            if isCurrent(current) { fail(current, .boardNeedsUpdate) }
+            return nil
+        }
         guard isCurrent(current) else { return nil }
+
+        // A board that its hub unenrolled keeps a receipt of that ("erased and checked") until a
+        // new enrollment attempt replaces its record -- which the start below does. The hub needs
+        // that receipt to call the earlier removal complete, so it is collected and handed in
+        // first. What the hub makes of it does not decide this enrollment: without it the earlier
+        // removal simply ends as "superseded" when the new enrollment becomes active.
+        if let receiptRelay, await board.capabilities().contains(.releaseReceiptV1) {
+            guard await waitUntilActive(current) else { return nil }
+            let receipt: PowerBaseBLEReleaseReceipt?
+            do {
+                receipt = try await board.releaseReceipt(target: bluetooth.eui64)
+            } catch {
+                // A request without a usable answer costs the session, like any other.
+                if isCurrent(current) { fail(current, Self.failure(forRequest: error)) }
+                return nil
+            }
+            guard isCurrent(current) else { return nil }
+            if let receipt {
+                // The board's answer may have arrived while the app was away: the request to the
+                // hub is a new one and waits for the foreground like every other. The run, and
+                // where its hub is now, are read after that wait, right before the request.
+                guard await waitUntilActive(current), let run else { return nil }
+                if (try? await receiptRelay.submitReceipt(baseURL: run.baseURL, credential: run.credential, receiptHex: receipt.hex)) != nil {
+                    relayedReceipts += 1
+                }
+                guard isCurrent(current) else { return nil }
+            }
+        }
 
         // Only now, with the right board on the line, are the secrets for the hub made.
         guard let pskd = ThreadPSKd.generate(randomBytes: randomBytes), let requestID = PowerBaseBLERequestID.random(randomBytes) else {
@@ -697,20 +875,35 @@ final class PowerBaseEnrollmentBLEController {
         self.run?.postSent = true
         // In a task of its own: ending the run cancels the driver, and a POST cut off half-way
         // would leave a session nobody knows the id of. This one always runs to its answer.
-        let post = Task { [transport, eui64 = bluetooth.eui64.hex] in
-            // Always the request that asks for the hub's bridge endpoint. A hub that refuses it
-            // is not asked again without it.
-            try await transport.startDeliveringBridgeEndpoint(baseURL: run.baseURL, credential: run.credential, eui64: eui64, pskd: pskd)
+        let post = Task { [transport, requireManagement, eui64 = bluetooth.eui64.hex] () async throws -> PowerBaseEnrollmentManagedStart in
+            // Always the request that asks for the hub's bridge endpoint -- and, when the run
+            // requires it, for a management credential. A hub that refuses either is not asked
+            // again without it.
+            if requireManagement {
+                return try await transport.startManaged(baseURL: run.baseURL, credential: run.credential, eui64: eui64, pskd: pskd)
+            }
+            let session = try await transport.startDeliveringBridgeEndpoint(baseURL: run.baseURL, credential: run.credential, eui64: eui64, pskd: pskd)
+            return PowerBaseEnrollmentManagedStart(session: session, credential: nil)
         }
         let result = await post.result
         guard isCurrent(current) else {
             // The run ended while the POST was under way: its clean-up cancels this session.
-            if case let .success(accepted) = result, !accepted.state.isFinal { return accepted.sessionID }
+            if case let .success(accepted) = result, !accepted.session.state.isFinal { return accepted.session.sessionID }
             return nil
         }
         switch result {
-        case let .success(session):
+        case let .success(started):
+            let session = started.session
             self.run?.sessionID = session.sessionID
+            if requireManagement {
+                // The credential of exactly this session, or nothing goes to the board and the
+                // session is cancelled by name.
+                guard let issued = started.credential, session.managementGeneration == issued.generationHex else {
+                    endWithCleanup(current, .hubEndpoint(.managementMissing, cleanup: Self.pendingCleanup))
+                    return nil
+                }
+                self.run?.bluetooth?.management = issued
+            }
             await follow(current, from: session)
         case let .failure(PowerBaseEnrollmentError.enrollmentInProgress(own?)):
             // This device's session from an earlier start. Its PSKd is not this run's: the board
@@ -806,6 +999,10 @@ final class PowerBaseEnrollmentBLEController {
     /// and board.
     private func bindEndpoint(from session: PowerBaseEnrollmentSession) -> EndpointProblem? {
         guard let run, let bluetooth = run.bluetooth else { return nil }
+        // A session that was started with a management credential keeps naming its generation.
+        if let management = bluetooth.management, session.managementGeneration != management.generationHex {
+            return .changed
+        }
         if let bound = bluetooth.endpoint {
             let same = session.bridgeEndpoint == bound.endpoint && session.sessionID == bound.sessionID
                 && session.eui64 == bound.eui64 && run.hubID == bound.hubID
@@ -875,6 +1072,8 @@ final class PowerBaseEnrollmentBLEController {
             // Only ever the endpoint bound from this run's session; every round and every
             // repetition of the start carries the same one.
             guard let endpoint = bluetooth.endpoint?.endpoint else { return .failed(.protocolMismatch("bridge_endpoint"), nil) }
+            // A run that requires the management credential never sends a start without it.
+            if requireManagement, bluetooth.management == nil { return .failed(.protocolMismatch("management"), nil) }
             if wasInterrupted(since: turn) { return .postponed }
 
             // A session: the one from step 1, or a new one if that connection is gone.
@@ -925,7 +1124,8 @@ final class PowerBaseEnrollmentBLEController {
             if let problem = Self.problem(in: status, expected: bluetooth.eui64) { return .failed(problem, nil) }
             guard let challenge = status.challenge else { return .failed(.protocolMismatch("challenge"), nil) }
             // A session opened again must be with firmware that takes the endpoint too.
-            guard await board.capabilities().contains(.bridgeEndpointV1) else {
+            let needed: PowerBaseBLECapabilities = bluetooth.management == nil ? [.bridgeEndpointV1] : [.bridgeEndpointV1, .managementV1]
+            guard await board.capabilities().isSuperset(of: needed) else {
                 guard isCurrent(current) else { return .stale }
                 return bluetooth.startSent ? .uncertain : .failed(.needsUpdate, nil)
             }
@@ -935,7 +1135,15 @@ final class PowerBaseEnrollmentBLEController {
             run?.bluetooth?.startSent = true
             let code: PowerBaseBLECode
             do {
-                code = try await board.start(target: bluetooth.eui64, requestID: requestID, challenge: challenge, pskd: pskd, endpoint: endpoint)
+                if let management = bluetooth.management {
+                    // Message 0x06: the same request id, PSKd and endpoint on every repetition,
+                    // and the same credential.
+                    code = try await board.start(
+                        target: bluetooth.eui64, requestID: requestID, challenge: challenge, pskd: pskd, endpoint: endpoint, management: management
+                    )
+                } else {
+                    code = try await board.start(target: bluetooth.eui64, requestID: requestID, challenge: challenge, pskd: pskd, endpoint: endpoint)
+                }
             } catch {
                 guard isCurrent(current) else { return .stale }
                 // The answer is lost; the board may have the request. The next round asks it by
@@ -1460,15 +1668,3 @@ final class PowerBaseEnrollmentBLEController {
     }
 }
 
-extension PowerBaseEnrollmentController.Target {
-    /// Why an enrollment test can't use this source; `nil` when it can. Only a hub picked in
-    /// "Find hubs" (it has a `hub_id`), with a known address, that this device is paired with.
-    var ineligibility: PowerBaseEnrollmentController.Ineligibility? {
-        if isSimulated { return .simulatedData }
-        guard hubID != nil else { return .typedAddress }
-        guard baseURL != nil else { return .noAddress }
-        guard isPaired else { return .notPaired }
-        return nil
-    }
-}
-#endif

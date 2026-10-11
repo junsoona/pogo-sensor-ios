@@ -1,9 +1,12 @@
 import SwiftUI
 
 /// "기기 추가". Only paths that really exist are offered: a Matter accessory through Apple's own
-/// Apple Home setup flow (see `MatterAccessorySetupSection`), and a POGO Power Base, which is
-/// registered outside the app today (see `PowerBaseConnectionView`). Sensor modules need no
-/// entry here — they pair automatically when docked onto a Power Base.
+/// Apple Home setup flow (see `MatterAccessorySetupSection`), a Power Base, which the app
+/// registers with the paired hub over Bluetooth (see `PowerBaseSetupView`), and moving a
+/// registered Power Base to another hub (see `PowerBaseReenrollView`). The older way --
+/// writing a configuration image from a computer -- is still described in
+/// `PowerBaseConnectionView`. Sensor modules need no entry here — they pair automatically when
+/// docked onto a Power Base.
 struct AddDeviceSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AppleHomeModel.self) private var appleHome
@@ -17,11 +20,35 @@ struct AddDeviceSheet: View {
 
                 Section {
                     NavigationLink {
-                        PowerBaseConnectionView()
+                        PowerBaseSetupView(onFinished: { dismiss() })
                     } label: {
                         SheetIconRow(systemImage: "powerplug.fill", iconStyle: .tint) {
-                            Text("조각보 Power Base 연결")
-                            Text("새 Power Base를 Thread 네트워크와 Linux Bridge에 연결합니다.")
+                            Text("Power Base 추가")
+                            Text("새 Power Base를 Bluetooth로 찾아 설정 코드로 허브에 등록합니다.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .sheetParagraph()
+                        }
+                    }
+                    .sheetRowInsets()
+                    NavigationLink {
+                        PowerBaseReenrollView(onFinished: { dismiss() })
+                    } label: {
+                        SheetIconRow(systemImage: "arrow.triangle.swap", iconStyle: .tint) {
+                            Text(verbatim: PowerBaseReenrollText.entryTitle)
+                            Text(verbatim: PowerBaseReenrollText.entrySubtitle)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .sheetParagraph()
+                        }
+                    }
+                    .sheetRowInsets()
+                    NavigationLink {
+                        PowerBaseConnectionView()
+                    } label: {
+                        SheetIconRow(systemImage: "desktopcomputer", iconStyle: .secondary) {
+                            Text("컴퓨터로 Power Base 연결")
+                            Text("설정 이미지를 기록해 연결하는 기존 방법과, 허브가 인식한 Power Base를 확인합니다.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .sheetParagraph()
@@ -44,11 +71,12 @@ struct AddDeviceSheet: View {
     }
 }
 
-/// The "POGO Power Base 연결" path. The app can't register a Power Base itself: a Base joins
-/// the Thread network and learns the Linux bridge's address only from the configuration image
-/// flashed onto it from a computer. So this screen states that procedure plainly, then shows
-/// only what the bridge actually reports — the Bases it hears and any that appeared since the
-/// screen opened. It never shows a success state the bridge hasn't reported.
+/// The "컴퓨터로 Power Base 연결" path: a Base that is not registered from the app (see
+/// `PowerBaseSetupView`) joins the Thread network and learns the Linux bridge's address from the
+/// configuration image flashed onto it from a computer. This screen states that procedure
+/// plainly, then shows only what the bridge actually reports — the Bases it hears and any that
+/// appeared since the screen opened. It never shows a success state the bridge hasn't reported.
+/// A Base connected this way has no management credential, so the app cannot remove it.
 struct PowerBaseConnectionView: View {
     @Environment(AppModel.self) private var appModel
     @State private var discovery: PowerBaseDiscovery?
@@ -64,25 +92,25 @@ struct PowerBaseConnectionView: View {
     var body: some View {
         List {
             Section {
-                Text("조각보 홈 앱은 아직 Power Base를 직접 등록할 수 없습니다. 새 Power Base는 컴퓨터에서 펌웨어와 설정 이미지를 기록해야 Thread 네트워크와 Linux Bridge에 연결됩니다.")
+                Text("Bluetooth 등록을 쓰지 않는 Power Base는 컴퓨터에서 펌웨어와 설정 이미지를 기록해 연결할 수 있습니다. 이렇게 연결한 Power Base는 앱에서 삭제할 수 없습니다.")
                     .sheetParagraph()
                     .sheetRowInsets()
                 #if DEBUG
-                Text("이 문단과 아래 절차는 출시용 앱의 현재 등록 방법입니다. 이 DEBUG 빌드에는 그와 별개로, 미리 준비한 여분 보드로 등록 경로를 확인하는 시험 두 가지(BLE, USB 콘솔)가 맨 아래에 있습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG build: separates the Release registration procedure from the DEBUG tests")
+                Text("이 DEBUG 빌드에는 제품용 'Power Base 추가' 화면과 별개로, 미리 준비한 여분 보드로 등록 경로를 확인하는 시험 두 가지(BLE, USB 콘솔)가 맨 아래에 있습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG build: separates the product registration from the DEBUG tests")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .sheetParagraph()
                     .sheetRowInsets()
                 #endif
             } header: {
-                Text("현재 등록 방법")
+                Text("컴퓨터로 연결하는 방법")
             }
 
             Section {
-                SheetNumberedStep(number: 1, text: "Linux OTBR 호스트에서 Thread Active Dataset과 Bridge 주소(Mesh-Local EID)를 확인합니다.")
+                SheetNumberedStep(number: 1, text: "OTBR에서 Thread Active Dataset과 허브 주소(Mesh-Local EID)를 확인합니다.")
                 SheetNumberedStep(number: 2, text: "컴퓨터에서 Power Base 설정 이미지를 만듭니다. 이미 쓰고 있는 Power Base와 같은 이미지를 써도 됩니다. 각 Power Base의 식별자는 칩에 기록된 EUI-64라서 서로 겹치지 않습니다.")
                 SheetNumberedStep(number: 3, text: "새 Power Base에 USB로 Power Base 펌웨어와 설정 이미지를 기록합니다.")
-                SheetNumberedStep(number: 4, text: "전원을 켜면 Power Base가 Thread 네트워크에 합류하고 10초마다 Linux Bridge에 신호를 보냅니다. 그러면 아래 목록에 나타납니다.")
+                SheetNumberedStep(number: 4, text: "전원을 켜면 Power Base가 Thread 네트워크에 합류하고 10초마다 허브에 신호를 보냅니다. 그러면 아래 목록에 나타납니다.")
                 SheetNumberedStep(number: 5, text: "센서 모듈을 새 Power Base에 끼우면 기존처럼 자동으로 페어링되어 그 Power Base 아래에 표시됩니다.")
             } header: {
                 Text("등록 절차")
@@ -96,50 +124,29 @@ struct PowerBaseConnectionView: View {
 
             Section {
                 if snapshot.powerBases.isEmpty {
-                    Text(snapshot.reportsPowerBases ? "Linux Bridge가 아직 어떤 Power Base의 신호도 받지 못했습니다." : "확인할 수 없음")
+                    Text(snapshot.reportsPowerBases ? "허브가 아직 어떤 Power Base의 신호도 받지 못했습니다." : "확인할 수 없음")
                         .foregroundStyle(.secondary)
                         .sheetParagraph()
                 } else {
                     ForEach(snapshot.powerBases) { base in
-                        PowerBaseHeader(base: base, isCurrentStateVerified: appModel.health.isCurrentStateVerified)
+                        PowerBaseHeader(base: base, isCurrentStateVerified: appModel.isPowerBaseStateVerified)
                     }
                 }
             } header: {
-                Text("Linux Bridge가 인식한 Power Base")
+                Text("허브가 인식한 Power Base")
             }
             .sheetRowInsets()
 
             #if DEBUG
-            // In a DEBUG build the three statements of the Release build would contradict the
-            // tests below, so they are worded for what a DEBUG build really has. The Release
-            // wording (the `#else` branch) is unchanged.
-            Section {
-                debugLimitation(Text("출시용 앱에는 Bluetooth·QR 코드로 Power Base를 등록하는 기능이 없습니다. 이 DEBUG 빌드에는 아래의 시험 두 가지만 있고, QR 등록은 어디에도 없습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG build: limitation 1, scoped against the DEBUG tests"))
-                debugLimitation(Text("앱은 Thread 네트워크 정보(Dataset, Network Key)를 Power Base로 보내지 않습니다. DEBUG 시험이 전달하는 것은 한 번 쓰는 가입 코드(PSKd)뿐입니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG build: limitation 2, scoped against the DEBUG tests"))
-                debugLimitation(Text("앱의 일반 기능은 Linux Bridge에 등록을 요청하지 않습니다. 허브의 등록 세션 API는 아래 DEBUG 시험에서만, 페어링한 허브에만 사용합니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG build: limitation 3, scoped against the DEBUG tests"))
-            } header: {
-                Text("출시용 앱에서 아직 할 수 없는 것", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG build: header of the limitations section")
-            }
-            .sheetRowInsets()
-
             bleTestEntrySection
 
             if let enrollment {
                 PowerBaseEnrollmentTestSection(controller: enrollment, eui64Input: $enrollmentEUI64)
             }
-            #else
-            Section {
-                limitation("Bluetooth·QR 코드로 Power Base를 등록하는 기능은 아직 없습니다.")
-                limitation("앱에서 Thread 네트워크 정보를 Power Base로 보낼 수 없습니다.")
-                limitation("Linux Bridge API는 읽기 전용이라 앱에서 등록을 요청할 수 없습니다.")
-            } header: {
-                Text("앱에서 아직 할 수 없는 것")
-            }
-            .sheetRowInsets()
             #endif
         }
         .sheetListSpacing()
-        .navigationTitle("조각보 Power Base 연결")
+        .navigationTitle("컴퓨터로 Power Base 연결")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if discovery == nil {
@@ -204,15 +211,6 @@ struct PowerBaseConnectionView: View {
         }
         .sheetRowInsets()
     }
-
-    private func debugLimitation(_ text: Text) -> some View {
-        SheetIconRow(systemImage: "xmark.circle", iconStyle: .secondary) {
-            text
-                .foregroundStyle(.secondary)
-                .sheetParagraph()
-        }
-        .accessibilityElement(children: .combine)
-    }
     #endif
 
     @ViewBuilder
@@ -220,13 +218,13 @@ struct PowerBaseConnectionView: View {
         Section {
             if !snapshot.reportsPowerBases {
                 SheetIconRow(systemImage: "exclamationmark.triangle.fill", iconStyle: .orange) {
-                    Text("연결된 Linux Bridge가 Power Base 정보를 보내지 않습니다. 새 Power Base를 확인하려면 Bridge를 이 버전 이상으로 업데이트해야 합니다.")
+                    Text("연결된 허브가 Power Base 정보를 보내지 않습니다. 새 Power Base를 확인하려면 허브를 업데이트해야 합니다.")
                         .foregroundStyle(.orange)
                         .sheetParagraph()
                 }
             } else if appModel.connectionStatus != .connected {
                 SheetIconRow(systemImage: "wifi.exclamationmark", iconStyle: .orange) {
-                    Text("Linux Bridge에 연결되어 있지 않아 새 Power Base를 확인할 수 없습니다.")
+                    Text("허브에 연결되어 있지 않아 새 Power Base를 확인할 수 없습니다.")
                         .foregroundStyle(.orange)
                         .sheetParagraph()
                 }
@@ -262,17 +260,6 @@ struct PowerBaseConnectionView: View {
         }
         .sheetRowInsets()
     }
-
-    #if !DEBUG
-    private func limitation(_ text: LocalizedStringKey) -> some View {
-        SheetIconRow(systemImage: "xmark.circle", iconStyle: .secondary) {
-            Text(text)
-                .foregroundStyle(.secondary)
-                .sheetParagraph()
-        }
-        .accessibilityElement(children: .combine)
-    }
-    #endif
 }
 
 #Preview {

@@ -20,7 +20,17 @@ nonisolated final class FakeEnrollmentHub: PowerBaseEnrollmentTransport, @unchec
         let pskd: String?
         /// A `POST` that asked for the hub's bridge endpoint (`bridge_endpoint_version`).
         var asksForBridgeEndpoint = false
+        /// A `POST` that also asked for a management credential (`management_version`).
+        var asksForManagement = false
     }
+
+    /// What a `POST` that asks for a management credential answers next to its session. `nil`: a
+    /// hub whose answer carries no usable `management`.
+    var issuedManagement: PowerBaseBLEManagementCredential? {
+        get { lock.withLock { managementCredential } }
+        set { lock.withLock { managementCredential = newValue } }
+    }
+    private var managementCredential: PowerBaseBLEManagementCredential?
 
     private let lock = NSLock()
     private var calls: [Call] = []
@@ -96,6 +106,15 @@ nonisolated final class FakeEnrollmentHub: PowerBaseEnrollmentTransport, @unchec
         let reply = lock.withLock { startReplies.isEmpty ? nil : startReplies.removeFirst() }
         guard let reply else { throw PowerBaseEnrollmentError.unreachable("unscripted") }
         return try reply.get()
+    }
+
+    /// Answered from the same script as `start`, with `issuedManagement` next to the session.
+    func startManaged(baseURL: URL, credential: HubCredential, eui64: String, pskd: String) async throws -> PowerBaseEnrollmentManagedStart {
+        record(Call(method: .start, baseURL: baseURL, hubID: credential.hubID, token: credential.token, pinnedCertificate: credential.certificateSHA256, sessionID: nil, eui64: eui64, pskd: pskd, asksForBridgeEndpoint: true, asksForManagement: true))
+        await waitIfHeld { self.holdsStarts }
+        let reply = lock.withLock { startReplies.isEmpty ? nil : startReplies.removeFirst() }
+        guard let reply else { throw PowerBaseEnrollmentError.unreachable("unscripted") }
+        return PowerBaseEnrollmentManagedStart(session: try reply.get(), credential: issuedManagement)
     }
 
     func status(baseURL: URL, credential: HubCredential, sessionID: String) async throws -> PowerBaseEnrollmentSession {
@@ -185,7 +204,8 @@ enum EnrollmentFixtures {
 
     static func session(
         _ state: PowerBaseEnrollmentSession.State, id: String = sessionID, expiresInMs: Int64 = 118_250,
-        error: String? = nil, joinerEntry: String = "allowed", bridgeEndpoint: Endpoint = .asTheHubSends
+        error: String? = nil, joinerEntry: String = "allowed", bridgeEndpoint: Endpoint = .asTheHubSends,
+        managementGeneration: String? = nil
     ) -> PowerBaseEnrollmentSession {
         let endpoint: PowerBaseBLEBridgeEndpoint?
         switch bridgeEndpoint {
@@ -198,8 +218,16 @@ enum EnrollmentFixtures {
             windowSeconds: 120, createdAtUnixMs: 1_790_000_000_000, expiresAtUnixMs: 1_790_000_120_000,
             expiresInMs: state.isFinal ? 0 : expiresInMs,
             heartbeatReceivedAtUnixMs: state == .heartbeatReceived ? 1_790_000_030_000 : nil,
-            startedByDeviceID: deviceID, bridgeEndpoint: endpoint
+            startedByDeviceID: deviceID, bridgeEndpoint: endpoint, managementGeneration: managementGeneration
         )
+    }
+
+    /// A made-up enrollment generation and the credential a hub would issue with it. The key is
+    /// test data; no real key is ever written into a test.
+    static let managementGeneration = String(repeating: "7e", count: 16)
+    static let otherManagementGeneration = String(repeating: "5d", count: 16)
+    static func managementCredential(hubID: String = hubA, generation: String = managementGeneration) -> PowerBaseBLEManagementCredential {
+        PowerBaseBLEManagementCredential(hubIDHex: hubID, generationHex: generation, keyHex: String(repeating: "a5", count: 32))!
     }
 
     static func pairedTarget(hubID: String = hubA, url: URL = urlA) -> PowerBaseEnrollmentController.Target {

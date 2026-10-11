@@ -45,9 +45,9 @@ enum PlatformSupport {
     /// no API to read that permission, so the app can only point to it when it can't connect.
     static var localNetworkPermissionHint: String {
         #if targetEnvironment(macCatalyst)
-        String(localized: "연결되지 않으면 이 Mac이 Linux Bridge와 같은 네트워크에 있는지, 시스템 설정 > 개인정보 보호 및 보안 > 로컬 네트워크에서 조각보 홈이 켜져 있는지 확인하세요.", comment: "Mac: hint shown while Live mode isn't connected")
+        String(localized: "연결되지 않으면 이 Mac이 허브와 같은 네트워크에 있는지, 시스템 설정 > 개인정보 보호 및 보안 > 로컬 네트워크에서 조각보 홈이 켜져 있는지 확인하세요.", comment: "Mac: hint shown while Live mode isn't connected")
         #else
-        String(localized: "연결되지 않으면 이 기기가 Linux Bridge와 같은 Wi-Fi에 있는지, 설정 > 개인정보 보호 및 보안 > 로컬 네트워크에서 조각보 홈이 켜져 있는지 확인하세요.", comment: "iPhone/iPad: hint shown while Live mode isn't connected")
+        String(localized: "연결되지 않으면 이 기기가 허브와 같은 Wi-Fi에 있는지, 설정 > 개인정보 보호 및 보안 > 로컬 네트워크에서 조각보 홈이 켜져 있는지 확인하세요.", comment: "iPhone/iPad: hint shown while Live mode isn't connected")
         #endif
     }
 }

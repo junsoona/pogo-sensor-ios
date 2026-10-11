@@ -1,4 +1,3 @@
-#if DEBUG
 import Foundation
 import Security
 
@@ -7,9 +6,15 @@ import Security
 // docs/power-base.md "BLE 등록 전달 경로". Every value below is copied from there; nothing is
 // guessed. Every multi-byte integer is big-endian.
 //
-// Two start messages exist on `pb-start`: the first one (0x02, PSKd only) and the one that also
-// carries the Linux bridge endpoint (0x04, capability `bridge_endpoint_v1`). The first keeps its
-// bytes; the app's test sends the second and only to a board that lists the capability.
+// Three start messages exist on `pb-start`: the first one (0x02, PSKd only), the one that also
+// carries the Linux bridge endpoint (0x04, capability `bridge_endpoint_v1`), and the one that
+// carries the endpoint and the hub's management credential (0x06, capability `mgmt_v1`, firmware
+// repository docs/power-base-management.md). Each keeps its own bytes; a message is only ever sent
+// to a board that lists its capability, and never replaced by an older one.
+//
+// Two more messages belong to the local reset of an enrolled board (capability `local_reset_v1`,
+// firmware repository docs/power-base.md "BOOT 버튼 로컬 재등록"): the reset command on `pb-start`
+// (0x09) and "what became of it" on `pb-status` (0x08). They follow the same rule.
 
 public enum PowerBaseBLEProtocol {
     public static let version: UInt8 = 1
@@ -112,6 +117,110 @@ public enum PowerBaseBLERandom {
         var bytes = [UInt8](repeating: 0, count: count)
         let status = bytes.withUnsafeMutableBytes { SecRandomCopyBytes(kSecRandomDefault, count, $0.baseAddress!) }
         return status == errSecSuccess ? bytes : nil
+    }
+}
+
+/// The client's name for one local reset: 16 bytes from the system's secure random generator,
+/// never all zero. It names the operation for as long as its outcome is asked about -- across a
+/// lost answer, a new connection and a restart of the board -- so that asking never becomes a
+/// second reset.
+public struct PowerBaseBLEOperationID: Hashable, Sendable {
+    public static let length = 16
+    public let bytes: Data
+
+    public init?(bytes: Data) {
+        guard bytes.count == Self.length, bytes.contains(where: { $0 != 0 }) else { return nil }
+        self.bytes = Data(bytes)
+    }
+
+    /// A new id, or `nil` when there is no secure randomness (then nothing may be sent).
+    public static func random(_ randomBytes: (Int) -> [UInt8]? = PowerBaseBLERandom.system) -> PowerBaseBLEOperationID? {
+        guard let bytes = randomBytes(length), bytes.count == length else { return nil }
+        return PowerBaseBLEOperationID(bytes: Data(bytes))
+    }
+}
+
+/// What the user must have said before a local reset command is built: that the board's existing
+/// registration is to be erased. There is exactly one value, and no command can be encoded without
+/// it -- so a reset is never sent by a code path that did not go through the confirmation.
+public struct PowerBaseBLELocalResetConfirmation: Equatable, Sendable {
+    /// Byte [44] of the request (`PB_BLE_LOCAL_RESET_CONFIRM_ERASE`).
+    let wireValue: UInt8
+    private init(wireValue: UInt8) { self.wireValue = wireValue }
+
+    /// The user explicitly confirmed erasing the board's existing network registration.
+    public static let userConfirmedErasingRegistration = PowerBaseBLELocalResetConfirmation(wireValue: 0x01)
+}
+
+/// What a board says about a local reset (`pb-status` message 0x08 / 0x88). Only ever built from a
+/// response that passed every check.
+///
+/// Four things are kept apart and none is taken for another: the command being *accepted* (the
+/// answer to the command itself), the reset being *in progress* (journaled on the board: it never
+/// resumes its old registration again), the reset being *verified* (`phase == .verified` with
+/// `condition == .notEnrolled`), and a new registration -- which is not reported here at all.
+public struct PowerBaseBLELocalResetStatus: Equatable, Sendable {
+    /// What the board holds now (`PB_BLE_LR_COND_*`).
+    public enum Condition: UInt8, Equatable, Sendable {
+        /// Nothing it would resume: nothing to reset; register it the usual way.
+        case notEnrolled = 0
+        /// A registration it resumes from.
+        case enrolled = 1
+        /// Its hub is unenrolling it: that comes first.
+        case remoteReleasePending = 2
+        /// A journaled local reset is not finished.
+        case resetPending = 3
+        /// Its reset journal or registration record cannot be read.
+        case unreadable = 4
+    }
+
+    /// How far the asked operation got (`PB_BLE_LR_PHASE_*`).
+    public enum Phase: UInt8, Equatable, Sendable {
+        /// Accepted; the board's worker has not journaled it yet.
+        case queued = 1
+        /// Journaled; the erase is not verified (yet).
+        case inProgress = 2
+        /// The registration record and the stored network were read back empty.
+        case verified = 3
+        /// Ended before anything was changed.
+        case notStarted = 4
+    }
+
+    public static let formatVersion: UInt8 = 1
+    public static let maximumReason: UInt8 = 9
+    public static let maximumWindowSeconds = 120
+
+    public var eui64: PowerBaseBLEEUI64
+    public var condition: Condition
+    /// The board's physical re-enrollment window (opened with its button) is open now.
+    public var isWindowOpen: Bool
+    /// Seconds left in that window; 0 unless it is open.
+    public var windowSecondsLeft: Int
+    /// `nil` unless the board knows the operation that was asked about.
+    public var operationPhase: Phase?
+    /// `PB_BLE_LR_REASON_*` of that operation (0: none).
+    public var operationReason: UInt8
+
+    public init(
+        eui64: PowerBaseBLEEUI64, condition: Condition, isWindowOpen: Bool = false, windowSecondsLeft: Int = 0,
+        operationPhase: Phase? = nil, operationReason: UInt8 = 0
+    ) {
+        self.eui64 = eui64
+        self.condition = condition
+        self.isWindowOpen = isWindowOpen
+        self.windowSecondsLeft = windowSecondsLeft
+        self.operationPhase = operationPhase
+        self.operationReason = operationReason
+    }
+
+    static let reasonNames = [
+        "none", "journal_store_failed", "not_enrolled", "remote_release_pending", "other_reset_pending",
+        "record_clear_failed", "record_still_present", "network_erase_failed", "network_not_empty", "journal_final_failed",
+    ]
+
+    /// The documented name of a reason value this codec accepted, for a developer-facing display.
+    public static func reasonName(_ value: UInt8) -> String {
+        Int(value) < reasonNames.count ? reasonNames[Int(value)] : "0x" + String(value, radix: 16)
     }
 }
 
@@ -238,6 +347,68 @@ public struct PowerBaseBLEBridgeEndpoint: Hashable, Sendable {
     }
 }
 
+/// The hub's management credential for one enrollment: its id, the enrollment generation and the
+/// 32-byte management key -- what later authenticates a remote "unenroll" between that hub and that
+/// board (firmware repository, docs/power-base-management.md). Carried by `pb-start` message 0x06
+/// (pb_ble_proto.h `PB_BLE_MSG_START_MGMT_REQ`, capability `mgmt_v1`).
+///
+/// The key is a secret. This type is how it travels from the hub's answer to the one encrypted
+/// request that hands it to the board; nothing here stores it, and it has no textual form: every
+/// description of a value of this type is the same fixed word.
+public struct PowerBaseBLEManagementCredential: Sendable, CustomStringConvertible, CustomDebugStringConvertible, CustomReflectable {
+    /// Byte [64] of the request: the management format this type is.
+    public static let formatVersion: UInt8 = 1
+    public static let hubIDLength = 16
+    public static let generationLength = 16
+    public static let keyLength = 32
+
+    public let hubID: Data
+    public let generation: Data
+    let key: Data
+
+    /// `nil` unless each part has its exact length and is not all zero.
+    public init?(hubID: Data, generation: Data, key: Data) {
+        guard hubID.count == Self.hubIDLength, generation.count == Self.generationLength, key.count == Self.keyLength,
+              hubID.contains(where: { $0 != 0 }), generation.contains(where: { $0 != 0 }), key.contains(where: { $0 != 0 }) else { return nil }
+        self.hubID = Data(hubID)
+        self.generation = Data(generation)
+        self.key = Data(key)
+    }
+
+    /// From the hub's JSON: 32, 32 and 64 lower-case hex digits. Anything else is not a credential.
+    public init?(hubIDHex: String, generationHex: String, keyHex: String) {
+        guard let hubID = Self.bytes(hubIDHex, count: Self.hubIDLength), let generation = Self.bytes(generationHex, count: Self.generationLength),
+              let key = Self.bytes(keyHex, count: Self.keyLength) else { return nil }
+        self.init(hubID: hubID, generation: generation, key: key)
+    }
+
+    /// The generation as the hub prints it (32 lower-case hex digits). Not a secret.
+    public var generationHex: String { generation.map { String(format: "%02x", $0) }.joined() }
+
+    public var description: String { "PowerBaseBLEManagementCredential(redacted)" }
+    public var debugDescription: String { description }
+    public var customMirror: Mirror { Mirror(self, children: [:]) }
+
+    private static func bytes(_ hex: String, count: Int) -> Data? {
+        let scalars = Array(hex.unicodeScalars)
+        guard scalars.count == count * 2 else { return nil }
+        var out = Data(capacity: count)
+        for index in stride(from: 0, to: scalars.count, by: 2) {
+            guard let high = nibble(scalars[index]), let low = nibble(scalars[index + 1]) else { return nil }
+            out.append(high << 4 | low)
+        }
+        return out
+    }
+
+    private static func nibble(_ scalar: Unicode.Scalar) -> UInt8? {
+        switch scalar {
+        case "0"..."9": return UInt8(scalar.value - 48)
+        case "a"..."f": return UInt8(scalar.value - 87)
+        default: return nil
+        }
+    }
+}
+
 /// What a board says it can do beyond the first version 1 messages: `pb_enroll.cap` in
 /// `proto-ver`. Read before authentication, so it only decides which message this client sends --
 /// a board that does not list a capability is never sent the message that needs it.
@@ -247,8 +418,69 @@ public struct PowerBaseBLECapabilities: OptionSet, Equatable, Sendable {
 
     /// `"bridge_endpoint_v1"`: the board takes `pb-start` with the bridge endpoint (message 0x04).
     public static let bridgeEndpointV1 = PowerBaseBLECapabilities(rawValue: 0x01)
+    /// `"mgmt_v1"`: the board takes `pb-start` with the bridge endpoint and the hub's management
+    /// credential (message 0x06), and can then be unenrolled by that hub.
+    public static let managementV1 = PowerBaseBLECapabilities(rawValue: 0x02)
+    /// `"release_receipt_v1"`: the board hands out its release receipt on `pb-status` (message
+    /// 0x07) after its hub unenrolled it.
+    public static let releaseReceiptV1 = PowerBaseBLECapabilities(rawValue: 0x04)
+
+    /// `"local_reset_v1"`: the board has a re-enrollment button and takes the local reset command
+    /// (message 0x09 on `pb-start`) and its status (message 0x08 on `pb-status`).
+    public static let localResetV1 = PowerBaseBLECapabilities(rawValue: 0x08)
 
     static let bridgeEndpointV1Name = "bridge_endpoint_v1"
+    static let managementV1Name = "mgmt_v1"
+    static let releaseReceiptV1Name = "release_receipt_v1"
+    static let localResetV1Name = "local_reset_v1"
+}
+
+/// A board's release receipt (firmware repository, docs/power-base-management.md): the complete
+/// management message `UNENROLL_DONE` with result `ERASED`, which the board makes only after it
+/// erased its stored network, checked that, and stored its final record. A released board has no
+/// Thread network left, so this is read here, inside the Security 2 session, and relayed to the
+/// hub -- the only thing that completes a removal there.
+///
+/// It holds no secret (identifiers and a MAC). This type checks its shape only; whether it is
+/// genuine is decided by the hub that issued the enrollment's key, never by the app.
+public struct PowerBaseBLEReleaseReceipt: Equatable, Sendable {
+    public static let length = 96
+    static let messageType: UInt8 = 0x03
+    static let resultOffset = 60
+    static let resultErased: UInt8 = 2
+
+    public let bytes: Data
+
+    /// `nil` unless `bytes` is an `UNENROLL_DONE` of management protocol version 1 that says
+    /// `ERASED`. In particular the board's "released" notice (result 1) is not a receipt.
+    public init?(bytes: Data) {
+        let b = [UInt8](bytes)
+        guard b.count == Self.length, b[0] == 1, b[1] == Self.messageType, b[2] == 0, b[3] == 0,
+              b[Self.resultOffset] == Self.resultErased, b[61] == 0, b[62] == 0, b[63] == 0 else { return nil }
+        self.bytes = Data(b)
+    }
+
+    /// The EUI-64 the receipt names, 16 lower-case hex digits.
+    public var eui64Hex: String { PowerBaseBLEHex.string(bytes.subdata(in: 4..<12)) }
+    /// The hub the receipt is for, 32 lower-case hex digits.
+    public var hubIDHex: String { PowerBaseBLEHex.string(bytes.subdata(in: 12..<28)) }
+    /// The enrollment generation it belongs to, 32 lower-case hex digits.
+    public var generationHex: String { PowerBaseBLEHex.string(bytes.subdata(in: 28..<44)) }
+    /// The whole receipt as the hub's API takes it: 192 lower-case hex digits.
+    public var hex: String { PowerBaseBLEHex.string(bytes) }
+}
+
+enum PowerBaseBLEHex {
+    static func string(_ data: Data) -> String {
+        let digits = Array("0123456789abcdef".utf8)
+        var out = [UInt8]()
+        out.reserveCapacity(data.count * 2)
+        for byte in data {
+            out.append(digits[Int(byte >> 4)])
+            out.append(digits[Int(byte & 0x0f)])
+        }
+        return String(decoding: out, as: UTF8.self)
+    }
 }
 
 /// `pb_ble_code_t`. 0x00…0x0f mean the request was honoured.
@@ -274,6 +506,15 @@ public enum PowerBaseBLECode: UInt8, Equatable, Sendable, CaseIterable {
     /// `pb-start` with the bridge endpoint only: unknown endpoint format, port 0, or an address
     /// that is not a Thread Mesh-Local EID. Nothing started.
     case invalidEndpoint = 0x1d
+    /// `pb-start` with the management credential only: unknown management format, or a hub id,
+    /// generation or key made of zeros. Nothing started.
+    case invalidManagement = 0x1e
+    /// The local reset command only: no physical re-enrollment window is open on the board (its
+    /// button was not held, or the window's time is over). Nothing changed.
+    case windowClosed = 0x1f
+    /// The local reset command only: the board holds no registration it would resume, so there is
+    /// nothing to reset. Nothing changed.
+    case notEnrolled = 0x20
 
     /// The name in pb_ble_proto.h, for a developer-facing display.
     public var name: String {
@@ -295,6 +536,9 @@ public enum PowerBaseBLECode: UInt8, Equatable, Sendable, CaseIterable {
         case .unavailable: return "UNAVAILABLE"
         case .internalError: return "INTERNAL"
         case .invalidEndpoint: return "INVALID_ENDPOINT"
+        case .invalidManagement: return "INVALID_MANAGEMENT"
+        case .windowClosed: return "WINDOW_CLOSED"
+        case .notEnrolled: return "NOT_ENROLLED"
         }
     }
 }
@@ -413,13 +657,32 @@ public enum PowerBaseBLECodec {
     static let startResponseType: UInt8 = 0x82
     static let cancelResponseType: UInt8 = 0x83
     static let startWithEndpointResponseType: UInt8 = 0x84
+    /// `pb-start` with the bridge endpoint and the management credential: a third message.
+    static let startWithManagementRequestType: UInt8 = 0x06
+    static let startWithManagementResponseType: UInt8 = 0x86
+    static let receiptRequestType: UInt8 = 0x07
+    static let receiptResponseType: UInt8 = 0x87
+    static let receiptFormatVersion: UInt8 = 1
+    /// `pb-status`: what became of a local reset.
+    static let localResetStatusRequestType: UInt8 = 0x08
+    static let localResetStatusResponseType: UInt8 = 0x88
+    /// `pb-start`: the local reset command.
+    static let localResetRequestType: UInt8 = 0x09
+    static let localResetResponseType: UInt8 = 0x89
+
+    public static let localResetStatusRequestLength = 28
+    public static let localResetStatusResponseLength = 32
+    public static let localResetRequestLength = 48
 
     public static let statusRequestLength = 20
     public static let statusResponseLength = 40
     public static let startRequestFixedLength = 44
     public static let startWithEndpointRequestFixedLength = 64
+    public static let startWithManagementRequestFixedLength = 130
     public static let cancelRequestLength = 28
     public static let shortResponseLength = 4
+    public static let receiptRequestLength = 12
+    public static let receiptResponseLength = 112
 
     static let statusIssueChallenge: UInt8 = 0x01
 
@@ -434,6 +697,141 @@ public enum PowerBaseBLECodec {
     // MARK: Requests
 
     /// `[0]` version `[1]` 0x01 `[2]` flags `[3]` 0 `[4..19]` request id to ask about (zero: none).
+    /// `[0]` version `[1]` 0x07 `[2]` 0 `[3]` 0 `[4..11]` target. Sent on `pb-status`, only to a
+    /// board that lists `release_receipt_v1`.
+    public static func receiptRequest(target: PowerBaseBLEEUI64) -> Data {
+        var data = Data([PowerBaseBLEProtocol.version, receiptRequestType, 0, 0])
+        data.append(target.bytes)
+        return data
+    }
+
+    /// `[0]` version `[1]` 0x87 `[2]` code `[3]` 0 `[4..11]` the board's EUI-64 `[12]` receipt
+    /// format (1) `[13]` 1 = present `[14..15]` 0 `[16..111]` the receipt, or zeros.
+    ///
+    /// `nil`: the board has no receipt. Throws for anything that is not exactly one of the two
+    /// documented answers for `target` -- a refusal, another board's EUI-64, a "present" flag with
+    /// something that is not a receipt, or a receipt that names another board.
+    public static func decodeReceiptResponse(_ response: Data, target: PowerBaseBLEEUI64) throws -> PowerBaseBLEReleaseReceipt? {
+        let bytes = [UInt8](response)
+        guard bytes.count == receiptResponseLength else { throw PowerBaseBLECodecError.length(bytes.count) }
+        guard bytes[0] == PowerBaseBLEProtocol.version else { throw PowerBaseBLECodecError.version(bytes[0]) }
+        guard bytes[1] == receiptResponseType else { throw PowerBaseBLECodecError.type(bytes[1]) }
+        guard bytes[3] == 0, bytes[14] == 0, bytes[15] == 0 else { throw PowerBaseBLECodecError.reserved }
+        guard let code = PowerBaseBLECode(rawValue: bytes[2]) else { throw PowerBaseBLECodecError.code(bytes[2]) }
+        guard code == .ok else {
+            guard code == .malformed || code == .unsupportedVersion || code == .wrongTarget else {
+                throw PowerBaseBLECodecError.code(bytes[2])
+            }
+            throw PowerBaseBLECodecError.refused(code)
+        }
+        guard bytes[12] == receiptFormatVersion else { throw PowerBaseBLECodecError.field("receipt version") }
+        guard Data(bytes[4..<12]) == target.bytes else { throw PowerBaseBLECodecError.field("eui64") }
+        let body = Data(bytes[16...])
+        switch bytes[13] {
+        case 0:
+            guard body.allSatisfy({ $0 == 0 }) else { throw PowerBaseBLECodecError.field("receipt") }
+            return nil
+        case 1:
+            guard let receipt = PowerBaseBLEReleaseReceipt(bytes: body), receipt.bytes.subdata(in: 4..<12) == target.bytes else {
+                throw PowerBaseBLECodecError.field("receipt")
+            }
+            return receipt
+        default:
+            throw PowerBaseBLECodecError.field("receipt present")
+        }
+    }
+
+    // MARK: Local reset
+
+    /// `[0]` version `[1]` 0x08 `[2]` 0 `[3]` 0 `[4..11]` target `[12..27]` operation id to ask
+    /// about (zero: none). Sent on `pb-status`, only to a board that lists `local_reset_v1`.
+    /// Asking changes nothing on the board and needs no challenge.
+    public static func localResetStatusRequest(target: PowerBaseBLEEUI64, operationID: PowerBaseBLEOperationID?) -> Data {
+        var data = Data([PowerBaseBLEProtocol.version, localResetStatusRequestType, 0, 0])
+        data.append(target.bytes)
+        data.append(operationID?.bytes ?? Data(count: PowerBaseBLEOperationID.length))
+        return data
+    }
+
+    /// `[0]` version `[1]` 0x88 `[2]` code `[3]` 0 `[4..11]` the board's EUI-64 `[12]` local reset
+    /// format (1) `[13]` condition `[14]` flags (0x01 window open, 0x02 operation known)
+    /// `[15]` phase `[16]` reason `[17]` 0 `[18..19]` seconds left in the window `[20..31]` 0.
+    ///
+    /// Throws for anything that is not exactly a documented answer for `target`: a refusal,
+    /// another board's EUI-64, a value outside its range, or fields that contradict each other.
+    public static func decodeLocalResetStatusResponse(_ response: Data, target: PowerBaseBLEEUI64) throws -> PowerBaseBLELocalResetStatus {
+        let bytes = [UInt8](response)
+        guard bytes.count == localResetStatusResponseLength else { throw PowerBaseBLECodecError.length(bytes.count) }
+        guard bytes[0] == PowerBaseBLEProtocol.version else { throw PowerBaseBLECodecError.version(bytes[0]) }
+        guard bytes[1] == localResetStatusResponseType else { throw PowerBaseBLECodecError.type(bytes[1]) }
+        guard bytes[3] == 0, bytes[17] == 0, bytes[20...].allSatisfy({ $0 == 0 }) else { throw PowerBaseBLECodecError.reserved }
+        guard let code = PowerBaseBLECode(rawValue: bytes[2]) else { throw PowerBaseBLECodecError.code(bytes[2]) }
+        guard code == .ok else {
+            guard code == .malformed || code == .unsupportedVersion || code == .wrongTarget else {
+                throw PowerBaseBLECodecError.code(bytes[2])
+            }
+            // A refusal carries no state: everything after the EUI-64 is zero (and for the first
+            // two the EUI-64 as well). Anything else is not that refusal.
+            guard bytes[12...].allSatisfy({ $0 == 0 }), code == .wrongTarget || bytes[4..<12].allSatisfy({ $0 == 0 }) else {
+                throw PowerBaseBLECodecError.field("refusal")
+            }
+            throw PowerBaseBLECodecError.refused(code)
+        }
+        guard Data(bytes[4..<12]) == target.bytes else { throw PowerBaseBLECodecError.field("eui64") }
+        guard bytes[12] == PowerBaseBLELocalResetStatus.formatVersion else { throw PowerBaseBLECodecError.field("local reset version") }
+        guard let condition = PowerBaseBLELocalResetStatus.Condition(rawValue: bytes[13]) else { throw PowerBaseBLECodecError.field("condition") }
+        guard bytes[14] & ~0x03 == 0 else { throw PowerBaseBLECodecError.field("flags") }
+        let windowOpen = bytes[14] & 0x01 != 0
+        let operationKnown = bytes[14] & 0x02 != 0
+        let phase = PowerBaseBLELocalResetStatus.Phase(rawValue: bytes[15])
+        guard bytes[16] <= PowerBaseBLELocalResetStatus.maximumReason else { throw PowerBaseBLECodecError.field("reason") }
+        if operationKnown {
+            guard phase != nil else { throw PowerBaseBLECodecError.field("phase") }
+        } else {
+            guard bytes[15] == 0, bytes[16] == 0 else { throw PowerBaseBLECodecError.field("phase") }
+        }
+        let seconds = Int(bytes[18]) << 8 | Int(bytes[19])
+        if windowOpen {
+            guard (1...PowerBaseBLELocalResetStatus.maximumWindowSeconds).contains(seconds) else { throw PowerBaseBLECodecError.field("window") }
+        } else {
+            guard seconds == 0 else { throw PowerBaseBLECodecError.field("window") }
+        }
+        return PowerBaseBLELocalResetStatus(
+            eui64: target, condition: condition, isWindowOpen: windowOpen, windowSecondsLeft: seconds,
+            operationPhase: operationKnown ? phase : nil, operationReason: bytes[16]
+        )
+    }
+
+    /// The local reset command (48 bytes), sent on `pb-start`, only to a board that lists
+    /// `local_reset_v1`: `[0]` version `[1]` 0x09 `[2]` local reset format (1) `[3]` 0
+    /// `[4..11]` target `[12..27]` operation id `[28..43]` challenge `[44]` confirmation (0x01)
+    /// `[45..47]` 0. It cannot be built without a `PowerBaseBLELocalResetConfirmation`.
+    public static func localResetRequest(
+        target: PowerBaseBLEEUI64, operationID: PowerBaseBLEOperationID, challenge: PowerBaseBLEChallenge,
+        confirmation: PowerBaseBLELocalResetConfirmation
+    ) -> Data {
+        var data = Data([PowerBaseBLEProtocol.version, localResetRequestType, PowerBaseBLELocalResetStatus.formatVersion, 0])
+        data.append(target.bytes)
+        data.append(operationID.bytes)
+        data.append(challenge.bytes)
+        data.append(contentsOf: [confirmation.wireValue, 0, 0, 0])
+        return data
+    }
+
+    /// The codes the local reset command can be answered with (pb_ble_admission.c).
+    static let localResetCodes: Set<PowerBaseBLECode> = [
+        .accepted, .duplicate, .malformed, .wrongTarget, .challengeInvalid, .challengeExpired, .busy, .requestConflict,
+        .closed, .windowClosed, .notEnrolled,
+    ]
+
+    /// The answer to the local reset command: its own response type (0x89). A board that does not
+    /// know the message answers with the version 1 type (0x82, `MALFORMED`), which this refuses as
+    /// `.type` -- nothing in it is used. `.accepted` means the board took the command, not that it
+    /// erased anything.
+    public static func decodeLocalResetResponse(_ response: Data) throws -> PowerBaseBLECode {
+        try decodeShortResponse(response, type: localResetResponseType, codes: localResetCodes)
+    }
+
     public static func statusRequest(issueChallenge: Bool, requestID: PowerBaseBLERequestID?) -> Data {
         var data = Data([PowerBaseBLEProtocol.version, statusRequestType, issueChallenge ? statusIssueChallenge : 0, 0])
         data.append(requestID?.bytes ?? Data(count: PowerBaseBLERequestID.length))
@@ -476,6 +874,31 @@ public enum PowerBaseBLECodec {
         return data
     }
 
+    /// The start that delivers the bridge endpoint and the hub's management credential
+    /// (130 + PSKd bytes): the 0x04 layout up to `[63]` with type 0x06, then
+    /// `[64]` management format (1) `[65]` 0 `[66..81]` hub id `[82..97]` enrollment generation
+    /// `[98..129]` management key `[130..]` PSKd. `nil` for a PSKd outside the Thread alphabet or
+    /// 6…32. The two earlier requests are unchanged; this is another message.
+    public static func startRequest(
+        target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String,
+        endpoint: PowerBaseBLEBridgeEndpoint, management: PowerBaseBLEManagementCredential
+    ) -> Data? {
+        guard isValidPSKd(pskd) else { return nil }
+        let code = Data(pskd.utf8)
+        var data = Data([PowerBaseBLEProtocol.version, startWithManagementRequestType, UInt8(code.count), 0])
+        data.append(target.bytes)
+        data.append(requestID.bytes)
+        data.append(challenge.bytes)
+        data.append(contentsOf: [PowerBaseBLEBridgeEndpoint.formatVersion, 0, UInt8(endpoint.port >> 8), UInt8(endpoint.port & 0xff)])
+        data.append(endpoint.address)
+        data.append(contentsOf: [PowerBaseBLEManagementCredential.formatVersion, 0])
+        data.append(management.hubID)
+        data.append(management.generation)
+        data.append(management.key)
+        data.append(code)
+        return data
+    }
+
     /// `[0]` version `[1]` 0x03 `[2..3]` 0 `[4..11]` target `[12..27]` request id.
     public static func cancelRequest(target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID) -> Data {
         var data = Data([PowerBaseBLEProtocol.version, cancelRequestType, 0, 0])
@@ -495,6 +918,8 @@ public enum PowerBaseBLECodec {
     ]
     /// The start with the bridge endpoint answers with the same codes, and with `INVALID_ENDPOINT`.
     static let startWithEndpointCodes: Set<PowerBaseBLECode> = startCodes.union([.invalidEndpoint])
+    /// The start with the management credential adds `INVALID_MANAGEMENT` to those.
+    static let startWithManagementCodes: Set<PowerBaseBLECode> = startWithEndpointCodes.union([.invalidManagement])
     static let cancelCodes: Set<PowerBaseBLECode> = [.ok, .unsupportedVersion, .malformed, .wrongTarget, .noSuchAttempt, .busy, .closed]
 
     public static func decodeStatusResponse(_ response: Data) throws -> PowerBaseBLEStatus {
@@ -560,6 +985,13 @@ public enum PowerBaseBLECodec {
         try decodeShortResponse(response, type: startWithEndpointResponseType, codes: startWithEndpointCodes)
     }
 
+    /// The answer to the start with the management credential: its own response type (0x86). A
+    /// board that does not know the message answers with the version 1 type (0x82, `MALFORMED`),
+    /// which this refuses as `.type` -- nothing in it is used.
+    public static func decodeStartWithManagementResponse(_ response: Data) throws -> PowerBaseBLECode {
+        try decodeShortResponse(response, type: startWithManagementResponseType, codes: startWithManagementCodes)
+    }
+
     public static func decodeCancelResponse(_ response: Data) throws -> PowerBaseBLECode {
         try decodeShortResponse(response, type: cancelResponseType, codes: cancelCodes)
     }
@@ -579,7 +1011,8 @@ public enum PowerBaseBLECodec {
 /// What `proto-ver` must say before any handshake is attempted:
 /// `{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":[]},"pb_enroll":{"proto":1}}`, with
 /// an optional `"cap":[…]` list inside `pb_enroll` (firmware that takes the start with the bridge
-/// endpoint lists `"bridge_endpoint_v1"` there; older firmware has no list).
+/// endpoint lists `"bridge_endpoint_v1"` there, firmware that also takes the management credential
+/// `"mgmt_v1"`; older firmware has no list).
 public enum PowerBaseBLEVersion {
     public enum Failure: Error, Equatable, Sendable {
         case malformed
@@ -625,6 +1058,15 @@ public enum PowerBaseBLEVersion {
         if (document.pb_enroll.cap ?? []).contains(PowerBaseBLECapabilities.bridgeEndpointV1Name) {
             capabilities.insert(.bridgeEndpointV1)
         }
+        if (document.pb_enroll.cap ?? []).contains(PowerBaseBLECapabilities.managementV1Name) {
+            capabilities.insert(.managementV1)
+        }
+        if (document.pb_enroll.cap ?? []).contains(PowerBaseBLECapabilities.releaseReceiptV1Name) {
+            capabilities.insert(.releaseReceiptV1)
+        }
+        if (document.pb_enroll.cap ?? []).contains(PowerBaseBLECapabilities.localResetV1Name) {
+            capabilities.insert(.localResetV1)
+        }
         return capabilities
     }
 }
@@ -652,4 +1094,3 @@ public enum PowerBaseSetupCode {
         return String(result)
     }
 }
-#endif

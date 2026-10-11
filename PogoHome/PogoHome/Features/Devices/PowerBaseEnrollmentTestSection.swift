@@ -371,6 +371,11 @@ enum PowerBaseEnrollmentText {
             return Text("허브가 요청 내용을 거부했습니다. (\(code))", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG enrollment error 400/411/413/422; argument is the hub's code")
         case .bridgeEndpointNotSupported:
             return Text("이 허브는 Thread 목적지 자동 전달을 지원하지 않습니다. 허브(Linux Bridge와 OTBR helper)를 업데이트해야 합니다. 세션은 만들어지지 않았고, 주소를 추정하거나 이전 방식으로 바꿔 요청하지 않았습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG enrollment error: the hub refused the request for its bridge endpoint")
+        case .managementNotSupported:
+            // The DEBUG tests never ask for a management credential; only the product screen does.
+            return Text(verbatim: "management_not_supported")
+        case .managementRequired:
+            return Text(verbatim: "409 management_required")
         case let .unavailable(reason):
             return Text("허브가 지금 등록을 처리할 수 없습니다(503, \(reason)). 잠시 후 다시 시도하세요.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG enrollment error 503; argument is the hub's reason")
         case .internalError:

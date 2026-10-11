@@ -1,0 +1,29 @@
+// The ONE definition of the app's version numbers (docs/versioning.md).
+//
+// Every target -- the app, its widgets, the Watch app, the Watch widgets and the test bundles --
+// gets both numbers from here: this file is the base configuration of the PROJECT's Debug and
+// Release configurations, and no target sets either number itself
+// (Scripts/pogo_app_version.py check verifies that).
+//
+// MARKETING_VERSION        -> CFBundleShortVersionString: MAJOR.MINOR.PATCH, three integers.
+// CURRENT_PROJECT_VERSION  -> CFBundleVersion: one integer, raised for every build that leaves
+//                             this Mac for a device or a tester, never reused for the same version.
+//
+// Both are plain numbers, as Apple's keys require. Nothing else is ever put into them: not "dev",
+// not a Git SHA, not a date. Whether a build is a development build, and which sources it was
+// made from, is separate metadata (the POGO_BUILD_* settings below).
+//
+// These numbers change only by editing this file on purpose. No build raises them, and no build
+// rewrites the project file.
+MARKETING_VERSION = 1.3.4
+CURRENT_PROJECT_VERSION = 17
+
+// Build identity, shown in Settings > App Info > Build Details and written into the app's
+// Info.plist (PogoBuild* keys). Scripts/pogo_app_version.py build passes the real values on the
+// xcodebuild command line for that one build; a build made any other way (Xcode's Run button, a
+// bare xcodebuild) keeps these defaults and says "unknown" -- it never shows a guessed commit.
+POGO_BUILD_COMMIT = unknown
+POGO_BUILD_DIRTY = unknown
+POGO_BUILD_SOURCE_FINGERPRINT = unknown
+POGO_BUILD_ID = unknown
+POGO_BUILD_KIND = unknown

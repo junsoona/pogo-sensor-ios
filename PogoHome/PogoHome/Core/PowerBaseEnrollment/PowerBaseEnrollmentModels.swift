@@ -1,11 +1,10 @@
-#if DEBUG
 import Foundation
 import PowerBaseBLEKit
 import Security
 
 // The hub's Power Base enrollment API ("Power Base enrollment" in the firmware repository's
-// docs/pogohome-api-v1.md), for the DEBUG-only enrollment test. Nothing here is compiled into a
-// Release build: the app does not register Power Bases yet.
+// docs/pogohome-api-v1.md and docs/power-base-management.md). Used by the product enrollment screen
+// and by the DEBUG enrollment tests, so it is compiled into Debug and Release builds alike.
 
 /// A Power Base's Joiner EUI-64 as the hub accepts it: exactly 16 hex digits, not all zero. No
 /// separators, no `*` (wildcard Joiner), no discerner.
@@ -100,6 +99,65 @@ nonisolated enum PowerBaseEnrollmentBridgeEndpoint {
     }
 }
 
+/// The hub's `management` of a session started with a management credential (firmware repository,
+/// docs/power-base-management.md): the enrollment generation, and -- only in the answer to the
+/// `POST` that started the session -- the hub's id and the management key.
+///
+/// Decoding is strict: format version exactly 1 and every part exactly as long as documented. An
+/// answer that carries a `management` this cannot read is unusable as a whole.
+nonisolated enum PowerBaseEnrollmentManagement {
+    /// What the app asks for in the `POST` and the only `version` it reads.
+    static let version = 1
+
+    private enum CodingKeys: String, CodingKey {
+        case version, generation, hubID = "hub_id", key
+    }
+
+    /// The generation of a `management` key: `nil` when the key is absent or `null` (a session
+    /// started without a management credential).
+    static func decodeGenerationIfPresent<Key: CodingKey>(
+        from container: KeyedDecodingContainer<Key>, forKey key: Key
+    ) throws -> String? {
+        guard container.contains(key), try !container.decodeNil(forKey: key) else { return nil }
+        let object = try container.nestedContainer(keyedBy: CodingKeys.self, forKey: key)
+        guard try object.decode(Int.self, forKey: .version) == version else {
+            throw DecodingError.dataCorruptedError(forKey: .version, in: object, debugDescription: "management version")
+        }
+        let generation = try object.decode(String.self, forKey: .generation)
+        guard generation.unicodeScalars.count == 32,
+              generation.unicodeScalars.allSatisfy({ ("0"..."9").contains($0) || ("a"..."f").contains($0) }) else {
+            throw DecodingError.dataCorruptedError(forKey: .generation, in: object, debugDescription: "management generation")
+        }
+        return generation
+    }
+
+    /// The whole credential out of the answer to the starting `POST`: `nil` unless `hub_id` and
+    /// `key` are there and every part is exactly as documented. Nothing of it is ever put into an
+    /// error or a description.
+    static func decodeCredentialIfPresent(from data: Data) -> PowerBaseBLEManagementCredential? {
+        struct Envelope: Decodable {
+            struct Management: Decodable {
+                let version: Int
+                let generation: String
+                let hub_id: String?
+                let key: String?
+            }
+            let management: Management?
+        }
+        guard let management = (try? JSONDecoder().decode(Envelope.self, from: data))?.management,
+              management.version == version, let hubID = management.hub_id, let key = management.key else { return nil }
+        return PowerBaseBLEManagementCredential(hubIDHex: hubID, generationHex: management.generation, keyHex: key)
+    }
+}
+
+/// What the `POST` that asks for a management credential gave: the session, and the credential
+/// the hub issued for it. `credential` is `nil` when the hub accepted the session but its answer
+/// carried no usable credential -- then nothing may be delivered to the board with this session.
+nonisolated struct PowerBaseEnrollmentManagedStart: Sendable {
+    let session: PowerBaseEnrollmentSession
+    let credential: PowerBaseBLEManagementCredential?
+}
+
 /// One enrollment session as the hub reports it. Decoding is strict about the documented fields
 /// (all required, with their types; `state` one of the six documented values; ids well formed)
 /// and ignores unknown additional ones, as the API's compatibility policy asks.
@@ -146,6 +204,9 @@ nonisolated struct PowerBaseEnrollmentSession: Equatable, Sendable, Decodable {
     /// without bridge endpoint delivery) or `null` (not established yet -- possible while
     /// `preparing`, and for a session that ended before it was).
     let bridgeEndpoint: PowerBaseBLEBridgeEndpoint?
+    /// The enrollment generation of the session's management credential (32 lower-case hex
+    /// digits); `nil` for a session started without one. Never the key.
+    let managementGeneration: String?
 
     enum CodingKeys: String, CodingKey {
         case sessionID = "session_id"
@@ -161,12 +222,14 @@ nonisolated struct PowerBaseEnrollmentSession: Equatable, Sendable, Decodable {
         case heartbeatReceivedAtUnixMs = "heartbeat_received_at_unix_ms"
         case startedByDeviceID = "started_by_device_id"
         case bridgeEndpoint = "bridge_endpoint"
+        case management
     }
 
     init(
         sessionID: String, eui64: String, state: State, finished: Bool, joinerEntry: String, error: String?,
         windowSeconds: Int, createdAtUnixMs: Int64, expiresAtUnixMs: Int64, expiresInMs: Int64,
-        heartbeatReceivedAtUnixMs: Int64?, startedByDeviceID: String, bridgeEndpoint: PowerBaseBLEBridgeEndpoint? = nil
+        heartbeatReceivedAtUnixMs: Int64?, startedByDeviceID: String, bridgeEndpoint: PowerBaseBLEBridgeEndpoint? = nil,
+        managementGeneration: String? = nil
     ) {
         self.sessionID = sessionID
         self.eui64 = eui64
@@ -181,6 +244,7 @@ nonisolated struct PowerBaseEnrollmentSession: Equatable, Sendable, Decodable {
         self.heartbeatReceivedAtUnixMs = heartbeatReceivedAtUnixMs
         self.startedByDeviceID = startedByDeviceID
         self.bridgeEndpoint = bridgeEndpoint
+        self.managementGeneration = managementGeneration
     }
 
     init(from decoder: Decoder) throws {
@@ -213,7 +277,10 @@ nonisolated struct PowerBaseEnrollmentSession: Equatable, Sendable, Decodable {
             heartbeatReceivedAtUnixMs: try container.decode(Int64?.self, forKey: .heartbeatReceivedAtUnixMs),
             startedByDeviceID: try container.decode(String.self, forKey: .startedByDeviceID),
             // Absent or `null`: none. Present: every field checked, or the answer is refused.
-            bridgeEndpoint: try PowerBaseEnrollmentBridgeEndpoint.decodeIfPresent(from: container, forKey: .bridgeEndpoint)
+            bridgeEndpoint: try PowerBaseEnrollmentBridgeEndpoint.decodeIfPresent(from: container, forKey: .bridgeEndpoint),
+            // Absent or `null`: none. Present: checked, or the answer is refused. The key, if the
+            // answer has one, is not read here.
+            managementGeneration: try PowerBaseEnrollmentManagement.decodeGenerationIfPresent(from: container, forKey: .management)
         )
     }
 }
@@ -244,6 +311,14 @@ nonisolated enum PowerBaseEnrollmentError: Error, Equatable, Sendable {
     /// fields, or `422 unsupported_bridge_endpoint_version`). No session exists. The app does not
     /// ask again without the option and does not make up an address.
     case bridgeEndpointNotSupported
+    /// The hub does not issue management credentials: it refused the request that asked for one
+    /// (`400 invalid_request` from a bridge older than the option, or
+    /// `422 unsupported_management_version`). No session exists. The app does not ask again
+    /// without the option: a Base enrolled that way could not be removed from the app later.
+    case managementNotSupported
+    /// `409 management_required`: this Power Base was removed from this hub, and only a session
+    /// that issues a new management credential may enroll it again.
+    case managementRequired
     /// `503` with the hub's reason (`startup`, `stopping`, `auth_unavailable`, …).
     case unavailable(String)
     /// `500 internal_error`.
@@ -263,4 +338,3 @@ nonisolated enum PowerBaseEnrollmentError: Error, Equatable, Sendable {
         }
     }
 }
-#endif

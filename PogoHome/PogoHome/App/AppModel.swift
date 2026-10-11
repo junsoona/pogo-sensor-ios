@@ -74,6 +74,16 @@ final class AppModel {
     /// a strict subset during process restart is recovery progress rather than removal.
     private var completeModuleIDs: Set<UUID> = []
     private(set) var isRegistryRecovering = false
+    /// What this app has seen the current source's hub do with its Power Bases and their removal
+    /// jobs -- the grounds for taking a Base that left the list as released. Belongs to the source,
+    /// like `sourceSnapshot`: another hub starts from nothing.
+    private var releaseEvidence = PowerBaseReleaseEvidence()
+    /// Which of the current source's snapshots were applied, by the hub's own numbering: an older
+    /// one that arrives after a newer one is not applied (`HubSnapshotOrdering`). Belongs to the
+    /// source, like the evidence above.
+    private var snapshotOrdering = HubSnapshotOrdering()
+    /// How many snapshots were left out because a newer one had been applied already.
+    private(set) var staleSnapshotCount = 0
 
     init(
         dataSource: SensorDataSource,
@@ -132,6 +142,26 @@ final class AppModel {
             lastSyncAt: lastSyncAt,
             isRegistryRecovering: isRegistryRecovering
         )
+    }
+
+    /// Whether what the hub says about its Power Bases -- listed or not, heard or not -- is
+    /// current: the connection is live and fresh, and the Bases on screen are the hub's latest
+    /// rather than the last confirmed ones kept while its sensors recover. Unlike
+    /// `health.isCurrentStateVerified` this needs no sensor to have delivered a reading: a Base
+    /// without sensors is still a Base the hub hears.
+    var isPowerBaseStateVerified: Bool {
+        HomeHealthEvaluator.isPowerBaseStateVerified(
+            connectionStatus: connectionStatus,
+            lastSyncAt: lastSyncAt,
+            isHoldingBackSensorData: isHoldingBackSensorData
+        )
+    }
+
+    /// The sensors and Bases on screen are the last complete ones, kept while the hub's newer
+    /// snapshots are incomplete (see `applyIncoming(_:)`). Not the same as `isRegistryRecovering`,
+    /// which is also true before any complete snapshot exists -- then nothing is held back.
+    private var isHoldingBackSensorData: Bool {
+        isRegistryRecovering && !completeModuleIDs.isEmpty
     }
 
     /// While there are no modules at all: whether the source is still being reached, can't be
@@ -256,6 +286,8 @@ final class AppModel {
         lastSyncAt = nil
         completeModuleIDs = []
         isRegistryRecovering = false
+        releaseEvidence = PowerBaseReleaseEvidence()
+        snapshotOrdering = HubSnapshotOrdering()
         periodicRefreshFailureStreak = 0
         lastLoggedPeriodicRefreshResult = nil
     }
@@ -426,7 +458,42 @@ final class AppModel {
     /// transitional per-module state, not proof anything was removed. Before any complete
     /// baseline exists yet (cold start), incomplete progress is still shown (so first-boot
     /// topology-before-sample state is visible) rather than held.
+    ///
+    /// Two things are never held back with the sensors:
+    ///
+    /// - **What the hub says about Power Base management** -- whether it offers it, and its
+    ///   removal jobs. That is not sensor data, and a job goes on (released, completed, without a
+    ///   result) whether or not the registry is complete. A held-back snapshot still delivers it.
+    /// - **A Power Base the hub took out of its list** ("허브 목록에서 제거",
+    ///   `power_base_forgets`): gone in the same way as a released one, and judged by the same
+    ///   evidence. The hub's records of them are management, too, and are never held back.
+    /// - **A Power Base the hub has released.** At `released` the hub takes the Base and the
+    ///   sensors under it out of its lists for good, so their absence is that removal and not a
+    ///   registry being rebuilt: they leave the screen, and they no longer count towards the
+    ///   baseline. When they were the last ones there is no baseline left, and the hub's empty
+    ///   list is applied as it is. Only the hub's own `released`/`completed` job counts, and only
+    ///   when this app has not seen that job to be over before the Base's present listing
+    ///   (`PowerBaseReleaseEvidence`: the job's history, never a time). An empty list by itself, a
+    ///   job in any other state, an earlier removal of a Base that was enrolled again and silence
+    ///   keep the sensors as before.
+    /// - **A Power Base the hub names as out of its list** (`power_base_departures`). That is the
+    ///   hub's present state and not a job: it is in every snapshot until the Base is registered
+    ///   again, long after the job that ended the registration is no longer shown. So a device
+    ///   that was in the background through the whole removal -- for an hour -- still drops the
+    ///   sensors of that Base with the first snapshot it gets, and does not keep them as
+    ///   "recovering" because it never saw the job end.
+    ///
+    /// Before any of this, **a snapshot that is older than one already applied is left out
+    /// altogether** (`HubSnapshotOrdering`): the answer to a `GET` that was on its way while the
+    /// hub's state moved on and an event already showed the new state. Nothing of it is taken
+    /// in -- not its Bases, not its jobs, not its settings signal, not its place in the evidence
+    /// -- and it is not counted as hearing from the hub: what it says, the app knew already.
     private func applyIncoming(_ incoming: HomeSnapshot) {
+        guard snapshotOrdering.admits(incoming.delivery, now: SnapshotRequestClock.now) else {
+            staleSnapshotCount += 1
+            Self.logger.debug("snapshot left out: older than one already applied")
+            return
+        }
         lastSyncAt = Date()
         // Read even from a snapshot held back below: the settings revision is independent of
         // registry recovery.
@@ -435,6 +502,18 @@ final class AppModel {
         let incomingIDs = Set(incoming.modules.map(\.id))
         let incomingIsComplete = incoming.onlineModulesHaveReadings
 
+        // What is kept on screen if `incoming` is held back: the last sensors and Bases, without
+        // those the hub has released since. Every snapshot is taken in, held back or not: the
+        // evidence is what the hub said, in order.
+        let released = releaseEvidence.observe(incoming)
+        let kept = Self.removing(powerBases: released, notListedIn: incomingIDs, from: sourceSnapshot)
+        if kept.modules.count != sourceSnapshot.modules.count {
+            completeModuleIDs.formIntersection(kept.modules.map(\.id))
+            Self.logger.notice(
+                "\(self.sourceSnapshot.modules.count - kept.modules.count, privacy: .public) module(s) left with \(released.count, privacy: .public) released Power Base(s)"
+            )
+        }
+
         if !completeModuleIDs.isEmpty && !incomingIsComplete {
             if !isRegistryRecovering {
                 Self.logger.notice(
@@ -442,6 +521,11 @@ final class AppModel {
                 )
             }
             isRegistryRecovering = true
+            let held = Self.withPowerBaseManagement(of: incoming, on: kept)
+            if held != sourceSnapshot {
+                sourceSnapshot = held
+                snapshot = Self.apply(homeConfiguration, to: held)
+            }
             return
         }
 
@@ -543,8 +627,54 @@ final class AppModel {
         snapshot = Self.apply(homeConfiguration, to: sourceSnapshot)
     }
 
+    /// `source` without the released `powerBases` and the sensors under them. A sensor the hub
+    /// still lists (`stillListed`: it moved to another Base) stays.
+    private nonisolated static func removing(powerBases released: Set<String>, notListedIn stillListed: Set<UUID>, from source: HomeSnapshot) -> HomeSnapshot {
+        guard !released.isEmpty else { return source }
+        let modules = source.modules.filter { module in
+            guard let base = module.powerBaseIdentifier, released.contains(base) else { return true }
+            return stillListed.contains(module.id)
+        }
+        let powerBases = source.powerBases.filter { !released.contains($0.hardwareIdentifier) }
+        guard modules.count != source.modules.count || powerBases.count != source.powerBases.count else { return source }
+        return HomeSnapshot(
+            timestamp: source.timestamp,
+            rooms: source.rooms,
+            modules: modules,
+            powerBases: powerBases,
+            reportsPowerBases: source.reportsPowerBases,
+            hubSettings: source.hubSettings,
+            powerBaseRemovals: source.powerBaseRemovals,
+            reportsPowerBaseManagement: source.reportsPowerBaseManagement,
+            powerBaseForgets: source.powerBaseForgets,
+            reportsPowerBaseForget: source.reportsPowerBaseForget,
+            powerBaseDepartures: source.powerBaseDepartures,
+            reportsPowerBaseDepartures: source.reportsPowerBaseDepartures
+        )
+    }
+
+    /// `kept` -- sensors, readings, Bases and timestamp as they are -- with what `incoming` says
+    /// about Power Base management.
+    private nonisolated static func withPowerBaseManagement(of incoming: HomeSnapshot, on kept: HomeSnapshot) -> HomeSnapshot {
+        HomeSnapshot(
+            timestamp: kept.timestamp,
+            rooms: kept.rooms,
+            modules: kept.modules,
+            powerBases: kept.powerBases,
+            reportsPowerBases: kept.reportsPowerBases,
+            hubSettings: kept.hubSettings,
+            powerBaseRemovals: incoming.powerBaseRemovals,
+            reportsPowerBaseManagement: incoming.reportsPowerBaseManagement,
+            powerBaseForgets: incoming.powerBaseForgets,
+            reportsPowerBaseForget: incoming.reportsPowerBaseForget,
+            powerBaseDepartures: incoming.powerBaseDepartures,
+            reportsPowerBaseDepartures: incoming.reportsPowerBaseDepartures
+        )
+    }
+
     /// Applies only user-facing metadata. Sensor readings, online state, timestamps and
-    /// roles always come from `source` unchanged.
+    /// roles always come from `source` unchanged -- and so does everything else the hub reports
+    /// (Power Bases, its settings signal, Power Base management and its removal jobs).
     private nonisolated static func apply(
         _ configuration: HomeConfigurationSnapshot,
         to source: HomeSnapshot
@@ -576,7 +706,13 @@ final class AppModel {
             modules: modules,
             powerBases: source.powerBases,
             reportsPowerBases: source.reportsPowerBases,
-            hubSettings: source.hubSettings
+            hubSettings: source.hubSettings,
+            powerBaseRemovals: source.powerBaseRemovals,
+            reportsPowerBaseManagement: source.reportsPowerBaseManagement,
+            powerBaseForgets: source.powerBaseForgets,
+            reportsPowerBaseForget: source.reportsPowerBaseForget,
+            powerBaseDepartures: source.powerBaseDepartures,
+            reportsPowerBaseDepartures: source.reportsPowerBaseDepartures
         )
     }
 }

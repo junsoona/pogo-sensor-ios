@@ -5,9 +5,10 @@
 #   git -C /tmp/espprov checkout 78e58f010f8539f800bce063a26d3e4c4ac596b9
 #   sh verify_against_upstream.sh /tmp/espprov
 #
-# Every file here is the upstream file with one line added before it ("#if DEBUG ...") and one
-# after it ("#endif"). With those two lines removed, the only files that may differ are the three
-# patched ones listed in VENDORED.md; their diffs are printed. Exit status 0 = as documented.
+# Every file here is the upstream file itself -- no wrapper line before or after it (until
+# 2026-10-05 each file was inside "#if DEBUG ... #endif"; the package is now compiled into Release
+# builds too, see VENDORED.md). The only files that may differ are the three patched ones listed
+# in VENDORED.md; their diffs are printed. Exit status 0 = as documented.
 set -eu
 upstream="${1:?path to a checkout of esp-idf-provisioning-ios at the pinned commit}/ESPProvision"
 here="$(cd "$(dirname "$0")" && pwd)/Upstream"
@@ -22,13 +23,12 @@ for file in $(find . -name '*.swift' | sed 's|^\./||' | tr ' ' '?' | sort); do
     if [ ! -f "$upstream/$file" ]; then
         echo "NOT IN UPSTREAM: $file"; status=1; continue
     fi
-    [ "$(head -n 1 "$file" | cut -c1-9)" = "#if DEBUG" ] || { echo "NO DEBUG WRAPPER: $file"; status=1; }
-    [ "$(tail -n 1 "$file")" = "#endif" ] || { echo "NO #endif: $file"; status=1; }
-    if ! sed '1d;$d' "$file" | cmp -s - "$upstream/$file"; then
+    [ "$(head -n 1 "$file" | cut -c1-9)" != "#if DEBUG" ] || { echo "DEBUG WRAPPER: $file"; status=1; }
+    if ! cmp -s "$file" "$upstream/$file"; then
         changed="$changed$file
 "
         echo "=== $file"
-        sed '1d;$d' "$file" | diff "$upstream/$file" - || true
+        diff "$upstream/$file" "$file" || true
     fi
 done
 if [ "$(printf '%s' "$changed" | sort)" != "$(printf '%s\n' "$expected" | sort)" ]; then

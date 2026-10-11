@@ -1,8 +1,9 @@
-#if DEBUG && os(macOS)
+#if os(macOS)
 import XCTest
 
 /// Rules about the package's own source text: nothing in it can log, the vendored copy contains no
-/// weaker security scheme and none of the SDK's networking, and every file stays DEBUG-only.
+/// weaker security scheme and none of the SDK's networking, and no file is DEBUG-only -- a Release
+/// build compiles exactly the code these tests ran.
 final class SourceRulesTests: XCTestCase {
     private var sourcesDirectory: URL {
         URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
@@ -52,11 +53,25 @@ final class SourceRulesTests: XCTestCase {
         }
     }
 
-    func testEverySourceFileIsDebugOnly() throws {
+    /// The product enrollment screen uses this package, so nothing in it may depend on the build
+    /// configuration: no `#if DEBUG` anywhere (code or comment), in any source file.
+    func testNoSourceFileDependsOnTheBuildConfiguration() throws {
         for file in try swiftFiles() {
-            let lines = try String(contentsOf: file, encoding: .utf8).split(separator: "\n", omittingEmptySubsequences: true)
-            XCTAssertTrue(lines.first?.hasPrefix("#if DEBUG") == true, "\(file.lastPathComponent) starts with #if DEBUG")
-            XCTAssertEqual(lines.last, "#endif", "\(file.lastPathComponent) ends with #endif")
+            let text = try String(contentsOf: file, encoding: .utf8)
+            XCTAssertFalse(text.contains("#if DEBUG"), "\(file.lastPathComponent) has a DEBUG-only part")
+            XCTAssertFalse(text.contains("#if !DEBUG"), "\(file.lastPathComponent) has a Release-only part")
+        }
+    }
+
+    /// Nothing in the package shows, copies or stores a secret: no pasteboard, no keychain, no
+    /// user defaults, no file writing.
+    func testNoSourceFileCanPersistOrExposeASecret() throws {
+        let forbidden = ["UIPasteboard", "NSPasteboard", "UserDefaults", "SecItemAdd", "SecItemUpdate", "FileManager", ".write(to:"]
+        for file in try swiftFiles() {
+            let text = try code(file)
+            for word in forbidden {
+                XCTAssertFalse(text.contains(word), "\(file.lastPathComponent) contains \(word)")
+            }
         }
     }
 }

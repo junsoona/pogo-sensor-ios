@@ -1,4 +1,3 @@
-#if DEBUG
 // PogoHome addition -- not part of ESPProvision. It stands in for upstream's generated protobuf
 // code (Proto/session.pb.swift, sec2.pb.swift, constants.pb.swift and the SwiftProtobuf runtime
 // they need), for exactly the four Security 2 handshake messages, with the same type and property
@@ -429,4 +428,3 @@ struct Security2WireWriter {
         data.append(bytes)
     }
 }
-#endif

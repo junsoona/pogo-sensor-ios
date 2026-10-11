@@ -1,4 +1,3 @@
-#if DEBUG
 import ESPProvisionSecurity2
 import Foundation
 
@@ -232,6 +231,99 @@ public actor PowerBaseBLEBoardClient {
         }
     }
 
+    /// Hands the PSKd over together with the Linux bridge endpoint and the hub's management
+    /// credential (message 0x06). Only for a board that listed both `bridge_endpoint_v1` and
+    /// `mgmt_v1`: for any other board nothing is sent and this throws `.invalidInput("capability")`
+    /// -- an older start message is never sent in its place. The request is encrypted with the
+    /// Security 2 session like every other; the credential is not kept by this type.
+    public func start(
+        target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String,
+        endpoint: PowerBaseBLEBridgeEndpoint, management: PowerBaseBLEManagementCredential
+    ) async throws -> PowerBaseBLECode {
+        guard boardCapabilities.contains([.bridgeEndpointV1, .managementV1]) else { throw PowerBaseBLEClientError.invalidInput("capability") }
+        guard let request = PowerBaseBLECodec.startRequest(
+            target: target, requestID: requestID, challenge: challenge, pskd: pskd, endpoint: endpoint, management: management
+        ) else {
+            throw PowerBaseBLEClientError.invalidInput("pskd")
+        }
+        let response = try await secureExchange(endpoint: .start, plaintext: request)
+        do {
+            return try PowerBaseBLECodec.decodeStartWithManagementResponse(response)
+        } catch {
+            discardSession()
+            throw PowerBaseBLEClientError.malformedResponse(Self.codecError(error))
+        }
+    }
+
+    /// The board's release receipt, or `nil` when it has none (it was never unenrolled by its hub,
+    /// the erase of its stored network is not finished, or a new enrollment attempt has replaced
+    /// the record). Only sent to a board that lists `release_receipt_v1`; for any other board
+    /// nothing is sent and this throws `.invalidInput("capability")`. Reading it changes nothing on
+    /// the board and needs no challenge.
+    public func releaseReceipt(target: PowerBaseBLEEUI64) async throws -> PowerBaseBLEReleaseReceipt? {
+        guard boardCapabilities.contains(.releaseReceiptV1) else { throw PowerBaseBLEClientError.invalidInput("capability") }
+        let request = PowerBaseBLECodec.receiptRequest(target: target)
+        let response = try await secureExchange(endpoint: .status, plaintext: request)
+        do {
+            return try PowerBaseBLECodec.decodeReceiptResponse(response, target: target)
+        } catch PowerBaseBLECodecError.refused(let code) {
+            discardSession()
+            throw PowerBaseBLEClientError.refusedByBoard(code)
+        } catch {
+            discardSession()
+            throw PowerBaseBLEClientError.malformedResponse(Self.codecError(error))
+        }
+    }
+
+    /// What the board holds and, with `operationID`, what became of that local reset (message 0x08
+    /// on `pb-status`). Only sent to a board that lists `local_reset_v1`; for any other board
+    /// nothing is sent and this throws `.invalidInput("capability")`. Asking changes nothing on the
+    /// board and needs no challenge: it is how an uncertain outcome is resolved without sending
+    /// the command again.
+    public func localResetStatus(target: PowerBaseBLEEUI64, operationID: PowerBaseBLEOperationID?) async throws -> PowerBaseBLELocalResetStatus {
+        guard boardCapabilities.contains(.localResetV1) else { throw PowerBaseBLEClientError.invalidInput("capability") }
+        let request = PowerBaseBLECodec.localResetStatusRequest(target: target, operationID: operationID)
+        let response = try await secureExchange(endpoint: .status, plaintext: request)
+        let status: PowerBaseBLELocalResetStatus
+        do {
+            status = try PowerBaseBLECodec.decodeLocalResetStatusResponse(response, target: target)
+        } catch PowerBaseBLECodecError.refused(let code) {
+            discardSession()
+            throw PowerBaseBLEClientError.refusedByBoard(code)
+        } catch {
+            discardSession()
+            throw PowerBaseBLEClientError.malformedResponse(Self.codecError(error))
+        }
+        // The answer must fit the question.
+        if operationID == nil, status.operationPhase != nil {
+            discardSession()
+            throw PowerBaseBLEClientError.malformedResponse(.field("phase"))
+        }
+        return status
+    }
+
+    /// Asks the board to erase its own registration and stored network (message 0x09 on
+    /// `pb-start`). Only for a board that lists `local_reset_v1`: for any other board nothing is
+    /// sent and this throws `.invalidInput("capability")` -- no other message is sent in its
+    /// place. `.accepted` and `.duplicate` mean the board took the command; whether it erased and
+    /// verified is what `localResetStatus` says afterwards. This type never sends it twice.
+    public func localReset(
+        target: PowerBaseBLEEUI64, operationID: PowerBaseBLEOperationID, challenge: PowerBaseBLEChallenge,
+        confirmation: PowerBaseBLELocalResetConfirmation
+    ) async throws -> PowerBaseBLECode {
+        guard boardCapabilities.contains(.localResetV1) else { throw PowerBaseBLEClientError.invalidInput("capability") }
+        let request = PowerBaseBLECodec.localResetRequest(
+            target: target, operationID: operationID, challenge: challenge, confirmation: confirmation
+        )
+        let response = try await secureExchange(endpoint: .start, plaintext: request)
+        do {
+            return try PowerBaseBLECodec.decodeLocalResetResponse(response)
+        } catch {
+            discardSession()
+            throw PowerBaseBLEClientError.malformedResponse(Self.codecError(error))
+        }
+    }
+
     /// Asks the board to stop the attempt this client started, named by its request id.
     public func cancel(target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID) async throws -> PowerBaseBLECode {
         let request = PowerBaseBLECodec.cancelRequest(target: target, requestID: requestID)
@@ -322,4 +414,3 @@ public actor PowerBaseBLEBoardClient {
         }
     }
 }
-#endif

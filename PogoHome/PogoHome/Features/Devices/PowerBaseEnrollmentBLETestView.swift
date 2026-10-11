@@ -82,21 +82,6 @@ struct PowerBaseEnrollmentBLETestView: View {
     }
 }
 
-extension PowerBaseEnrollmentController.Target {
-    /// The source the app reads now, as the enrollment tests see it.
-    init(appModel: AppModel) {
-        let identity = appModel.sourceIdentity
-        let shared = appModel.sharedSettings
-        let hubID = identity.hubID
-        self.init(
-            hubID: hubID,
-            baseURL: hubID == nil ? nil : appModel.sourceAddress,
-            isSimulated: identity.isSimulated,
-            isPaired: hubID != nil && shared.hubID == hubID && shared.isPaired
-        )
-    }
-}
-
 /// What the tester entered. Kept in memory by the screen only; the setup code is never stored,
 /// shown, copied or logged, and is dropped with the screen.
 struct PowerBaseEnrollmentBLEForm: Equatable {
@@ -839,6 +824,10 @@ enum PowerBaseEnrollmentBLEText {
             return Text("허브가 Joiner를 열었지만 이 세션의 Thread 목적지(bridge_endpoint)를 알려 주지 않았습니다. 보드에는 등록 요청을 보내지 않았고 세션 취소를 요청했습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment failure: the hub waits for the heartbeat without a bridge endpoint")
         case .hubEndpoint(.changed, _):
             return Text("허브가 같은 세션에서 처음과 다른 Thread 목적지(bridge_endpoint)를 알려 주었습니다. 바뀐 목적지로는 아무것도 보내지 않았고 세션 취소를 요청했습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment failure: the hub's bridge endpoint changed within one session")
+        case .hubEndpoint(.managementMissing, _):
+            // Only a run that requires the management credential (the product screen) can end
+            // this way; this DEBUG test never asks for one.
+            return Text(verbatim: "management credential missing")
         case .stopped:
             return Text("시험을 중단했습니다.", tableName: "PowerBaseEnrollmentDebug", comment: "DEBUG BLE enrollment failure: cancelled before any hub session")
         case .sourceChanged:

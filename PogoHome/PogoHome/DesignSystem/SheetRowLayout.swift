@@ -15,6 +15,9 @@ enum SheetRowLayout {
     static let lineSpacing: CGFloat = 2
     /// Between the icon or number column and the text.
     static let columnSpacing: CGFloat = 12
+    /// The symbol whose width is the width of the icon column (`SheetIconColumn`): about 24pt at
+    /// the default text size, and the widest of the symbols the rows ordinarily show.
+    static let columnReferenceSymbol = "dot.radiowaves.left.and.right"
     /// Mac: added between one section and the next section's header. The Catalyst list adds its
     /// own ~19pt after a card (~33pt after a footer) to this; iPhone and iPad keep the system's.
     static let macSectionSpacing: CGFloat = 8
@@ -49,14 +52,46 @@ extension View {
     }
 }
 
-/// A row with a leading icon in a fixed-width column. The icon sits on the first line's
+/// The icon (or number, or spinner) column of a sheet row.
+///
+/// Its width is the width of one reference symbol drawn, invisibly, in the row's own font -- so
+/// the column grows exactly as the symbols in it grow with Dynamic Type. A fixed 24pt scaled with
+/// `@ScaledMetric` did not: that follows the text style's metrics (2.8 times at the largest
+/// accessibility size) while a symbol drawn as text follows the font's point size (3.2 times), and
+/// the column cut the wide symbols off from "extra large" on. The column is also never narrower
+/// than what it shows (`fixedSize`): a symbol wider than the reference widens its own row instead
+/// of being cut.
+///
+/// An icon is decorative: hidden from VoiceOver, which reads the row's text and would otherwise
+/// read the symbol's name before a button's own. A step's number is not (`isDecorative: false`).
+struct SheetIconColumn<Icon: View>: View {
+    private let icon: Icon
+    private let isDecorative: Bool
+
+    init(isDecorative: Bool = true, @ViewBuilder icon: () -> Icon) {
+        self.icon = icon()
+        self.isDecorative = isDecorative
+    }
+
+    var body: some View {
+        ZStack {
+            Text(Image(systemName: SheetRowLayout.columnReferenceSymbol))
+                .hidden()
+                .accessibilityHidden(true)
+            icon
+                .accessibilityHidden(isDecorative)
+        }
+        .fixedSize()
+    }
+}
+
+/// A row with a leading icon in a column of one width. The icon sits on the first line's
 /// baseline and every line of `content` — however many it wraps to — starts at the same x, as
 /// does the row separator below it.
 struct SheetIconRow<Icon: View, Content: View>: View {
     private let icon: Icon
     private let spacing: CGFloat
     private let content: Content
-    @ScaledMetric(relativeTo: .body) private var iconWidth: CGFloat = 24
 
     init(spacing: CGFloat = SheetRowLayout.titleSpacing, @ViewBuilder icon: () -> Icon, @ViewBuilder content: () -> Content) {
         self.icon = icon()
@@ -66,9 +101,7 @@ struct SheetIconRow<Icon: View, Content: View>: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: SheetRowLayout.columnSpacing) {
-            icon
-                .frame(width: iconWidth)
-                .accessibilityHidden(true)
+            SheetIconColumn { icon }
             VStack(alignment: .leading, spacing: spacing) {
                 content
             }
@@ -114,20 +147,21 @@ struct SymbolIcon: View {
     }
 }
 
-/// One numbered step: the number in a fixed-width column on the first line's baseline, the text
-/// wrapping on its own left edge, the row separator starting there too. Every step, one line
-/// or four, follows the same rule.
+/// One numbered step: the number in the same column as a row's icon, on the first line's
+/// baseline, the text wrapping on its own left edge, the row separator starting there too. Every
+/// step, one line or four, follows the same rule.
 struct SheetNumberedStep: View {
     let number: Int
     let text: LocalizedStringKey
-    @ScaledMetric(relativeTo: .body) private var numberWidth: CGFloat = 24
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: SheetRowLayout.columnSpacing) {
-            Text(verbatim: "\(number)")
-                .font(.headline.monospacedDigit())
-                .foregroundStyle(.tint)
-                .frame(width: numberWidth)
+            // Not hidden from VoiceOver like an icon: the number is part of what the step says.
+            SheetIconColumn(isDecorative: false) {
+                Text(verbatim: "\(number)")
+                    .font(.headline.monospacedDigit())
+                    .foregroundStyle(.tint)
+            }
             Text(text)
                 .sheetParagraph()
                 .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }

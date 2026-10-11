@@ -1,9 +1,8 @@
-#if DEBUG
 import Foundation
 import PowerBaseBLEKit
 
-// What the DEBUG "BLE 등록 시험" needs from Bluetooth, as protocols, so the controller can be tested
-// against scripted boards. The real implementation is `PowerBaseEnrollmentBLECentral`
+// What Power Base enrollment (the product screen and the DEBUG "BLE 등록 시험") needs from
+// Bluetooth, as protocols, so the controller can be tested against scripted boards. The real implementation is `PowerBaseEnrollmentBLECentral`
 // (CoreBluetooth) with `PowerBaseBLEBoardClient` (the package: Espressif's Security 2 and the
 // pb-* messages).
 
@@ -44,9 +43,57 @@ nonisolated protocol PowerBaseBLEBoardSession: Sendable {
         target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String,
         endpoint: PowerBaseBLEBridgeEndpoint
     ) async throws -> PowerBaseBLECode
+    /// `pb-start` with the hub's bridge endpoint and its management credential (message 0x06):
+    /// what the product enrollment sends, and only to a board that lists `mgmt_v1`.
+    func start(
+        target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String,
+        endpoint: PowerBaseBLEBridgeEndpoint, management: PowerBaseBLEManagementCredential
+    ) async throws -> PowerBaseBLECode
     func cancel(target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID) async throws -> PowerBaseBLECode
+    /// The board's release receipt (message 0x07 on `pb-status`), or `nil` when it has none. Only
+    /// asked of a board that lists `release_receipt_v1`. Changes nothing on the board.
+    func releaseReceipt(target: PowerBaseBLEEUI64) async throws -> PowerBaseBLEReleaseReceipt?
+    /// What the board holds and, with `operationID`, what became of that local reset (message 0x08
+    /// on `pb-status`). Only asked of a board that lists `local_reset_v1`. Changes nothing on the
+    /// board.
+    func localResetStatus(target: PowerBaseBLEEUI64, operationID: PowerBaseBLEOperationID?) async throws -> PowerBaseBLELocalResetStatus
+    /// The local reset command (message 0x09 on `pb-start`): the board erases its own registration
+    /// and stored network. Only sent to a board that lists `local_reset_v1`, and only with the
+    /// user's confirmation.
+    func localReset(
+        target: PowerBaseBLEEUI64, operationID: PowerBaseBLEOperationID, challenge: PowerBaseBLEChallenge,
+        confirmation: PowerBaseBLELocalResetConfirmation
+    ) async throws -> PowerBaseBLECode
     /// Drops the session keys and ends the connection.
     func close() async
+}
+
+extension PowerBaseBLEBoardSession {
+    /// A session type that knows nothing of message 0x06 sends nothing in its place.
+    func start(
+        target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String,
+        endpoint: PowerBaseBLEBridgeEndpoint, management: PowerBaseBLEManagementCredential
+    ) async throws -> PowerBaseBLECode {
+        throw PowerBaseBLEClientError.invalidInput("capability")
+    }
+
+    /// A session type that knows nothing of the release receipt asks for none.
+    func releaseReceipt(target: PowerBaseBLEEUI64) async throws -> PowerBaseBLEReleaseReceipt? {
+        throw PowerBaseBLEClientError.invalidInput("capability")
+    }
+
+    /// A session type that knows nothing of the local reset asks nothing about one...
+    func localResetStatus(target: PowerBaseBLEEUI64, operationID: PowerBaseBLEOperationID?) async throws -> PowerBaseBLELocalResetStatus {
+        throw PowerBaseBLEClientError.invalidInput("capability")
+    }
+
+    /// ...and sends none, and nothing in its place.
+    func localReset(
+        target: PowerBaseBLEEUI64, operationID: PowerBaseBLEOperationID, challenge: PowerBaseBLEChallenge,
+        confirmation: PowerBaseBLELocalResetConfirmation
+    ) async throws -> PowerBaseBLECode {
+        throw PowerBaseBLEClientError.invalidInput("capability")
+    }
 }
 
 extension PowerBaseBLEBoardClient: PowerBaseBLEBoardSession {}
@@ -80,6 +127,9 @@ protocol PowerBaseBLEBoardProviding: AnyObject, Sendable {
     func activate()
     /// Forgets the boards seen so far and scans (as soon as Bluetooth is on).
     func startScanning()
+    /// Scans again (as soon as Bluetooth is on) and keeps the boards seen so far: the same search
+    /// going on after a pause, not a new one.
+    func resumeScanning()
     func stopScanning()
 
     /// Connects to `boardID`, checks its GATT service and `proto-ver`, and runs the Security 2
@@ -98,4 +148,3 @@ protocol PowerBaseBLEBoardProviding: AnyObject, Sendable {
     /// Stops scanning and ends any connection.
     func shutdown()
 }
-#endif

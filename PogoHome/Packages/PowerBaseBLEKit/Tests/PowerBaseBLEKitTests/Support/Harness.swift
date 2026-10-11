@@ -1,4 +1,4 @@
-#if DEBUG && os(macOS)
+#if os(macOS)
 import Foundation
 import XCTest
 @testable import PowerBaseBLEKit
@@ -70,8 +70,19 @@ final class Harness: @unchecked Sendable {
         var pendingEndpoint: Endpoint?
         /// The bridge endpoint of an enrolled controller (what the exporter would be given).
         var activeEndpoint: Endpoint?
-        /// The bridge endpoint in the stored version 2 enrollment record.
+        /// The bridge endpoint in the stored version 2 or 3 enrollment record.
         var storedEndpoint: Endpoint?
+        /// The management credential (firmware repository, docs/power-base-management.md): held in
+        /// RAM by the controller / an enrolled controller with a version 3 record / in the stored
+        /// record, with that record's state byte and its three parts as stored. Test credentials
+        /// only -- the harness never sees a real one.
+        var pendingManagement = false
+        var activeManagement = false
+        var storedManagement = false
+        var storedManagementState: UInt8 = 0
+        var storedHubID = Data()
+        var storedGeneration = Data()
+        var storedKey = Data()
     }
 
     struct Endpoint: Equatable {
@@ -80,7 +91,35 @@ final class Harness: @unchecked Sendable {
     }
 
     enum CloseReason: UInt8 {
-        case open = 0, enrolled, authLocked, windowExpired
+        case open = 0, enrolled, authLocked, windowExpired, localResetDone
+    }
+
+    /// What the next boot is, for the local reset (harness command 'W'; nothing unless sent).
+    struct LocalResetBoot: OptionSet {
+        let rawValue: UInt8
+        /// The board has the re-enrollment button: it lists `local_reset_v1`.
+        static let supported = LocalResetBoot(rawValue: 0x01)
+        /// This boot is a re-enrollment window boot (the button was held before it).
+        static let window = LocalResetBoot(rawValue: 0x02)
+        /// The board boots with a stored registration (record version 3) and its Dataset.
+        static let enrolled = LocalResetBoot(rawValue: 0x04)
+    }
+
+    /// What the local reset left behind (harness command 'L'), read with the firmware's own
+    /// `pb_reenroll_snapshot()`.
+    struct LocalResetStats {
+        /// `pb_reenroll_rec_status_t`: 0 absent, 1 valid.
+        var journalStatus: UInt8
+        /// `pb_reenroll_stage_t`: 1 approved, 2 verified (0 without a valid journal).
+        var journalStage: UInt8
+        var journalOperation: Data
+        /// `pb_reenroll_condition_t`.
+        var condition: UInt8
+        /// `pb_enroll_marker_status_t` of the registration record: 0 absent, 1 valid.
+        var recordStatus: UInt8
+        var datasetStored: Bool
+        var resetRuns: UInt32
+        var quiesceCalls: UInt32
     }
 
     let logURL: URL
@@ -203,6 +242,21 @@ final class Harness: @unchecked Sendable {
         return (Self.u32(reply.payload, 0), Data(reply.payload.dropFirst(4)))
     }
 
+    /// What the next `boot` is for the local reset. Before `boot` only.
+    func prepareLocalReset(_ flags: LocalResetBoot) throws -> Bool {
+        try command("W", Data([flags.rawValue])).status == 0
+    }
+
+    func localResetStats() throws -> LocalResetStats {
+        let payload = try command("L").payload
+        let bytes = [UInt8](payload)
+        guard bytes.count == 29 else { throw HarnessError(description: "harness without the local reset stats (rebuild tools/host_ble_sec2)") }
+        return LocalResetStats(
+            journalStatus: bytes[0], journalStage: bytes[1], journalOperation: Data(bytes[2..<18]), condition: bytes[18],
+            recordStatus: bytes[19], datasetStored: bytes[20] != 0, resetRuns: Self.u32(payload, 21), quiesceCalls: Self.u32(payload, 25)
+        )
+    }
+
     /// Advances the board's monotonic clock.
     func advance(milliseconds: UInt32) throws { _ = try command("T", Self.u32(milliseconds)) }
 
@@ -219,6 +273,12 @@ final class Harness: @unchecked Sendable {
     /// One controller tick.
     func tick(attached: Bool, datasetComplete: Bool) throws { _ = try command("A", Data([attached ? 1 : 0, datasetComplete ? 1 : 0])) }
 
+    /// Stores the final release record a board holds after an unenroll whose erase was verified
+    /// (harness command 'F'; test values only).
+    func storeFinalRelease(hubID: Data, generation: Data, commandID: Data, mac: Data) throws -> Bool {
+        try command("F", hubID + generation + commandID + mac).status == 0
+    }
+
     func stats() throws -> Stats {
         let payload = try command("S").payload
         let bytes = [UInt8](payload)
@@ -228,11 +288,22 @@ final class Harness: @unchecked Sendable {
             guard bytes.count >= offset + 19, bytes[offset] != 0 else { return nil }
             return Endpoint(address: Data(bytes[(offset + 1)..<(offset + 17)]), port: UInt16(bytes[offset + 17]) << 8 | UInt16(bytes[offset + 18]))
         }
-        return Stats(
+        var stats = Stats(
             state: bytes[0], last: bytes[1], attempt: Self.u32(payload, 2), joinerStarts: Self.u32(payload, 6),
             joinerStops: Self.u32(payload, 10), threadEnabled: bytes[14] != 0, servicesAllowed: bytes[15] != 0,
             marker: bytes[16], pskd: pskd, pendingEndpoint: endpoint(50), activeEndpoint: endpoint(69), storedEndpoint: endpoint(88)
         )
+        // pending(1) active(1) stored(1) state(1) hub_id(16) generation(16) key(32), after the endpoints.
+        if bytes.count >= 107 + 68 {
+            stats.pendingManagement = bytes[107] != 0
+            stats.activeManagement = bytes[108] != 0
+            stats.storedManagement = bytes[109] != 0
+            stats.storedManagementState = bytes[110]
+            stats.storedHubID = Data(bytes[111..<127])
+            stats.storedGeneration = Data(bytes[127..<143])
+            stats.storedKey = Data(bytes[143..<175])
+        }
+        return stats
     }
 
     func quit() {

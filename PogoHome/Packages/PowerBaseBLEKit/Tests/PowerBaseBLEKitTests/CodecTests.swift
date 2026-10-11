@@ -1,4 +1,3 @@
-#if DEBUG
 import XCTest
 @testable import PowerBaseBLEKit
 
@@ -234,7 +233,7 @@ final class CodecTests: XCTestCase {
             0x00: "OK", 0x01: "ACCEPTED", 0x02: "DUPLICATE", 0x10: "UNSUPPORTED_VERSION", 0x11: "MALFORMED", 0x12: "WRONG_TARGET",
             0x13: "CHALLENGE_INVALID", 0x14: "CHALLENGE_EXPIRED", 0x15: "INVALID_PSKD", 0x16: "BUSY", 0x17: "REQUEST_CONFLICT",
             0x18: "NOT_WAITING", 0x19: "NO_SUCH_ATTEMPT", 0x1a: "CLOSED", 0x1b: "UNAVAILABLE", 0x1c: "INTERNAL",
-            0x1d: "INVALID_ENDPOINT",
+            0x1d: "INVALID_ENDPOINT", 0x1e: "INVALID_MANAGEMENT", 0x1f: "WINDOW_CLOSED", 0x20: "NOT_ENROLLED",
         ]
         XCTAssertEqual(PowerBaseBLECode.allCases.count, header.count)
         for (value, name) in header {
@@ -295,6 +294,172 @@ final class CodecTests: XCTestCase {
         // The board's two answers to it, as bytes.
         XCTAssertEqual(try PowerBaseBLECodec.decodeStartWithEndpointResponse(bytes(BridgeEndpointGolden.responseAccepted)), .accepted)
         XCTAssertEqual(try PowerBaseBLECodec.decodeStartWithEndpointResponse(bytes(BridgeEndpointGolden.responseInvalidEndpoint)), .invalidEndpoint)
+    }
+
+    /// The same bytes are in the firmware repository's tools/test_power_base_ble_admission.c
+    /// (`GOLDEN_START_MGMT_HEX`) and in its docs/power-base-management.md, section 5: the endpoint
+    /// vector above, then management format 1, hub id 10..1f, generation 20..2f, key 30..4f.
+    private enum ManagementGolden {
+        static let request = "01060800" + "6055f9fffe001234" + "a0a1a2a3a4a5a6a7a8a9aaabacadaeaf" + "c0c1c2c3c4c5c6c7c8c9cacbcccdcecf"
+            + "0100" + "1634" + "fd112233445500008c1f2e3d4c5b6a79"
+            + "0100" + "101112131415161718191a1b1c1d1e1f" + "202122232425262728292a2b2c2d2e2f"
+            + "303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f" + "4a30314e4d45374b"
+        static let responseAccepted = "01860100"
+        static let responseInvalidManagement = "01861e00"
+        static let hubID = "101112131415161718191a1b1c1d1e1f"
+        static let generation = "202122232425262728292a2b2c2d2e2f"
+        static let key = "303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f"
+    }
+
+    func testStartWithManagementIsByteForByteTheGoldenVectorSharedWithTheFirmware() throws {
+        let endpoint = try PowerBaseBLEBridgeEndpoint(address: BridgeEndpointGolden.addressText, port: BridgeEndpointGolden.port)
+        let credential = try XCTUnwrap(PowerBaseBLEManagementCredential(
+            hubIDHex: ManagementGolden.hubID, generationHex: ManagementGolden.generation, keyHex: ManagementGolden.key
+        ))
+        let id = try XCTUnwrap(PowerBaseBLERequestID(bytes: Data(0xA0...0xAF)))
+        let golden = try XCTUnwrap(PowerBaseBLEChallenge(bytes: Data(0xC0...0xCF), lifetimeSeconds: 60))
+        let request = try XCTUnwrap(PowerBaseBLECodec.startRequest(
+            target: eui, requestID: id, challenge: golden, pskd: "J01NME7K", endpoint: endpoint, management: credential
+        ))
+        XCTAssertEqual(hex(request), ManagementGolden.request, "the same bytes the firmware's admission test feeds to the real board code")
+
+        let wire = [UInt8](request)
+        XCTAssertEqual(wire.count, 130 + 8)
+        XCTAssertEqual(Array(wire[0..<4]), [1, 0x06, 8, 0], "version 1, its own message type, pskd_len, reserved 0")
+        XCTAssertEqual(Array(wire[4..<64]), Array([UInt8](bytes(BridgeEndpointGolden.request))[4..<64]),
+                       "target, request id, challenge and the endpoint block sit exactly where message 0x04 has them")
+        XCTAssertEqual(wire[64], 1, "management format version")
+        XCTAssertEqual(wire[65], 0, "reserved")
+        XCTAssertEqual(Array(wire[66..<82]), Array(0x10...0x1F), "hub id")
+        XCTAssertEqual(Array(wire[82..<98]), Array(0x20...0x2F), "enrollment generation")
+        XCTAssertEqual(Array(wire[98..<130]), Array(0x30...0x4F), "management key")
+        XCTAssertEqual(Array(wire[130...]), Array("J01NME7K".utf8))
+        XCTAssertEqual(PowerBaseBLECodec.startWithManagementRequestFixedLength, 130)
+        XCTAssertLessThanOrEqual(130 + 32 + 16, PowerBaseBLEProtocol.maximumAttributeLength, "the longest request and its AES-GCM tag fit one characteristic value")
+
+        // The board's two answers to it, as bytes; and only with this message's own type.
+        XCTAssertEqual(try PowerBaseBLECodec.decodeStartWithManagementResponse(bytes(ManagementGolden.responseAccepted)), .accepted)
+        XCTAssertEqual(try PowerBaseBLECodec.decodeStartWithManagementResponse(bytes(ManagementGolden.responseInvalidManagement)), .invalidManagement)
+        for other in ["01820100", "01840100", "01830000"] {
+            XCTAssertThrowsError(try PowerBaseBLECodec.decodeStartWithManagementResponse(bytes(other)), other) {
+                XCTAssertEqual($0 as? PowerBaseBLECodecError, .type(bytes(other)[1]))
+            }
+        }
+        XCTAssertThrowsError(try PowerBaseBLECodec.decodeStartResponse(bytes(ManagementGolden.responseAccepted)), "0x86 is not an answer to the first start")
+        XCTAssertThrowsError(try PowerBaseBLECodec.decodeStartWithEndpointResponse(bytes("01841e00")), "INVALID_MANAGEMENT is not a code of message 0x04") {
+            XCTAssertEqual($0 as? PowerBaseBLECodecError, .code(0x1e))
+        }
+        XCTAssertEqual(PowerBaseBLECode.invalidManagement.rawValue, 0x1e)
+        XCTAssertEqual(PowerBaseBLECode.invalidManagement.name, "INVALID_MANAGEMENT")
+
+        // The two earlier start messages are byte for byte what they were.
+        XCTAssertEqual(hex(try XCTUnwrap(PowerBaseBLECodec.startRequest(target: eui, requestID: id, challenge: golden, pskd: "J01NME7K", endpoint: endpoint))),
+                       BridgeEndpointGolden.request)
+    }
+
+    func testAManagementCredentialIsExactAndHasNoTextualForm() throws {
+        let hub = ManagementGolden.hubID, generation = ManagementGolden.generation, key = ManagementGolden.key
+        let credential = try XCTUnwrap(PowerBaseBLEManagementCredential(hubIDHex: hub, generationHex: generation, keyHex: key))
+        XCTAssertEqual(credential.generationHex, generation)
+        XCTAssertEqual(credential.hubID, Data(0x10...0x1F))
+
+        // Exactly 32, 32 and 64 lower-case hex digits; nothing is trimmed, padded or repaired.
+        XCTAssertNil(PowerBaseBLEManagementCredential(hubIDHex: String(hub.dropLast()), generationHex: generation, keyHex: key))
+        XCTAssertNil(PowerBaseBLEManagementCredential(hubIDHex: hub + "00", generationHex: generation, keyHex: key))
+        XCTAssertNil(PowerBaseBLEManagementCredential(hubIDHex: hub, generationHex: generation.uppercased(), keyHex: key))
+        XCTAssertNil(PowerBaseBLEManagementCredential(hubIDHex: hub, generationHex: generation, keyHex: String(key.dropLast(2))))
+        XCTAssertNil(PowerBaseBLEManagementCredential(hubIDHex: hub, generationHex: generation, keyHex: " " + key.dropFirst()))
+        XCTAssertNil(PowerBaseBLEManagementCredential(hubIDHex: hub, generationHex: generation, keyHex: String(repeating: "g", count: 64)))
+        // A part made of zeros names nothing.
+        XCTAssertNil(PowerBaseBLEManagementCredential(hubIDHex: String(repeating: "0", count: 32), generationHex: generation, keyHex: key))
+        XCTAssertNil(PowerBaseBLEManagementCredential(hubIDHex: hub, generationHex: String(repeating: "0", count: 32), keyHex: key))
+        XCTAssertNil(PowerBaseBLEManagementCredential(hubIDHex: hub, generationHex: generation, keyHex: String(repeating: "0", count: 64)))
+        XCTAssertNil(PowerBaseBLEManagementCredential(hubID: Data(count: 15), generation: Data(0x20...0x2F), key: Data(0x30...0x4F)))
+
+        // Nothing that turns a value into text shows the key (or any other part).
+        var dumped = ""
+        dump(credential, to: &dumped)
+        for text in ["\(credential)", String(describing: credential), String(reflecting: credential), dumped] {
+            XCTAssertFalse(text.contains("3031"), text)
+            XCTAssertFalse(text.contains("48, 49"), text)
+            XCTAssertFalse(text.lowercased().contains("key"), text)
+            XCTAssertTrue(text.contains("redacted"), text)
+        }
+        XCTAssertTrue(Mirror(reflecting: credential).children.isEmpty, "reflection finds no stored value")
+    }
+
+    func testStartWithManagementHasEveryLengthAndNeverAnInvalidPSKd() throws {
+        let endpoint = try PowerBaseBLEBridgeEndpoint(addressBytes: Data(BridgeEndpointGolden.addressBytes), port: 5684)
+        let credential = try XCTUnwrap(PowerBaseBLEManagementCredential(hubID: Data(0x10...0x1F), generation: Data(0x20...0x2F), key: Data(0x30...0x4F)))
+        for length in 6...32 {
+            let pskd = String(repeating: "A", count: length)
+            let request = try XCTUnwrap(PowerBaseBLECodec.startRequest(
+                target: eui, requestID: requestID, challenge: challenge, pskd: pskd, endpoint: endpoint, management: credential
+            ))
+            XCTAssertEqual(request.count, 130 + length)
+            XCTAssertEqual(request[2], UInt8(length))
+        }
+        for bad in ["", "ABCDE", String(repeating: "A", count: 33), "J01NMEI", "j01nme7k"] {
+            XCTAssertNil(PowerBaseBLECodec.startRequest(
+                target: eui, requestID: requestID, challenge: challenge, pskd: bad, endpoint: endpoint, management: credential
+            ), bad)
+        }
+    }
+
+    func testTheManagementCapabilityIsItsOwnName() throws {
+        func capabilities(_ enroll: String) throws -> PowerBaseBLECapabilities {
+            try PowerBaseBLEVersion.validate(Data((#"{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":[]},"pb_enroll":"# + enroll + "}").utf8))
+        }
+        let real = #"{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":[]},"pb_enroll":{"proto":1,"cap":["bridge_endpoint_v1","mgmt_v1"]}}"#
+        XCTAssertEqual(try PowerBaseBLEVersion.validate(Data(real.utf8)), [.bridgeEndpointV1, .managementV1], "what pb_ble_service.h answered before the release receipt")
+        XCTAssertEqual(try capabilities(#"{"proto":1,"cap":["mgmt_v1"]}"#), [.managementV1])
+        XCTAssertEqual(try capabilities(#"{"proto":1,"cap":["bridge_endpoint_v1"]}"#), [.bridgeEndpointV1], "firmware before management")
+        XCTAssertEqual(try capabilities(#"{"proto":1,"cap":["mgmt_v2","MGMT_V1","mgmt"]}"#), [], "the name is exact")
+        let misplaced = #"{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":["mgmt_v1"]},"pb_enroll":{"proto":1}}"#
+        XCTAssertEqual(try PowerBaseBLEVersion.validate(Data(misplaced.utf8)), [], "not among Espressif's own capabilities")
+    }
+
+    func testABoardWithoutTheManagementCapabilityIsNeverSentThatStart() async throws {
+        final class VersionOnlyLink: PowerBaseBLELink, @unchecked Sendable {
+            let version: String
+            private let lock = NSLock()
+            private var seen: [PowerBaseBLEProtocol.Endpoint] = []
+            init(version: String) { self.version = version }
+            var endpoints: [PowerBaseBLEProtocol.Endpoint] { lock.withLock { seen } }
+            func exchange(endpoint: PowerBaseBLEProtocol.Endpoint, payload: Data) async throws -> Data {
+                lock.withLock { seen.append(endpoint) }
+                guard endpoint == .version else { throw PowerBaseBLELinkError.rejected }
+                return Data(version.utf8)
+            }
+            func close() async {}
+        }
+        let endpoint = try PowerBaseBLEBridgeEndpoint(addressBytes: Data(BridgeEndpointGolden.addressBytes), port: 5684)
+        let credential = try XCTUnwrap(PowerBaseBLEManagementCredential(hubID: Data(0x10...0x1F), generation: Data(0x20...0x2F), key: Data(0x30...0x4F)))
+        func version(_ cap: String) -> String { #"{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":[]},"pb_enroll":{"proto":1"# + cap + "}}" }
+
+        // Neither capability, or only one of the two: nothing is sent -- not this message and not an older one in its place.
+        for cap in ["", #","cap":["bridge_endpoint_v1"]"#, #","cap":["mgmt_v1"]"#] {
+            let link = VersionOnlyLink(version: version(cap))
+            let client = PowerBaseBLEBoardClient(link: link)
+            try await client.checkVersion()
+            do {
+                _ = try await client.start(target: eui, requestID: requestID, challenge: challenge, pskd: "J01NME7K", endpoint: endpoint, management: credential)
+                XCTFail("the management start must not be sent (\(cap))")
+            } catch {
+                XCTAssertEqual(error as? PowerBaseBLEClientError, .invalidInput("capability"), cap)
+            }
+            XCTAssertEqual(link.endpoints, [.version], cap)
+        }
+        // With both the request is attempted (and fails here only for want of a session).
+        let link = VersionOnlyLink(version: version(#","cap":["bridge_endpoint_v1","mgmt_v1"]"#))
+        let capable = PowerBaseBLEBoardClient(link: link)
+        try await capable.checkVersion()
+        do {
+            _ = try await capable.start(target: eui, requestID: requestID, challenge: challenge, pskd: "J01NME7K", endpoint: endpoint, management: credential)
+            XCTFail("no session exists")
+        } catch {
+            XCTAssertEqual(error as? PowerBaseBLEClientError, .noSession)
+        }
     }
 
     func testTheFirstStartMessageIsUnchangedByTheNewOne() throws {
@@ -438,7 +603,7 @@ final class CodecTests: XCTestCase {
         let old = #"{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":[]},"pb_enroll":{"proto":1}}"#
         let new = #"{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":[]},"pb_enroll":{"proto":1,"cap":["bridge_endpoint_v1"]}}"#
         XCTAssertEqual(try PowerBaseBLEVersion.validate(Data(old.utf8)), [], "firmware before the capability list")
-        XCTAssertEqual(try PowerBaseBLEVersion.validate(Data(new.utf8)), [.bridgeEndpointV1], "exactly what pb_ble_service.h answers now")
+        XCTAssertEqual(try PowerBaseBLEVersion.validate(Data(new.utf8)), [.bridgeEndpointV1], "what pb_ble_service.h answered before management was added")
 
         func capabilities(_ enroll: String) throws -> PowerBaseBLECapabilities {
             try PowerBaseBLEVersion.validate(Data((#"{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":[]},"pb_enroll":"# + enroll + "}").utf8))
@@ -531,4 +696,3 @@ final class CodecTests: XCTestCase {
         }
     }
 }
-#endif

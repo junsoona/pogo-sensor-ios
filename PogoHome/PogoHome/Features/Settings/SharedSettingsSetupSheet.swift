@@ -89,7 +89,7 @@ struct SharedSettingsSetupSheet: View {
                 Text("허브 ID \(HubIDText.short(hubID))", comment: "Hub discovery row: short hub id; argument is 8 hex digits")
             }
         } footer: {
-            Text("허브에서 브리지를 실행하는 계정으로 ‘pogohome-hubctl --state-dir <상태 디렉터리> pair’를 실행해 만든 12자리 코드를 입력하세요. 코드는 한 번만, 정해진 시간 동안만 쓸 수 있습니다. 이 기기 이름은 허브의 기기 목록에 표시됩니다.", comment: "Shared settings setup: where the pairing code comes from")
+            Text("OTBR에서 허브 서비스 계정으로 ‘pogohome-hubctl --state-dir <상태 디렉터리> pair’를 실행해 만든 12자리 연결 코드를 입력하세요. 코드는 한 번만, 정해진 시간 동안 쓸 수 있습니다. 이 기기 이름은 허브의 기기 목록에 표시됩니다.", comment: "Shared settings setup: where the pairing code comes from")
         }
 
         Section {

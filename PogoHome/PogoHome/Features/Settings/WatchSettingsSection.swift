@@ -47,7 +47,7 @@ struct WatchSettingsSection: View {
             } header: {
                 Text(verbatim: "Apple Watch")
             } footer: {
-                Text("Watch는 Linux Bridge와 같은 Wi‑Fi에 있으면 직접 연결하고, 아니면 가까이 있는 이 iPhone을 통해 값을 받습니다. 집 밖에서는 새 값을 받지 못해 마지막 값과 확인 시각을 표시합니다. 허브 주소, 선택한 값, 기기 이름은 이 iPhone에서 Watch로 전달됩니다.", comment: "Settings footer: how the Apple Watch gets POGO data")
+                Text("Watch는 허브와 같은 Wi‑Fi에 있으면 직접, 아니면 가까이 있는 이 iPhone을 통해 값을 받습니다. 집 밖에서는 마지막 값과 확인 시각을 표시합니다. 허브 주소와 표시할 값, 이름은 이 iPhone에서 전달됩니다.", comment: "Settings footer: how the Apple Watch gets POGO data")
             }
             .onAppear {
                 selectionCount = PhoneWatchSettings.selection(in: .standard).count

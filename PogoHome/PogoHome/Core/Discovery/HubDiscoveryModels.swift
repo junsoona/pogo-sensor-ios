@@ -174,11 +174,50 @@ nonisolated struct HubHealthDTO: Decodable, Hashable, Sendable {
     let schemaVersion: Int
     let service: String?
     let hubID: String?
+    /// Which build of the bridge answered (its optional `build` object). `nil` for a hub from
+    /// before that field, and for a `build` that is not the documented object -- neither stops a
+    /// hub from being recognized: this is identification, never a condition for anything.
+    let build: HubBuildDTO?
 
     enum CodingKeys: String, CodingKey {
         case schemaVersion = "schema_version"
         case service
         case hubID = "hub_id"
+        case build
+    }
+
+    init(schemaVersion: Int, service: String?, hubID: String?, build: HubBuildDTO? = nil) {
+        self.schemaVersion = schemaVersion
+        self.service = service
+        self.hubID = hubID
+        self.build = build
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        service = try container.decodeIfPresent(String.self, forKey: .service)
+        hubID = try container.decodeIfPresent(String.self, forKey: .hubID)
+        // Lenient on purpose: whatever is wrong with `build`, the rest of the answer still counts.
+        build = (try? container.decodeIfPresent(HubBuildDTO.self, forKey: .build)) ?? nil
+    }
+}
+
+/// The bridge's own word for which build it is (firmware repository, docs/versioning.md):
+/// `{"component":"linux_bridge","version":"0.1.0","build_id":"…","build_kind":"development"}`.
+/// Shown as information only. What a hub supports is said by its API fields and capability
+/// values, never worked out from these strings.
+nonisolated struct HubBuildDTO: Decodable, Hashable, Sendable {
+    let component: String
+    let version: String
+    let buildID: String?
+    let buildKind: String?
+
+    enum CodingKeys: String, CodingKey {
+        case component
+        case version
+        case buildID = "build_id"
+        case buildKind = "build_kind"
     }
 }
 

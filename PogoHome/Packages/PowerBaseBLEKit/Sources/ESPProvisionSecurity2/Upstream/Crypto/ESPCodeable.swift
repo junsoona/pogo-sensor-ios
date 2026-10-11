@@ -1,4 +1,3 @@
-#if DEBUG // PogoHome: compiled into DEBUG builds only (see VENDORED.md)
 // Copyright 2020 Espressif Systems
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,4 +53,3 @@ public protocol ESPCodeable {
     /// - Returns: decrypted data
     func decrypt(data: Data) -> Data?
 }
-#endif

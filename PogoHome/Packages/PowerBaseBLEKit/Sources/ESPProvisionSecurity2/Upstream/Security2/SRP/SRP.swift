@@ -1,4 +1,3 @@
-#if DEBUG // PogoHome: compiled into DEBUG builds only (see VENDORED.md)
 // Copyright (C) 2016 Bouke Haarsma
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -138,4 +137,3 @@ func calculate_v(group: Group, x: BigUInt) -> BigUInt {
 func randomBytes(_ count: Int) -> Data {
     return Data((0..<count).map { _ in UInt8.random(in: 0...255) })
 }
-#endif

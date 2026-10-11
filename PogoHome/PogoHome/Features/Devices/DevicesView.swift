@@ -6,6 +6,8 @@ import SwiftUI
 final class DeviceActions {
     var editingModule: SensorModule?
     var isAddingDevice = false
+    /// The Power Base whose management sheet (state, removal) is shown.
+    var managingPowerBase: PowerBaseManagementTarget?
 }
 
 /// What the list-and-detail layout shows in its detail column.
@@ -15,9 +17,33 @@ enum DeviceSelection: Hashable {
 }
 
 struct DevicesView: View {
-    @State private var actions = DeviceActions()
+    @Environment(AppModel.self) private var appModel
+    @Environment(\.scenePhase) private var scenePhase
+    /// The window's tab selection; `nil` where the tab is shown by itself (previews, tests).
+    @Environment(AppNavigator.self) private var navigator: AppNavigator?
+    @State private var actions: DeviceActions
+    /// Power Base removal jobs of the hub the app follows. Kept by the tab, not by the sheet: a
+    /// job goes on at the hub whether or not its sheet is open.
+    @State private var removals: PowerBaseRemovalController
     /// Kept here so it survives switching between the two layouts (iPad window resizing).
     @State private var selection: DeviceSelection?
+    /// How long a "삭제 완료" notice stays on screen.
+    private let noticeDuration: Duration
+    /// Tells VoiceOver that a removal was completed. Replaced in tests.
+    private let announce: @MainActor (String) -> Void
+
+    /// Every argument is replaced in tests only.
+    init(
+        actions: DeviceActions = DeviceActions(),
+        removals: PowerBaseRemovalController = PowerBaseRemovalController(),
+        noticeDuration: Duration = .seconds(5),
+        announce: @escaping @MainActor (String) -> Void = PowerBaseRemovalCompletionNotice.announce
+    ) {
+        _actions = State(initialValue: actions)
+        _removals = State(initialValue: removals)
+        self.noticeDuration = noticeDuration
+        self.announce = announce
+    }
 
     var body: some View {
         @Bindable var actions = actions
@@ -44,12 +70,153 @@ struct DevicesView: View {
             .appleHomeNavigationDestinations()
         }
         .environment(actions)
+        .environment(removals)
         .sheet(item: $actions.editingModule) { module in
             ModuleEditorSheet(moduleID: module.id)
         }
         .sheet(isPresented: $actions.isAddingDevice) {
             AddDeviceSheet()
         }
+        .sheet(item: $actions.managingPowerBase) { target in
+            PowerBaseManagementSheet(target: target, controller: removals)
+        }
+        .onAppear { removals.targetDidChange(hubTarget) }
+        .onChange(of: hubTarget) { _, target in removals.targetDidChange(target) }
+        // Every word of the hub about its removal jobs, from the first snapshot on and whether or
+        // not a management sheet is open: this is how a removal the hub carries out by itself is
+        // seen to end. Here on the tab, not on a row of a list.
+        .onChange(of: removalReport, initial: true) { _, report in
+            removals.sourceDidReport(
+                report.jobs, forgets: report.forgets, powerBases: report.powerBases, departures: report.departures, from: report.source
+            )
+        }
+        // Once per hub: what the hub's own list says, for a job the snapshot does not carry.
+        .task(id: hubTarget.hubID) { await removals.refresh() }
+        // "삭제 완료", for removals that ended while the app was following them: taken in whenever
+        // the hub says so, shown and announced only while this tab is really on screen.
+        .onChange(of: NoticeCheck(isOnScreen: isOnScreen, waiting: removals.notices.waiting), initial: true) { _, check in
+            if check.isOnScreen {
+                for completion in removals.showWaitingNotices() { announce(PowerBaseRemovalCompletionNotice.text(for: completion)) }
+            } else {
+                removals.noticesWereInterrupted()
+            }
+        }
+        .overlay(alignment: .bottom) {
+            let shown = removals.notices.shown
+            if isOnScreen, !shown.isEmpty {
+                PowerBaseRemovalCompletionNotice(completions: shown, duration: noticeDuration) { removals.noticesWereShown(shown) }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.default, value: removals.notices.shown)
+    }
+
+    private var hubTarget: PowerBaseHubTarget { PowerBaseHubTarget(appModel: appModel) }
+
+    private var removalReport: RemovalReport {
+        RemovalReport(
+            source: appModel.sourceIdentity, jobs: appModel.snapshot.powerBaseRemovals, forgets: appModel.snapshot.powerBaseForgets,
+            powerBases: appModel.snapshot.powerBases, departures: appModel.snapshot.powerBaseDepartures
+        )
+    }
+
+    /// Whether the user can see this tab now: the app is in the foreground, the tab is the
+    /// selected one, and none of its sheets is over it. A notice is shown, announced and timed
+    /// only then.
+    private var isOnScreen: Bool {
+        scenePhase == .active
+            && (navigator?.selectedTab ?? .devices) == .devices
+            && actions.editingModule == nil && !actions.isAddingDevice && actions.managingPowerBase == nil
+    }
+
+    /// The hub's removal jobs as of the snapshot on screen, and the source they are from.
+    private struct RemovalReport: Equatable {
+        let source: SensorSourceIdentity
+        let jobs: [PowerBaseRemoval]
+        /// The Bases the hub took out of its list (not removals).
+        let forgets: [PowerBaseForget]
+        /// The Bases the hub lists, with their registrations: what a request of this device that
+        /// has no final word is checked against (`PowerBaseRemovalController.settleRequests`).
+        let powerBases: [PowerBase]
+        /// The Bases the hub names as out of its list: a removal request without an answer ends
+        /// when its Base is one of them.
+        let departures: [PowerBaseDeparture]
+    }
+
+    /// What decides whether notices are shown: read together, compared together.
+    private struct NoticeCheck: Equatable {
+        let isOnScreen: Bool
+        let waiting: [PowerBaseRemovalCompletions.Completion]
+    }
+}
+
+/// The short notice that a Power Base was removed: at the bottom of the Devices tab for a few
+/// seconds, once per removal (`PowerBaseRemovalCompletions` decides which removals get one,
+/// `PowerBaseRemovalNotices` when). Several removals that ended together are one notice with a
+/// line each. Tapping it puts it away at once.
+///
+/// The view only draws and counts its time while it is in the hierarchy; its owner puts it there
+/// only while the tab is really on screen, and announces it.
+struct PowerBaseRemovalCompletionNotice: View {
+    let completions: [PowerBaseRemovalCompletions.Completion]
+    /// How long the notice stays when it is not tapped.
+    var duration: Duration = .seconds(5)
+    var onDismiss: () -> Void = {}
+
+    static func text(for completion: PowerBaseRemovalCompletions.Completion) -> String {
+        let label = PowerBaseManagementPresentation.label(forIdentifier: completion.powerBaseIdentifier)
+        switch completion.kind {
+        case .removalCompleted: return PowerBaseManagementText.completionNotice(label: label)
+        // Not a removal: said as what it is.
+        case .removedFromHubList: return PowerBaseManagementText.forgetNotice(label: label)
+        }
+    }
+
+    var body: some View {
+        Button(action: onDismiss) {
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(completions) { completion in
+                    Label {
+                        Text(verbatim: Self.text(for: completion))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } icon: {
+                        switch completion.kind {
+                        case .removalCompleted:
+                            Image(systemName: PowerBaseManagementContent.symbol(.completed))
+                                .foregroundStyle(PowerBaseManagementContent.style(.completed))
+                        case .removedFromHubList:
+                            // Not the mark of a completed removal.
+                            Image(systemName: "minus.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: PogoTheme.cardCornerRadius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: PogoTheme.cardCornerRadius, style: .continuous).strokeBorder(.separator))
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: PogoTheme.emptyStateMaxWidth)
+        .padding()
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isStaticText)
+        // Restarts when another removal joins the notice.
+        .task(id: completions) {
+            guard (try? await Task.sleep(for: duration)) != nil else { return }
+            onDismiss()
+        }
+    }
+
+    /// Spoken even while VoiceOver is moving to the screen under the sheet that just closed.
+    static func announce(_ text: String) {
+        var announcement = AttributedString(text)
+        announcement.accessibilitySpeechAnnouncementPriority = .high
+        AccessibilityNotification.Announcement(announcement).post()
     }
 }
 
@@ -67,6 +234,7 @@ private struct DevicesToolbar: ToolbarContent {
 private struct DevicesGrid: View {
     @Environment(AppModel.self) private var appModel
     @Environment(DeviceActions.self) private var actions
+    @Environment(PowerBaseRemovalController.self) private var removals
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var snapshot: HomeSnapshot { appModel.snapshot }
@@ -84,13 +252,18 @@ private struct DevicesGrid: View {
 
     @ViewBuilder
     private var pogoContent: some View {
+        let pendingRemovals = PowerBaseManagementPresentation.openRemovalsWithoutPowerBase(in: snapshot)
         if snapshot.modules.isEmpty && snapshot.powerBases.isEmpty {
+            if !pendingRemovals.isEmpty {
+                PowerBaseRemovalCards(removals: pendingRemovals)
+                    .padding()
+            }
             ContentUnavailableView(
                 "연결된 조각보 센서가 없습니다",
                 systemImage: "sensor.fill",
                 description: Text("모듈이 연결되면 여기에 표시됩니다.")
             )
-            .padding(.top, 60)
+            .padding(.top, pendingRemovals.isEmpty ? 60 : 20)
         } else if snapshot.powerBases.isEmpty {
             // A bridge without Power Base reporting (or mock data): the original flat list.
             moduleSection(
@@ -112,6 +285,9 @@ private struct DevicesGrid: View {
                         modules: unassigned
                     )
                 }
+                if !pendingRemovals.isEmpty {
+                    PowerBaseRemovalCards(removals: pendingRemovals)
+                }
             }
             .padding()
         }
@@ -120,7 +296,13 @@ private struct DevicesGrid: View {
     private func powerBaseSection(_ base: PowerBase) -> some View {
         let modules = snapshot.chainOrderedModules(on: base)
         return VStack(alignment: .leading, spacing: 12) {
-            PowerBaseHeader(base: base, isCurrentStateVerified: appModel.health.isCurrentStateVerified)
+            HStack(alignment: .center, spacing: 8) {
+                PowerBaseHeader(
+                    base: base, isCurrentStateVerified: appModel.isPowerBaseStateVerified,
+                    removal: removals.removal(for: base.hardwareIdentifier, in: snapshot)
+                )
+                PowerBaseManageButton(identifier: base.hardwareIdentifier)
+            }
             if modules.isEmpty {
                 Text("이 Power Base에 연결된 센서 모듈이 없습니다.")
                     .font(.subheadline)
@@ -170,6 +352,7 @@ private struct DevicesListDetail: View {
     @Environment(AppModel.self) private var appModel
     @Environment(AppleHomeModel.self) private var appleHome
     @Environment(DeviceActions.self) private var actions
+    @Environment(PowerBaseRemovalController.self) private var removals
     @Binding var selection: DeviceSelection?
 
     private var snapshot: HomeSnapshot { appModel.snapshot }
@@ -211,6 +394,7 @@ private struct DevicesListDetail: View {
             } header: {
                 Text("조각보 센서")
             }
+            removalRowsSection
         } else if snapshot.powerBases.isEmpty {
             Section {
                 ForEach(snapshot.modules) { moduleRow($0) }
@@ -229,17 +413,22 @@ private struct DevicesListDetail: View {
                         ForEach(modules) { moduleRow($0) }
                     }
                 } header: {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Label {
-                            Text(verbatim: base.shortLabel)
-                        } icon: {
-                            Image(systemName: "powerplug.fill")
+                    HStack(alignment: .center, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Label {
+                                Text(verbatim: base.shortLabel)
+                            } icon: {
+                                Image(systemName: "powerplug.fill")
+                            }
+                            Text(PowerBaseConnectionText.summary(of: base))
+                                .font(.caption)
+                                .foregroundStyle(appModel.isPowerBaseStateVerified && !base.isOnline ? Color.red : Color.secondary)
+                            PowerBaseRemovalBadge(removal: removals.removal(for: base.hardwareIdentifier, in: snapshot))
                         }
-                        Text(PowerBaseConnectionText.summary(of: base))
-                            .font(.caption)
-                            .foregroundStyle(isVerified && !base.isOnline ? Color.red : Color.secondary)
+                        .accessibilityElement(children: .combine)
+                        Spacer(minLength: 0)
+                        PowerBaseManageButton(identifier: base.hardwareIdentifier)
                     }
-                    .accessibilityElement(children: .combine)
                 }
             }
             let unassigned = snapshot.modulesWithoutPowerBase
@@ -249,6 +438,23 @@ private struct DevicesListDetail: View {
                 } header: {
                     Text("Power Base 정보 없음")
                 }
+            }
+            removalRowsSection
+        }
+    }
+
+    /// Removal jobs of Bases the hub no longer lists that are still under way: shown, so a job the
+    /// user started never just vanishes. A completed one leaves the list.
+    @ViewBuilder
+    private var removalRowsSection: some View {
+        let pending = PowerBaseManagementPresentation.openRemovalsWithoutPowerBase(in: snapshot)
+        if !pending.isEmpty {
+            Section {
+                ForEach(pending) { removal in
+                    PowerBaseRemovalRow(removal: removal)
+                }
+            } header: {
+                Text(verbatim: PowerBaseManagementText.listHeader)
             }
         }
     }
@@ -416,6 +622,8 @@ enum DeviceStatusText {
 struct PowerBaseHeader: View {
     let base: PowerBase
     let isCurrentStateVerified: Bool
+    /// The Base's removal job, when the list shows one ("삭제 대기", …).
+    var removal: PowerBaseRemoval? = nil
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
@@ -426,11 +634,59 @@ struct PowerBaseHeader: View {
                 Text(PowerBaseConnectionText.summary(of: base))
                     .font(.caption)
                     .foregroundStyle(isCurrentStateVerified && !base.isOnline ? Color.red : Color.secondary)
+                PowerBaseRemovalBadge(removal: removal)
             }
             Spacer(minLength: 0)
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// One removal job of a Base the hub no longer lists, as a row that opens its management sheet.
+struct PowerBaseRemovalRow: View {
+    let removal: PowerBaseRemoval
+    @Environment(DeviceActions.self) private var actions: DeviceActions?
+
+    var body: some View {
+        Button {
+            actions?.managingPowerBase = PowerBaseManagementTarget(identifier: removal.powerBaseIdentifier)
+        } label: {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: PowerBaseManagementPresentation.label(forIdentifier: removal.powerBaseIdentifier))
+                        .foregroundStyle(.primary)
+                    PowerBaseRemovalBadge(removal: removal)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.forward")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+                    .accessibilityHidden(true)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// The same rows for the card layout, under their own title.
+struct PowerBaseRemovalCards: View {
+    let removals: [PowerBaseRemoval]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(verbatim: PowerBaseManagementText.listHeader)
+                .font(.title3.weight(.semibold))
+                .accessibilityAddTraits(.isHeader)
+            ForEach(removals) { removal in
+                PowerBaseRemovalRow(removal: removal)
+                    .padding(PogoTheme.cardPadding)
+                    .background(PogoTheme.tile, in: RoundedRectangle(cornerRadius: PogoTheme.cardCornerRadius, style: .continuous))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -465,6 +721,11 @@ private struct DeviceCard: View {
     let isCurrentStateVerified: Bool
     var connectionText: String? = nil
     var isPowerBaseOffline = false
+    /// The name stands apart from what describes it. The gap is on the room's line, not a spacing
+    /// of the stack: each text still takes its own lines, and the gap grows with the text size.
+    @ScaledMetric(relativeTo: .caption) private var nameGap: CGFloat = 6
+    /// Between the room, the chain position and the status: a wrapped line stays with its own.
+    @ScaledMetric(relativeTo: .caption) private var detailGap: CGFloat = 2
 
     private var tint: Color { isCurrentStateVerified && module.isOnline ? .blue : .gray }
 
@@ -499,16 +760,19 @@ private struct DeviceCard: View {
             Text(roomName)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .padding(.top, nameGap)
             if let connectionText {
                 Text(connectionText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
+                    .padding(.top, detailGap)
             }
             Text(statusText)
                 .font(.caption)
                 .foregroundStyle(isCurrentStateVerified && !module.isOnline ? Color.red : Color.secondary)
                 .lineLimit(2)
+                .padding(.top, detailGap)
         }
         .padding(PogoTheme.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)

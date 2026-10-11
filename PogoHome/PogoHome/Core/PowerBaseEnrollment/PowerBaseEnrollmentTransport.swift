@@ -1,7 +1,7 @@
-#if DEBUG
 import Foundation
+import PowerBaseBLEKit
 
-/// The network side of the enrollment test. Separate from `URLSession` so tests can script it.
+/// The network side of Power Base enrollment. Separate from `URLSession` so tests can script it.
 ///
 /// Every call takes this device's credential for the hub: its bearer token goes only into the
 /// `Authorization` header, and the request goes only to a server presenting the certificate
@@ -13,10 +13,23 @@ nonisolated protocol PowerBaseEnrollmentTransport: Sendable {
     /// endpoint and reports it with the session. A hub that does not know the option answers
     /// `.bridgeEndpointNotSupported`; nothing is started there.
     func startDeliveringBridgeEndpoint(baseURL: URL, credential: HubCredential, eui64: String, pskd: String) async throws -> PowerBaseEnrollmentSession
+    /// The same `POST` with `"bridge_endpoint_version": 1` and `"management_version": 1`: the hub
+    /// also issues a management credential for this enrollment and returns it with the session --
+    /// in this answer only. A hub that does not know the option answers `.managementNotSupported`;
+    /// nothing is started there.
+    func startManaged(baseURL: URL, credential: HubCredential, eui64: String, pskd: String) async throws -> PowerBaseEnrollmentManagedStart
     /// `GET /api/v1/power-base-enrollments/<id>` → `200` + session.
     func status(baseURL: URL, credential: HubCredential, sessionID: String) async throws -> PowerBaseEnrollmentSession
     /// `DELETE /api/v1/power-base-enrollments/<id>` → `200` + session (`cancelled`).
     func cancel(baseURL: URL, credential: HubCredential, sessionID: String) async throws -> PowerBaseEnrollmentSession
+}
+
+extension PowerBaseEnrollmentTransport {
+    /// A transport that knows nothing of management credentials refuses the request before
+    /// anything is sent -- it never falls back to a session without one.
+    func startManaged(baseURL: URL, credential: HubCredential, eui64: String, pskd: String) async throws -> PowerBaseEnrollmentManagedStart {
+        throw PowerBaseEnrollmentError.managementNotSupported
+    }
 }
 
 /// The real transport: the same pinned HTTPS as settings sharing, to the same port.
@@ -48,6 +61,16 @@ nonisolated struct URLSessionPowerBaseEnrollmentTransport: PowerBaseEnrollmentTr
         let session = try Self.decodeSession(data, deviceID: credential.deviceID)
         guard session.eui64 == eui64 else { throw PowerBaseEnrollmentError.badResponse("eui64") }
         return session
+    }
+
+    func startManaged(baseURL: URL, credential: HubCredential, eui64: String, pskd: String) async throws -> PowerBaseEnrollmentManagedStart {
+        guard PowerBaseEUI64.normalized(eui64) == eui64 else { throw PowerBaseEnrollmentError.rejected("invalid_eui64") }
+        guard ThreadPSKd.isValid(pskd) else { throw PowerBaseEnrollmentError.rejected("invalid_pskd") }
+        var request = try makeRequest(baseURL: baseURL, path: Self.collectionPath, method: "POST", credential: credential)
+        request.httpBody = try Self.managedStartBody(eui64: eui64, pskd: pskd)
+        let (data, status) = try await send(request, credential: credential)
+        guard status == 202 else { throw Self.managedStartError(status: status, data: data, deviceID: credential.deviceID) }
+        return try Self.decodeManagedStart(data, eui64: eui64, credential: credential)
     }
 
     func status(baseURL: URL, credential: HubCredential, sessionID: String) async throws -> PowerBaseEnrollmentSession {
@@ -86,6 +109,46 @@ nonisolated struct URLSessionPowerBaseEnrollmentTransport: PowerBaseEnrollmentTr
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         return try encoder.encode(BridgeEndpointStartBody(bridge_endpoint_version: bridgeEndpointVersion, eui64: eui64, pskd: pskd))
+    }
+
+    /// Exactly `{"bridge_endpoint_version":1,"eui64":"…","management_version":1,"pskd":"…"}`: the
+    /// request that also asks the hub for a management credential. It carries no key -- the hub
+    /// makes it.
+    static func managedStartBody(eui64: String, pskd: String) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return try encoder.encode(ManagedStartBody(
+            bridge_endpoint_version: PowerBaseEnrollmentBridgeEndpoint.version, eui64: eui64,
+            management_version: PowerBaseEnrollmentManagement.version, pskd: pskd
+        ))
+    }
+
+    /// The `202` of a managed start: the session, and the credential if the answer carries a usable
+    /// one. The credential must name the hub the request went to; one that names another hub is
+    /// not this hub's and makes the whole answer unusable.
+    static func decodeManagedStart(_ data: Data, eui64: String, credential: HubCredential) throws -> PowerBaseEnrollmentManagedStart {
+        let session = try decodeSession(data, deviceID: credential.deviceID)
+        guard session.eui64 == eui64 else { throw PowerBaseEnrollmentError.badResponse("eui64") }
+        guard let issued = PowerBaseEnrollmentManagement.decodeCredentialIfPresent(from: data) else {
+            return PowerBaseEnrollmentManagedStart(session: session, credential: nil)
+        }
+        guard issued.hubID.map({ String(format: "%02x", $0) }).joined() == credential.hubID.lowercased(),
+              issued.generationHex == session.managementGeneration else {
+            throw PowerBaseEnrollmentError.badResponse("management")
+        }
+        return PowerBaseEnrollmentManagedStart(session: session, credential: issued)
+    }
+
+    /// The error answers to the request with both options. A hub older than either option accepts
+    /// fewer fields and answers `400 invalid_request` -- this request is otherwise well formed, so
+    /// that answer means "not supported". The app then stops: it does not ask again without the
+    /// management option.
+    static func managedStartError(status: Int, data: Data, deviceID: String) -> PowerBaseEnrollmentError {
+        let code = (try? JSONDecoder().decode(ErrorBody.self, from: data))?.error
+        if status == 400, code == "invalid_request" { return .managementNotSupported }
+        if status == 422, code == "unsupported_management_version" { return .managementNotSupported }
+        if status == 422, code == "unsupported_bridge_endpoint_version" { return .bridgeEndpointNotSupported }
+        return error(status: status, data: data, deviceID: deviceID)
     }
 
     /// The error answers to the request with the option. A hub older than the option accepts
@@ -161,6 +224,8 @@ nonisolated struct URLSessionPowerBaseEnrollmentTransport: PowerBaseEnrollmentTr
                 return .enrollmentInProgress(ownSession: own)
             case "power_base_already_connected":
                 return .powerBaseAlreadyConnected
+            case "management_required":
+                return .managementRequired
             case "session_already_final":
                 guard let session = body?.session, session.state.isFinal, session.startedByDeviceID == deviceID else {
                     return .badResponse("HTTP 409")
@@ -191,6 +256,13 @@ nonisolated struct URLSessionPowerBaseEnrollmentTransport: PowerBaseEnrollmentTr
         let pskd: String
     }
 
+    private struct ManagedStartBody: Encodable {
+        let bridge_endpoint_version: Int
+        let eui64: String
+        let management_version: Int
+        let pskd: String
+    }
+
     private struct ErrorBody: Decodable {
         let error: String?
         let reason: String?
@@ -209,4 +281,3 @@ nonisolated struct URLSessionPowerBaseEnrollmentTransport: PowerBaseEnrollmentTr
         }
     }
 }
-#endif

@@ -1,4 +1,3 @@
-#if DEBUG
 import Foundation
 import PowerBaseBLEKit
 
@@ -387,4 +386,3 @@ nonisolated enum PowerBaseBLESessionOpener {
         }
     }
 }
-#endif

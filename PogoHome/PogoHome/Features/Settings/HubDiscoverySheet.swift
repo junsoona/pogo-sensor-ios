@@ -40,7 +40,7 @@ struct HubDiscoverySheet: View {
                 } header: {
                     Text("같은 네트워크의 센서 허브", comment: "Hub discovery list header")
                 } footer: {
-                    Text("조각보 센서 허브(Linux)만 찾습니다. Power Base와 센서 모듈은 허브를 통해 표시됩니다. 고른 허브는 확인을 마친 뒤에 연결됩니다.", comment: "Hub discovery list footer")
+                    Text("OTBR(조각보 허브)만 찾습니다. 고른 허브는 확인을 마친 뒤에 연결됩니다.", comment: "Hub discovery list footer")
                 }
 
                 Section {

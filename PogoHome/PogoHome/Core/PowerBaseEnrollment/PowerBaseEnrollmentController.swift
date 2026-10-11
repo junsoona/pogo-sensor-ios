@@ -34,25 +34,11 @@ protocol PowerBaseEnrollmentClipboard: AnyObject {
 @MainActor
 @Observable
 final class PowerBaseEnrollmentController {
-    /// The source the app reads, as far as enrollment cares.
-    nonisolated struct Target: Equatable, Sendable {
-        var hubID: String?
-        var baseURL: URL?
-        var isSimulated: Bool
-        /// This device holds a credential for `hubID`.
-        var isPaired: Bool
-
-        static let none = Target(hubID: nil, baseURL: nil, isSimulated: false, isPaired: false)
-    }
-
+    /// The source the app reads, as far as enrollment cares (`PowerBaseHubTarget`, shared with the
+    /// product screens).
+    typealias Target = PowerBaseHubTarget
     /// Why a test can't start with the current source.
-    nonisolated enum Ineligibility: Equatable, Sendable {
-        case simulatedData
-        /// A typed address, not a hub picked in "Find hubs" (no `hub_id`).
-        case typedAddress
-        case noAddress
-        case notPaired
-    }
+    typealias Ineligibility = PowerBaseHubIneligibility
 
     nonisolated enum Phase: Equatable, Sendable {
         case idle
@@ -93,7 +79,7 @@ final class PowerBaseEnrollmentController {
     private(set) var pollProblem: PowerBaseEnrollmentError?
     private(set) var target: Target = .none
 
-    /// The rule itself is `Target.ineligibility`, shared with the BLE test.
+    /// The rule itself is `PowerBaseHubTarget.ineligibility`, shared with every other screen.
     var ineligibility: Ineligibility? { target.ineligibility }
 
     /// A session is under way (starting, running, or being cancelled).

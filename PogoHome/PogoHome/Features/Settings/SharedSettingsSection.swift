@@ -77,7 +77,7 @@ struct SharedSettingsSection: View {
         } header: {
             Text("허브 설정 공유", comment: "Settings section title: sharing home settings through the hub")
         } footer: {
-            Text("공유하면 집 이름, 방, 조각보 센서 이름과 방 배치가 같은 허브를 쓰는 iPhone, iPad, Mac에 똑같이 표시됩니다. 센서 값, Apple 홈, 모의 데이터, 언어·화면 설정, Watch에 표시할 센서는 공유하지 않습니다.", comment: "Shared settings footer: what is and isn't shared")
+            Text("공유하면 집 이름, 방, 조각보 센서의 이름과 방 배치가 같은 허브를 쓰는 기기에 똑같이 표시됩니다. 센서 값, Apple 홈, 언어·화면 설정, Watch에 표시할 값은 공유하지 않습니다.", comment: "Shared settings footer: what is and isn't shared")
         }
         .sheet(isPresented: $isSettingUp) {
             SharedSettingsSetupSheet()

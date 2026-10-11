@@ -33,11 +33,9 @@ struct SettingsView: View {
         )
     }
 
-    private var appVersion: String {
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-        return "\(version) (\(build))"
-    }
+    /// Product version and build number, read from the bundle (docs/versioning.md). A missing
+    /// value is shown as unknown; no number is made up in its place.
+    private var buildInfo: AppBuildInfo { .current }
 
     var body: some View {
         NavigationStack {
@@ -138,7 +136,7 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Text("Live 모드는 같은 Wi-Fi 네트워크에 있는 Linux 센서 허브에 연결합니다. Apple 홈(Matter·HomeKit) 기기는 위의 ‘Apple 홈’에서 따로 켭니다. 집·방·기기 이름을 다른 기기와 함께 쓰려면 위의 ‘허브 설정 공유’에서 허브의 연결 코드로 이 기기를 연결하세요.", comment: "Settings: about Live mode and hub settings sharing")
+                    Text("Live 모드는 같은 Wi-Fi에 있는 OTBR(조각보 허브)에 연결합니다. Apple 홈 기기는 위의 ‘Apple 홈’에서 따로 켭니다. 집·방·기기 이름을 다른 기기와 함께 쓰려면 ‘허브 설정 공유’에서 이 기기를 연결하세요.", comment: "Settings: about Live mode and hub settings sharing")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 } header: {
@@ -151,7 +149,13 @@ struct SettingsView: View {
                     } label: {
                         Text("이름에 담긴 뜻", comment: "Settings row and screen title: the meaning of the app's name")
                     }
-                    LabeledContent("버전", value: appVersion)
+                    LabeledContent { Text(verbatim: buildInfo.version) } label: { Text(verbatim: BuildDetailsText.version) }
+                    LabeledContent { Text(verbatim: buildInfo.buildNumber) } label: { Text(verbatim: BuildDetailsText.buildNumber) }
+                    NavigationLink {
+                        BuildDetailsView()
+                    } label: {
+                        Text(verbatim: BuildDetailsText.title)
+                    }
                     LabeledContent("번들 ID", value: Bundle.main.bundleIdentifier ?? "com.junsoona.PogoHome")
                 }
             }
@@ -193,9 +197,9 @@ private struct LocalStorageSection: View {
             Text("이 기기에만 저장")
         } footer: {
             if appModel.usesSharedSettings {
-                Text("방 구성, 방·기기 이름, 집 이름은 지금 허브와 공유하고 있습니다. 위 항목은 기기마다 따로 저장됩니다. 조각보 센서 값은 각 기기가 Linux Bridge에서 직접 받고, Apple 홈의 기기와 방 이름은 Apple 홈에서 가져옵니다.", comment: "Settings footer while hub settings sharing is on")
+                Text("방 구성과 이름은 지금 허브와 공유하고 있습니다. 위 항목은 기기마다 따로 저장됩니다.", comment: "Settings footer while hub settings sharing is on")
             } else {
-                Text("iPhone, iPad, Mac의 조각보 홈은 이 정보를 서로 동기화하지 않습니다. 다른 기기에서 같은 이름을 쓰려면 ‘허브 설정 공유’를 켜거나 그 기기에서도 따로 설정하세요. 조각보 센서 값은 각 기기가 Linux Bridge에서 직접 받고, Apple 홈의 기기와 방 이름은 Apple 홈에서 가져오므로 어느 기기에서나 같습니다.", comment: "Settings footer: what stays on this device")
+                Text("이 정보는 기기마다 따로 저장되고 다른 기기와 동기화되지 않습니다. 같은 이름을 함께 쓰려면 ‘허브 설정 공유’를 켜세요. Apple 홈의 기기와 방 이름은 Apple 홈에서 가져오므로 어느 기기에서나 같습니다.", comment: "Settings footer: what stays on this device")
             }
         }
     }

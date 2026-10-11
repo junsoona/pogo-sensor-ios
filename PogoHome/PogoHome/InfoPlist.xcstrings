@@ -48,25 +48,24 @@
       }
     },
     "NSBluetoothAlwaysUsageDescription" : {
-      "comment" : "Privacy - Bluetooth Always Usage Description (DEBUG builds only: the key is set in the Debug configuration)",
-      "extractionState" : "stale",
+      "comment" : "Privacy - Bluetooth Always Usage Description (Power Base enrollment; set in the Debug and Release configurations)",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jogakbo Home's development enrollment test uses Bluetooth to find and connect to an unenrolled Power Base nearby."
+            "value" : "Jogakbo Home uses Bluetooth to find and connect to a nearby unregistered Power Base when you add one."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La prueba de registro para desarrollo de Jogakbo Home usa Bluetooth para buscar un Power Base sin registrar cercano y conectarse a él."
+            "value" : "Jogakbo Home usa Bluetooth para buscar un Power Base cercano sin registrar y conectarse a él cuando añades uno."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "조각보 홈 앱의 개발용 등록 시험이 주변의 미등록 Power Base를 찾아 연결하기 위해 Bluetooth를 사용합니다."
+            "value" : "조각보 홈 앱은 새 Power Base를 등록할 때 주변의 미등록 Power Base를 찾아 연결하기 위해 Bluetooth를 사용합니다."
           }
         }
       }
@@ -100,19 +99,42 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jogakbo Home needs local network access to find the Linux sensor hub on your network and to talk to it."
+            "value" : "Jogakbo Home needs local network access to find the OTBR (the Jogakbo hub) on your network and to talk to it."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jogakbo Home necesita acceso a la red local para encontrar el hub de sensores Linux de tu red y comunicarse con él."
+            "value" : "Jogakbo Home necesita acceso a la red local para encontrar el OTBR (el hub Jogakbo) de tu red y comunicarse con él."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "조각보 홈 앱은 같은 네트워크에 있는 Linux 센서 허브를 찾거나 허브와 통신하기 위해 로컬 네트워크 접근 권한이 필요합니다."
+            "value" : "조각보 홈 앱은 같은 네트워크에 있는 OTBR(조각보 허브)를 찾거나 허브와 통신하기 위해 로컬 네트워크 접근 권한이 필요합니다."
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription" : {
+      "comment" : "Privacy - Camera Usage Description (reading a Power Base setup QR code; set for the app target in the Debug and Release configurations)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jogakbo Home uses the camera only to read a Power Base's setup QR code and enter its setup code. The camera picture is not saved or sent anywhere."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jogakbo Home usa la cámara solo para leer el código QR de configuración de un Power Base e introducir su código de configuración. La imagen de la cámara no se guarda ni se envía."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조각보 홈 앱은 Power Base의 설정 QR 코드를 읽어 설정 코드를 입력할 때만 카메라를 사용합니다. 촬영한 화면은 저장하거나 전송하지 않습니다."
           }
         }
       }

@@ -83,9 +83,11 @@ refuse them) and cannot send them.
 
 `verify_against_upstream.sh <checkout>` prints these and fails if anything else differs.
 
-0. **Every file**: one line added before the upstream text (`#if DEBUG …`) and one after it
-   (`#endif`), so a Release build of the app compiles none of this. Nothing else in 20 of the 23
-   files is touched.
+0. **No wrapper.** Until 2026-10-05 every file had one line added before the upstream text
+   (`#if DEBUG …`) and one after it (`#endif`), because the package was only used by a DEBUG test
+   screen. The app's product enrollment screen now uses the same code, so the two lines were
+   removed from every file: each file is the upstream file again, and the package compiles the
+   same in Debug and Release. `verify_against_upstream.sh` checks exactly that.
 1. **`Utility/ESPLogging.swift`** — `ESPLog` cannot print. Upstream has a global switch and a
    `print`; this copy has neither, and its message parameter is an autoclosure that is never
    evaluated. The 30-odd `ESPLog.log(…)` call sites in `ESPSecurity2.swift` are unchanged.

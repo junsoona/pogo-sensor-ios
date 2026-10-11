@@ -1729,42 +1729,6 @@
         }
       }
     },
-    "앱은 Thread 네트워크 정보(Dataset, Network Key)를 Power Base로 보내지 않습니다. DEBUG 시험이 전달하는 것은 한 번 쓰는 가입 코드(PSKd)뿐입니다." : {
-      "comment" : "DEBUG build: limitation 2, scoped against the DEBUG tests",
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The app does not send Thread network information (Dataset, Network Key) to a Power Base. The only thing a DEBUG test hands over is a single-use joining code (PSKd)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La app no envía información de la red Thread (Dataset, Network Key) a un Power Base. Lo único que entrega una prueba DEBUG es un código de unión de un solo uso (PSKd)."
-          }
-        }
-      }
-    },
-    "앱의 일반 기능은 Linux Bridge에 등록을 요청하지 않습니다. 허브의 등록 세션 API는 아래 DEBUG 시험에서만, 페어링한 허브에만 사용합니다." : {
-      "comment" : "DEBUG build: limitation 3, scoped against the DEBUG tests",
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The app's regular features never ask the Linux Bridge to enroll anything. The hub's enrollment session API is used only by the DEBUG tests below, and only with a paired hub."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Las funciones normales de la app nunca piden al Linux Bridge que registre nada. La API de sesiones de registro del hub solo la usan las pruebas DEBUG de abajo, y solo con un hub emparejado."
-          }
-        }
-      }
-    },
     "여분 보드의 EUI-64" : {
       "comment" : "DEBUG enrollment test: EUI-64 field title",
       "extractionState" : "stale",
@@ -1959,24 +1923,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No se pudieron leer las credenciales del hub de este dispositivo, así que no se envió ninguna solicitud. Vuelve a conectarte al hub en Ajustes."
-          }
-        }
-      }
-    },
-    "이 문단과 아래 절차는 출시용 앱의 현재 등록 방법입니다. 이 DEBUG 빌드에는 그와 별개로, 미리 준비한 여분 보드로 등록 경로를 확인하는 시험 두 가지(BLE, USB 콘솔)가 맨 아래에 있습니다." : {
-      "comment" : "DEBUG build: separates the Release registration procedure from the DEBUG tests",
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This paragraph and the steps below are how the released app registers a Power Base today. Separately, this DEBUG build has two tests at the bottom (BLE and USB console) that check the enrollment path with a spare board prepared in advance."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Este párrafo y los pasos siguientes son el método de registro actual de la app publicada. Aparte, esta compilación DEBUG tiene al final dos pruebas (BLE y consola USB) que comprueban la ruta de registro con una placa de repuesto preparada de antemano."
           }
         }
       }
@@ -2301,42 +2247,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No se ha encontrado ninguna placa. Inicia una búsqueda."
-          }
-        }
-      }
-    },
-    "출시용 앱에는 Bluetooth·QR 코드로 Power Base를 등록하는 기능이 없습니다. 이 DEBUG 빌드에는 아래의 시험 두 가지만 있고, QR 등록은 어디에도 없습니다." : {
-      "comment" : "DEBUG build: limitation 1, scoped against the DEBUG tests",
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The released app has no feature that registers a Power Base over Bluetooth or with a QR code. This DEBUG build only has the two tests below, and QR registration exists nowhere."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La app publicada no tiene ninguna función para registrar un Power Base por Bluetooth ni con un código QR. Esta compilación DEBUG solo tiene las dos pruebas de abajo, y el registro por QR no existe en ninguna parte."
-          }
-        }
-      }
-    },
-    "출시용 앱에서 아직 할 수 없는 것" : {
-      "comment" : "DEBUG build: header of the limitations section",
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What the Released App Can't Do Yet"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lo que la app publicada aún no puede hacer"
           }
         }
       }
@@ -3039,6 +2949,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Esperando la primera señal en el hub"
+          }
+        }
+      }
+    },
+    "이 DEBUG 빌드에는 제품용 'Power Base 추가' 화면과 별개로, 미리 준비한 여분 보드로 등록 경로를 확인하는 시험 두 가지(BLE, USB 콘솔)가 맨 아래에 있습니다." : {
+      "comment" : "DEBUG build: separates the product registration from the DEBUG tests",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apart from the product “Add Power Base” screen, this DEBUG build has two tests at the bottom (BLE, USB console) that check the registration path with a spare board prepared in advance."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Además de la pantalla de producto “Añadir Power Base”, esta compilación DEBUG tiene al final dos pruebas (BLE, consola USB) que comprueban la ruta de registro con una placa de repuesto preparada de antemano."
           }
         }
       }

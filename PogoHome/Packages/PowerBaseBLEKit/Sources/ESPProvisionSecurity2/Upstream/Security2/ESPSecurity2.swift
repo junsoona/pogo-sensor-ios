@@ -1,4 +1,3 @@
-#if DEBUG // PogoHome: compiled into DEBUG builds only (see VENDORED.md)
 // Copyright 2022 Espressif Systems
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -369,4 +368,3 @@ class ESPSecurity2: ESPCodeable {
         }
     }
 }
-#endif

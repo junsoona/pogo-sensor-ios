@@ -19,12 +19,34 @@ nonisolated struct PogoSnapshotDTO: Decodable, Hashable, Sendable {
     let settingsAPI: Int?
     let settingsState: String?
     let settingsRevision: String?
+    /// Added by the Power Base management revision (additive): the hub's removal (unenroll) jobs.
+    /// `nil` from a hub without management -- distinct from `[]`, "no job".
+    let powerBaseRemovals: [PowerBaseRemovalDTO]?
+    /// Added later (additive): the Power Bases the hub took out of its list. `nil` from a hub that
+    /// cannot do that -- distinct from `[]`, "none".
+    let powerBaseForgets: [PowerBaseForgetDTO]?
+    /// Added later (additive): the Power Bases that are out of the hub's list now -- their
+    /// registration ended and they were not registered again. `nil` from a hub that does not say
+    /// (Linux bridge 0.4.1 and earlier) -- distinct from `[]`, "none".
+    let powerBaseDepartures: [PowerBaseDepartureDTO]?
+    /// Added later (additive): where this snapshot stands among the snapshots of one run of the
+    /// hub. `snapshot_stream` (32 lower-case hex digits) is made when the bridge starts;
+    /// `snapshot_sequence` counts the snapshots of that run in the order they were made, whether
+    /// they went out as a `GET` answer or as an event. Both `nil` from a hub that does not say
+    /// (Linux bridge 0.4.2 and earlier).
+    let snapshotStream: String?
+    let snapshotSequence: Int64?
 
     enum CodingKeys: String, CodingKey {
         case schemaVersion = "schema_version"
         case generatedAtUnixMs = "generated_at_unix_ms"
         case registryGeneration = "registry_generation"
         case powerBases = "power_bases"
+        case powerBaseRemovals = "power_base_removals"
+        case powerBaseForgets = "power_base_forgets"
+        case powerBaseDepartures = "power_base_departures"
+        case snapshotStream = "snapshot_stream"
+        case snapshotSequence = "snapshot_sequence"
         case modules
         case settingsAPI = "settings_api"
         case settingsState = "settings_state"
@@ -38,11 +60,28 @@ nonisolated struct PogoPowerBaseDTO: Decodable, Hashable, Sendable {
     let online: Bool
     let moduleCount: Int?
     let onlineModuleCount: Int?
+    /// Added by the Power Base management revision: `"supported"` when the hub can unenroll this
+    /// Base remotely, `"unsupported"` when it holds no management credential for it. `nil` from a
+    /// hub without management.
+    let management: String?
+    /// Added later (additive), with `management` `"supported"`: `"automatic"` when the board
+    /// confirms the erase behind a removal to the hub itself, `"manual"` when that has to be done
+    /// near the board over Bluetooth. `nil` from a hub that predates it.
+    let eraseConfirmation: String?
+    /// Added later (additive): the registration the hub lists for this Base, 32 lower-case hex
+    /// digits. `nil` from a hub that cannot take a Base out of its list.
+    let record: String?
+    /// Added later (additive), with `management` `"supported"`: how many removals were asked of
+    /// the listed registration so far. `nil` from a hub whose removal request names the Base
+    /// alone (Linux bridge 0.4.2 and earlier).
+    let removalSerial: Int?
 
     enum CodingKeys: String, CodingKey {
-        case uuid, online
+        case uuid, online, management, record
         case moduleCount = "module_count"
         case onlineModuleCount = "online_module_count"
+        case eraseConfirmation = "erase_confirmation"
+        case removalSerial = "removal_serial"
     }
 }
 

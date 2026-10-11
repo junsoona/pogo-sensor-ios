@@ -24,6 +24,11 @@ nonisolated struct LoggedEnrollmentHub: PowerBaseEnrollmentTransport {
         return try await hub.start(baseURL: baseURL, credential: credential, eui64: eui64, pskd: pskd)
     }
 
+    func startManaged(baseURL: URL, credential: HubCredential, eui64: String, pskd: String) async throws -> PowerBaseEnrollmentManagedStart {
+        log.add("hub POST")
+        return try await hub.startManaged(baseURL: baseURL, credential: credential, eui64: eui64, pskd: pskd)
+    }
+
     func startDeliveringBridgeEndpoint(baseURL: URL, credential: HubCredential, eui64: String, pskd: String) async throws -> PowerBaseEnrollmentSession {
         log.add("hub POST")
         return try await hub.startDeliveringBridgeEndpoint(baseURL: baseURL, credential: credential, eui64: eui64, pskd: pskd)
@@ -52,6 +57,10 @@ nonisolated final class FakeBoard: @unchecked Sendable {
         let pskd: String
         /// The bridge endpoint the start carried (every start of the app carries one).
         let endpoint: PowerBaseBLEBridgeEndpoint
+        /// The hub id and generation of the management credential a 0x06 start carried; `nil` for
+        /// a start without one (0x04). The key cannot be read outside the BLE kit.
+        var managementHubID: Data? = nil
+        var managementGeneration: Data? = nil
     }
 
     struct CancelCall: Equatable {
@@ -114,6 +123,11 @@ nonisolated final class FakeBoard: @unchecked Sendable {
     private var heldPlainStatus: [CheckedContinuation<Void, Never>] = []
     private var repeatedStart: (second: StartRepeat, attemptBecomes: AttemptChange?)?
     private var scriptedCancelCodes: [PowerBaseBLECode] = []
+    private var storedReceipt: PowerBaseBLEReleaseReceipt?
+    private var receiptError: PowerBaseBLEClientError?
+    private var receiptCallCount = 0
+    private var holdsReceipt = false
+    private var heldReceipt: [CheckedContinuation<Void, Never>] = []
 
     init(eui64 hex: String = EnrollmentFixtures.eui64, log: EnrollmentEventLog = EnrollmentEventLog()) {
         eui64 = PowerBaseBLEEUI64(hex: hex)!
@@ -137,7 +151,39 @@ nonisolated final class FakeBoard: @unchecked Sendable {
     var heldPlainStatusRequests: Int { lock.withLock { heldPlainStatus.count } }
     var attemptPhase: PowerBaseBLEAttemptPhase? { lock.withLock { attempt?.phase } }
 
+    /// How often the release receipt was asked for.
+    var receiptCalls: Int { lock.withLock { receiptCallCount } }
+
     // MARK: What the test sets
+
+    /// The release receipt this board holds (after its hub unenrolled it); `nil`: none.
+    func set(receipt: PowerBaseBLEReleaseReceipt?) { lock.withLock { storedReceipt = receipt } }
+    /// A receipt request gets its answer only after `releaseHeldReceipt()`: it has left this
+    /// device and the board's answer is under way.
+    func holdReceipt() { lock.withLock { holdsReceipt = true } }
+    var heldReceiptRequests: Int { lock.withLock { heldReceipt.count } }
+
+    func releaseHeldReceipt() {
+        let waiting = lock.withLock {
+            holdsReceipt = false
+            defer { heldReceipt.removeAll() }
+            return heldReceipt
+        }
+        waiting.forEach { $0.resume() }
+    }
+
+    fileprivate func waitWhileReceiptIsHeld() async {
+        await withCheckedContinuation { continuation in
+            let held = lock.withLock {
+                if holdsReceipt { heldReceipt.append(continuation) }
+                return holdsReceipt
+            }
+            if !held { continuation.resume() }
+        }
+    }
+
+    /// The next receipt request fails with this error and the connection is gone.
+    func failNextReceipt(_ error: PowerBaseBLEClientError) { lock.withLock { receiptError = error } }
 
     /// The EUI-64 the board reports inside the session (to play another board).
     func report(eui64 hex: String) { lock.withLock { reportedEUI64 = PowerBaseBLEEUI64(hex: hex)! } }
@@ -305,14 +351,19 @@ nonisolated final class FakeBoard: @unchecked Sendable {
 
     fileprivate func start(
         session: Int, target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge sent: PowerBaseBLEChallenge, pskd: String,
-        endpoint: PowerBaseBLEBridgeEndpoint
+        endpoint: PowerBaseBLEBridgeEndpoint, management: PowerBaseBLEManagementCredential? = nil
     ) async throws -> PowerBaseBLECode {
-        log.add("board start")
+        log.add(management == nil ? "board start" : "board start+management")
         try lock.withLock {
             try requireLive(session)
             // Like the real client: a board without the capability is never sent this message.
-            guard boardCapabilities.contains(.bridgeEndpointV1) else { throw PowerBaseBLEClientError.invalidInput("capability") }
-            startCalls.append(StartCall(session: session, target: target.hex, requestID: requestID.bytes, challenge: sent.bytes, pskd: pskd, endpoint: endpoint))
+            var needed: PowerBaseBLECapabilities = [.bridgeEndpointV1]
+            if management != nil { needed.insert(.managementV1) }
+            guard boardCapabilities.isSuperset(of: needed) else { throw PowerBaseBLEClientError.invalidInput("capability") }
+            startCalls.append(StartCall(
+                session: session, target: target.hex, requestID: requestID.bytes, challenge: sent.bytes, pskd: pskd, endpoint: endpoint,
+                managementHubID: management?.hubID, managementGeneration: management?.generation
+            ))
         }
         await withCheckedContinuation { continuation in
             let held = lock.withLock {
@@ -379,6 +430,26 @@ nonisolated final class FakeBoard: @unchecked Sendable {
         return .accepted
     }
 
+    fileprivate func releaseReceipt(session: Int, target: PowerBaseBLEEUI64) throws -> PowerBaseBLEReleaseReceipt? {
+        log.add("board receipt")
+        return try lock.withLock {
+            receiptCallCount += 1
+            try requireLive(session)
+            // Like the real client: a board without the capability is never asked.
+            guard boardCapabilities.contains(.releaseReceiptV1) else { throw PowerBaseBLEClientError.invalidInput("capability") }
+            if let error = receiptError {
+                receiptError = nil
+                liveSession = 0
+                throw error
+            }
+            guard target == eui64 else {
+                liveSession = 0
+                throw PowerBaseBLEClientError.refusedByBoard(.wrongTarget)
+            }
+            return storedReceipt
+        }
+    }
+
     fileprivate func cancel(session: Int, target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID) throws -> PowerBaseBLECode {
         log.add("board cancel")
         return try lock.withLock {
@@ -423,8 +494,20 @@ nonisolated struct FakeBoardSession: PowerBaseBLEBoardSession {
         try await board.start(session: index, target: target, requestID: requestID, challenge: challenge, pskd: pskd, endpoint: endpoint)
     }
 
+    func start(
+        target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID, challenge: PowerBaseBLEChallenge, pskd: String,
+        endpoint: PowerBaseBLEBridgeEndpoint, management: PowerBaseBLEManagementCredential
+    ) async throws -> PowerBaseBLECode {
+        try await board.start(session: index, target: target, requestID: requestID, challenge: challenge, pskd: pskd, endpoint: endpoint, management: management)
+    }
+
     func cancel(target: PowerBaseBLEEUI64, requestID: PowerBaseBLERequestID) async throws -> PowerBaseBLECode {
         try board.cancel(session: index, target: target, requestID: requestID)
+    }
+
+    func releaseReceipt(target: PowerBaseBLEEUI64) async throws -> PowerBaseBLEReleaseReceipt? {
+        await board.waitWhileReceiptIsHeld()
+        return try board.releaseReceipt(session: index, target: target)
     }
 
     func close() async {
@@ -460,6 +543,8 @@ final class FakeBLEBoardProvider: PowerBaseBLEBoardProviding {
     private(set) var opens: [Open] = []
     private(set) var activations = 0
     private(set) var scanStarts = 0
+    /// Searches that went on after a pause (`resumeScanning`): the boards seen so far are kept.
+    private(set) var scanResumes = 0
     private(set) var scanStops = 0
     private(set) var shutdowns = 0
     /// Each open takes the next error; when none is left, the open succeeds.
@@ -503,6 +588,11 @@ final class FakeBLEBoardProvider: PowerBaseBLEBoardProviding {
         onChange?()
     }
 
+    func resumeScanning() {
+        scanResumes += 1
+        onChange?()
+    }
+
     func stopScanning() { scanStops += 1 }
 
     func shutdown() { shutdowns += 1 }
@@ -533,5 +623,18 @@ final class FakeBLEBoardProvider: PowerBaseBLEBoardProviding {
 extension EnrollmentFixtures {
     /// A made-up setup code in the prepare tool's form (26 base32 characters). Not a real one.
     static let setupCode = "MFRGGZDFMZTWQ2LKNNWG23TPOA"
+
+    /// A release receipt in the wire form (UNENROLL_DONE / ERASED) for `eui64`, with made-up
+    /// identifiers and a made-up MAC: the app only relays it, the hub (scripted here) judges it.
+    static func releaseReceipt(eui64: String = eui64) -> PowerBaseBLEReleaseReceipt {
+        var bytes = Data([1, 0x03, 0, 0])
+        bytes.append(PowerBaseBLEEUI64(hex: eui64)!.bytes)
+        bytes.append(Data(0x10...0x1F))
+        bytes.append(Data(0x20...0x2F))
+        bytes.append(Data(0xE0...0xEF))
+        bytes.append(contentsOf: [2, 0, 0, 0])
+        bytes.append(Data((0..<32).map { UInt8(0x80 + $0) }))
+        return PowerBaseBLEReleaseReceipt(bytes: bytes)!
+    }
 }
 #endif

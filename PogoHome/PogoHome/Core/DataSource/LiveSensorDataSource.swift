@@ -71,9 +71,14 @@ final class LiveSensorDataSource: SensorDataSource {
         self.periodicRefreshInterval = periodicRefreshInterval
     }
 
+    /// Every snapshot this type hands on says which request brought it
+    /// (`SnapshotDelivery.requestOrdinal`): the `GET`, or the event stream it arrived on, numbered
+    /// when that request was **started**. `AppModel` needs it to tell an answer that was asked for
+    /// before the hub was started again from one that was asked for after (`HubSnapshotOrdering`).
     func currentSnapshot() async throws -> HomeSnapshot {
+        let asked = SnapshotRequestClock.next()
         let data = try await transport.fetchSnapshotData(from: endpoint.snapshotURL)
-        return try PogoSnapshotMapper.decodeSnapshot(from: data)
+        return try PogoSnapshotMapper.decodeSnapshot(from: data).requested(at: asked)
     }
 
     func updates() -> AsyncStream<HomeSnapshot> {
@@ -116,8 +121,9 @@ final class LiveSensorDataSource: SensorDataSource {
             publishStatus(attempt == 0 ? .connecting : .reconnecting(attempt: attempt))
             do {
                 try Task.checkCancellation()
+                let asked = SnapshotRequestClock.next()
                 let snapshotData = try await transport.fetchSnapshotData(from: endpoint.snapshotURL)
-                let snapshot = try PogoSnapshotMapper.decodeSnapshot(from: snapshotData)
+                let snapshot = try PogoSnapshotMapper.decodeSnapshot(from: snapshotData).requested(at: asked)
                 continuation.yield(snapshot)
                 // Deliberately NOT `publishStatus(.connected)` here: a successful GET only
                 // proves the HTTP server answered once, not that a live SSE connection
@@ -133,6 +139,8 @@ final class LiveSensorDataSource: SensorDataSource {
 
                 var parser = SSELineParser()
                 var receivedFirstActivity = false
+                // Every event of this stream was asked for when the stream was opened.
+                let opened = SnapshotRequestClock.next()
                 let watchdog = SSELivenessWatchdog(idleTimeout: livenessIdleTimeout, sleeper: watchdogSleeper)
                 for try await line in watchdog.watch(transport.openEventStream(from: endpoint.eventsURL)) {
                     guard generation == updatesGeneration else { break }
@@ -159,7 +167,7 @@ final class LiveSensorDataSource: SensorDataSource {
                     // whole connection — mirrors the "unknown kind/status never crashes
                     // decoding" safety requirement.
                     if let next = try? PogoSnapshotMapper.decodeSnapshot(from: eventData) {
-                        continuation.yield(next)
+                        continuation.yield(next.requested(at: opened))
                         attempt = 0
                         publishStatus(.connected)
                     }

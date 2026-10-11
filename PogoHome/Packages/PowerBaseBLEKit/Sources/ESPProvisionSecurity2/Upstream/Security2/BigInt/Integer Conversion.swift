@@ -1,4 +1,3 @@
-#if DEBUG // PogoHome: compiled into DEBUG builds only (see VENDORED.md)
 // Copyright (c) 2016-2017 Károly Lőrentey
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -61,4 +60,3 @@ extension BigUInt: ExpressibleByIntegerLiteral {
     }
 }
 
-#endif

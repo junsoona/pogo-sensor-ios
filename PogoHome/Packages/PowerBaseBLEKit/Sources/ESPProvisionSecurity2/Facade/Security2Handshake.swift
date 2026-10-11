@@ -1,4 +1,3 @@
-#if DEBUG
 // PogoHome addition -- not part of ESPProvision. The only public surface of this module: a thin
 // wrapper that drives the vendored `ESPSecurity2` (Espressif's SRP-6a + AES-256-GCM client) and
 // checks the shape of the device's handshake messages before handing them to it. It adds no
@@ -159,4 +158,3 @@ public final class Security2Handshake {
         return try message.serializedData()
     }
 }
-#endif

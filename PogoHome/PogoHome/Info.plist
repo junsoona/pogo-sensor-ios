@@ -13,6 +13,16 @@
 			</array>
 		</dict>
 	</array>
+	<key>PogoBuildCommit</key>
+	<string>$(POGO_BUILD_COMMIT)</string>
+	<key>PogoBuildDirty</key>
+	<string>$(POGO_BUILD_DIRTY)</string>
+	<key>PogoBuildID</key>
+	<string>$(POGO_BUILD_ID)</string>
+	<key>PogoBuildKind</key>
+	<string>$(POGO_BUILD_KIND)</string>
+	<key>PogoBuildSourceFingerprint</key>
+	<string>$(POGO_BUILD_SOURCE_FINGERPRINT)</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_jogakbo._tcp</string>

@@ -1,4 +1,4 @@
-#if DEBUG && os(macOS)
+#if os(macOS)
 import XCTest
 @testable import ESPProvisionSecurity2
 @testable import PowerBaseBLEKit
@@ -194,7 +194,7 @@ final class HarnessInteropTests: XCTestCase {
         XCTAssertTrue(try harness.connect(1))
         let (client, link) = try await authenticatedClient(harness)
         let capabilities = await client.capabilities()
-        XCTAssertEqual(capabilities, [.bridgeEndpointV1], "the real proto-ver answer lists the capability")
+        XCTAssertEqual(capabilities, [.bridgeEndpointV1, .managementV1, .releaseReceiptV1], "the real proto-ver answer lists the three capabilities")
 
         let endpoint = try bridgeEndpoint()
         let id = requestID(30)
@@ -242,6 +242,138 @@ final class HarnessInteropTests: XCTestCase {
         XCTAssertNil(stats.pendingEndpoint)
         let enrolled = try await client.status(requestID: id)
         XCTAssertEqual(enrolled.requestPhase, .enrolled, "progress on the board -- never the hub's heartbeat_received")
+    }
+
+    /// A made-up credential (the documentation's golden values): no hub issued it.
+    private func managementCredential(keySeed: UInt8 = 0x30) throws -> PowerBaseBLEManagementCredential {
+        try XCTUnwrap(PowerBaseBLEManagementCredential(
+            hubID: Data(0x10...0x1F), generation: Data(0x20...0x2F), key: Data((0..<32).map { keySeed &+ UInt8($0) })
+        ))
+    }
+
+    func testTheManagementStartReachesTheRealBoardCodeAndIsStoredAsRecordVersion3() async throws {
+        let harness = try boot()
+        XCTAssertTrue(try harness.connect(1))
+        let (client, link) = try await authenticatedClient(harness)
+
+        let endpoint = try bridgeEndpoint()
+        let credential = try managementCredential()
+        let id = requestID(40)
+        let challenge = try await freshChallenge(client)
+        let accepted = try await client.start(
+            target: fixture.eui64, requestID: id, challenge: challenge, pskd: Self.pskd, endpoint: endpoint, management: credential
+        )
+        XCTAssertEqual(accepted, .accepted, "the real admission code takes the Swift codec's 0x06 message")
+        let sent = try XCTUnwrap(link.exchanges.last { $0.endpoint == .start })
+        XCTAssertEqual(sent.request.count, 130 + Self.pskd.count + 16, "130 + PSKd bytes of plaintext, plus the AES-GCM tag")
+        XCTAssertNil(sent.request.range(of: Data(0x30...0x4F)), "the key travels only inside the Security 2 ciphertext")
+        var stats = try harness.stats()
+        XCTAssertEqual(stats.joinerStarts, 0, "accepted is queued, not started")
+        XCTAssertFalse(stats.pendingManagement, "the BLE callback handed nothing to the controller")
+        XCTAssertFalse(stats.storedManagement, "and stored nothing")
+
+        let again = try await client.start(
+            target: fixture.eui64, requestID: id, challenge: challenge, pskd: Self.pskd, endpoint: endpoint, management: credential
+        )
+        XCTAssertEqual(again, .duplicate, "the same request with the same credential")
+        let otherKey = try await client.start(
+            target: fixture.eui64, requestID: id, challenge: challenge, pskd: Self.pskd, endpoint: endpoint, management: try managementCredential(keySeed: 0x31)
+        )
+        XCTAssertEqual(otherKey, .requestConflict, "the same request id with another key is not a duplicate")
+        let withoutCredential = try await client.start(target: fixture.eui64, requestID: id, challenge: challenge, pskd: Self.pskd, endpoint: endpoint)
+        XCTAssertEqual(withoutCredential, .requestConflict, "nor as the endpoint-only start")
+
+        XCTAssertEqual(try harness.poll(), .open)
+        stats = try harness.stats()
+        XCTAssertEqual(stats.joinerStarts, 1, "exactly one Joiner")
+        XCTAssertTrue(stats.pendingManagement, "the controller holds the credential in RAM while joining")
+        XCTAssertEqual(stats.pendingEndpoint, Harness.Endpoint(address: endpoint.address, port: 5684))
+        XCTAssertFalse(stats.storedManagement, "still only in RAM")
+        XCTAssertEqual(stats.marker, 0, "no record yet")
+
+        try harness.joinerDone(outcome: 0)
+        try harness.poll()
+        try harness.tick(attached: true, datasetComplete: true)
+        XCTAssertEqual(try harness.poll(), .enrolled)
+        stats = try harness.stats()
+        XCTAssertEqual(stats.state, Self.stateEnrolled)
+        XCTAssertEqual(stats.marker, 1, "a valid record")
+        XCTAssertTrue(stats.storedManagement, "the record is version 3")
+        XCTAssertEqual(stats.storedManagementState, 1, "state ENROLLED")
+        XCTAssertEqual(stats.storedHubID, credential.hubID, "the hub id the Swift client encoded")
+        XCTAssertEqual(stats.storedGeneration, credential.generation, "the generation")
+        XCTAssertEqual(stats.storedKey, Data(0x30...0x4F), "and the key -- byte for byte")
+        XCTAssertEqual(stats.storedEndpoint, Harness.Endpoint(address: endpoint.address, port: 5684), "with the delivered endpoint, in the same record")
+        XCTAssertTrue(stats.activeManagement)
+        XCTAssertFalse(stats.pendingManagement, "the controller's RAM copy is gone")
+        let enrolled = try await client.status(requestID: id)
+        XCTAssertEqual(enrolled.requestPhase, .enrolled, "progress on the board -- never the hub's heartbeat_received")
+    }
+
+    func testTheReleaseReceiptIsReadFromTheRealBoardCodeByteForByte() async throws {
+        let harness = try boot()
+        XCTAssertTrue(try harness.connect(1))
+        let (client, link) = try await authenticatedClient(harness)
+
+        // A board that was never unenrolled has none.
+        let none = try await client.releaseReceipt(target: fixture.eui64)
+        XCTAssertNil(none, "the real handler answers 'none' for a board without a final release record")
+        let exchange = try XCTUnwrap(link.exchanges.last { $0.endpoint == .status })
+        XCTAssertEqual(exchange.request.count, 12 + 16, "12 bytes of plaintext on pb-status, plus the AES-GCM tag")
+        XCTAssertEqual(exchange.response?.count, 112 + 16, "112 bytes of plaintext back, plus the tag")
+
+        // The record a board holds after an unenroll whose erase was verified (test values; the
+        // harness stores it through the firmware's own record code).
+        let hubID = Data(0x10...0x1F), generation = Data(0x20...0x2F), command = Data(0xE0...0xEF)
+        let mac = Data((0..<32).map { UInt8(0x80 + $0) })
+        XCTAssertTrue(try harness.storeFinalRelease(hubID: hubID, generation: generation, commandID: command, mac: mac))
+        let read = try await client.releaseReceipt(target: fixture.eui64)
+        let receipt = try XCTUnwrap(read)
+        var expected = Data([1, 0x03, 0, 0])
+        expected.append(fixture.eui64.bytes)
+        expected.append(hubID)
+        expected.append(generation)
+        expected.append(command)
+        expected.append(contentsOf: [2, 0, 0, 0])
+        expected.append(mac)
+        XCTAssertEqual(receipt.bytes, expected, "the firmware's pb_mgmt_receipt_load() message, as the Swift codec reads it")
+        XCTAssertEqual(receipt.eui64Hex, fixture.eui64.hex)
+        let again = try await client.releaseReceipt(target: fixture.eui64)
+        XCTAssertEqual(again, receipt, "reading it again gives the same receipt")
+
+        // Nothing changed on the board, and the session goes on.
+        let stats = try harness.stats()
+        XCTAssertEqual(stats.joinerStarts, 0, "reading a receipt starts nothing")
+        XCTAssertEqual(stats.storedManagementState, 3, "the record is still the released one")
+        XCTAssertEqual(stats.storedKey, Data(count: 32), "which holds no key")
+        let status = try await client.status()
+        XCTAssertEqual(status.state, .waiting, "pb-status answers as before on the same endpoint")
+
+        // Another board's EUI-64 is refused by the board, and the session is dropped.
+        let other = try XCTUnwrap(PowerBaseBLEEUI64(hex: "6055f9fffe005678"))
+        await assertClientError(.refusedByBoard(.wrongTarget), "the real handler refuses another target") {
+            _ = try await client.releaseReceipt(target: other)
+        }
+    }
+
+    func testAnEndpointOnlyEnrollmentStoresNoManagementCredential() async throws {
+        let harness = try boot()
+        XCTAssertTrue(try harness.connect(1))
+        let (client, _) = try await authenticatedClient(harness)
+        let endpoint = try bridgeEndpoint()
+        let challenge = try await freshChallenge(client)
+        let accepted = try await client.start(target: fixture.eui64, requestID: requestID(41), challenge: challenge, pskd: Self.pskd, endpoint: endpoint)
+        XCTAssertEqual(accepted, .accepted)
+        try harness.poll()
+        try harness.joinerDone(outcome: 0)
+        try harness.poll()
+        try harness.tick(attached: true, datasetComplete: true)
+        XCTAssertEqual(try harness.poll(), .enrolled)
+        let stats = try harness.stats()
+        XCTAssertEqual(stats.marker, 1)
+        XCTAssertFalse(stats.storedManagement, "message 0x04 still writes record version 2: no credential")
+        XCTAssertFalse(stats.activeManagement)
+        XCTAssertEqual(stats.storedKey, Data(count: 32))
     }
 
     func testAnEndpointAttemptThatDoesNotEnrollLeavesNoEndpointBehind() async throws {
@@ -526,7 +658,7 @@ final class HarnessInteropTests: XCTestCase {
     func testAnotherSecuritySchemeOrPatchIsRefusedBeforeAnyHandshake() async throws {
         let harness = try boot()
         XCTAssertTrue(try harness.connect(1))
-        let real = #"{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":[]},"pb_enroll":{"proto":1,"cap":["bridge_endpoint_v1"]}}"#
+        let real = #"{"prov":{"ver":"v1.1","sec_ver":2,"sec_patch_ver":1,"cap":[]},"pb_enroll":{"proto":1,"cap":["bridge_endpoint_v1","mgmt_v1","release_receipt_v1"]}}"#
         let version = try harness.request(session: 1, endpoint: "proto-ver", data: Data("ESP".utf8))
         XCTAssertEqual(version.error, 0)
         XCTAssertEqual(String(decoding: version.response, as: UTF8.self), real, "what the real board answers")

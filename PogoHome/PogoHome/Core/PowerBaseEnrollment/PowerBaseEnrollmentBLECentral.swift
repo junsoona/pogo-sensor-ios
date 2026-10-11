@@ -1,4 +1,3 @@
-#if DEBUG
 import CoreBluetooth
 import Foundation
 import PowerBaseBLEKit
@@ -62,6 +61,12 @@ final class PowerBaseEnrollmentBLECentral: NSObject, PowerBaseBLEBoardProviding,
         wantsScan = true
         boards = []
         // A board picked earlier stays connectable by its identifier.
+        scanIfPossible()
+        onChange?()
+    }
+
+    func resumeScanning() {
+        wantsScan = true
         scanIfPossible()
         onChange?()
     }
@@ -517,4 +522,3 @@ nonisolated struct PowerBaseEnrollmentBLELink: PowerBaseBLELink {
         await connection.invalidate(.disconnected)
     }
 }
-#endif

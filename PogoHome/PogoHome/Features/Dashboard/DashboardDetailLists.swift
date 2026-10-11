@@ -49,7 +49,7 @@ struct DashboardOnlineModulesView: View {
                         } description: {
                             snapshot.modules.isEmpty
                                 ? Text("연결된 조각보 센서가 없습니다. 모듈이 연결되면 여기에 표시됩니다.")
-                                : Text("조각보 센서 \(snapshot.modules.count)개가 모두 오프라인입니다. Power Base와 Linux Bridge 연결을 확인하세요.", comment: "Dashboard online list, empty: every module is offline; the number of modules (plural)")
+                                : Text("조각보 센서 \(snapshot.modules.count)개가 모두 오프라인입니다. Power Base와 허브의 연결을 확인하세요.", comment: "Dashboard online list, empty: every module is offline; the number of modules (plural)")
                         }
                     }
                 } else {

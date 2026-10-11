@@ -1,4 +1,3 @@
-#if DEBUG
 import XCTest
 @testable import ESPProvisionSecurity2
 
@@ -243,4 +242,3 @@ final class Security2MessageTests: XCTestCase {
         XCTAssertNil(handshake.encrypt(Data([1, 2, 3])))
     }
 }
-#endif

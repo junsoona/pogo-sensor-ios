@@ -82,9 +82,33 @@ nonisolated extension HomeHealthEvaluator {
     }
 }
 
+nonisolated extension HomeHealthEvaluator {
+    /// Whether the hub's word about its Power Bases can be stated as a fact: the connection is
+    /// live, something was received within `freshnessWindow`, and the Bases on screen are not
+    /// ones kept from an earlier snapshot while the sensors recover.
+    ///
+    /// Deliberately not derived from `HomeHealthState`: that verdict is about the sensors (none
+    /// yet, or one without a first reading, is "waiting for data"), while a Power Base is heard by
+    /// the hub whether or not anything is docked on it. This never makes the home's health any
+    /// better -- it only decides whether a Base's "connected"/"disconnected" is shown as current.
+    static func isPowerBaseStateVerified(
+        connectionStatus: DataSourceConnectionStatus,
+        lastSyncAt: Date?,
+        isHoldingBackSensorData: Bool,
+        now: Date = Date(),
+        freshnessWindow: TimeInterval = defaultFreshnessWindow
+    ) -> Bool {
+        guard connectionStatus == .connected, let lastSyncAt, now.timeIntervalSince(lastSyncAt) <= freshnessWindow else {
+            return false
+        }
+        return !isHoldingBackSensorData
+    }
+}
+
 extension HomeHealthState {
     /// True only when the connection and registry are current enough for per-module online
-    /// badges and counts to be stated as facts.
+    /// badges and counts to be stated as facts. For a Power Base's own state see
+    /// `HomeHealthEvaluator.isPowerBaseStateVerified`.
     nonisolated var isCurrentStateVerified: Bool {
         switch self {
         case .healthy, .attentionNeeded:

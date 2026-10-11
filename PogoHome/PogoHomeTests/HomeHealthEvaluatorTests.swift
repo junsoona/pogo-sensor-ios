@@ -134,4 +134,26 @@ final class HomeHealthEvaluatorTests: XCTestCase {
         let state = HomeHealthEvaluator.evaluate(snapshot: snapshot(modules: []), connectionStatus: .idle, lastSyncAt: nil, now: now)
         XCTAssertEqual(state, .waitingForData)
     }
+
+    // MARK: - A Power Base's own state
+
+    func testAPowerBasesStateIsKnownFromALiveFreshConnectionWithoutAnySensor() {
+        // No sensor at all, or one without a first reading: the home is waiting for data, and
+        // stays so -- but what the hub says about a Base is current.
+        for modules in [[], [module(hasReadings: false)]] {
+            XCTAssertEqual(HomeHealthEvaluator.evaluate(snapshot: snapshot(modules: modules), connectionStatus: .connected, lastSyncAt: freshSync, now: now), .waitingForData)
+        }
+        XCTAssertTrue(HomeHealthEvaluator.isPowerBaseStateVerified(connectionStatus: .connected, lastSyncAt: freshSync, isHoldingBackSensorData: false, now: now))
+    }
+
+    func testAPowerBasesStateIsNotKnownWithoutALiveFreshConnectionOrWhileSensorsAreHeldBack() {
+        let notConnected: [DataSourceConnectionStatus] = [.idle, .connecting, .reconnecting(attempt: 1), .failed("down")]
+        for status in notConnected {
+            XCTAssertFalse(HomeHealthEvaluator.isPowerBaseStateVerified(connectionStatus: status, lastSyncAt: freshSync, isHoldingBackSensorData: false, now: now), "\(status)")
+        }
+        XCTAssertFalse(HomeHealthEvaluator.isPowerBaseStateVerified(connectionStatus: .connected, lastSyncAt: staleSync, isHoldingBackSensorData: false, now: now), "nothing received recently")
+        XCTAssertFalse(HomeHealthEvaluator.isPowerBaseStateVerified(connectionStatus: .connected, lastSyncAt: nil, isHoldingBackSensorData: false, now: now), "nothing received at all")
+        XCTAssertFalse(HomeHealthEvaluator.isPowerBaseStateVerified(connectionStatus: .connected, lastSyncAt: freshSync, isHoldingBackSensorData: true, now: now),
+                       "the Bases on screen are the last confirmed ones, not the hub's latest")
+    }
 }

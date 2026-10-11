@@ -250,9 +250,42 @@ final class AdaptiveScreenRenderingTests: XCTestCase {
         }
     }
 
+    /// The Devices tab's sensor cards with the texts that stress a card: a name of two lines, a
+    /// long room name, no room, a chain position of two lines and none at all, an offline module
+    /// and an offline Power Base — one PNG per screenful (`…-p1.png`, `…-p2.png`, …), at the
+    /// default and the largest text size. Add `-testLanguage ko|en|es`.
+    func testRenderDeviceCards() async throws {
+        guard let directory = ProcessInfo.processInfo.environment["POGO_SCREEN_RENDER_DIR"] else {
+            throw XCTSkip("Set TEST_RUNNER_POGO_SCREEN_RENDER_DIR to render screens")
+        }
+        let outputDirectory = URL(fileURLWithPath: directory, isDirectory: true)
+        try FileManager.default.createDirectory(at: outputDirectory, withIntermediateDirectories: true)
+        let language = Bundle.main.preferredLocalizations.first ?? "ko"
+        // The phone's width, taller than its screen: fewer pages, the same cards.
+        let tall = CGSize(width: UIScreen.main.bounds.width, height: 1500)
+        let variants: [Variant] = isPhone
+            ? [Variant(name: "light", size: tall, horizontalSizeClass: .compact),
+               Variant(name: "dark", size: tall, style: .dark, horizontalSizeClass: .compact),
+               Variant(name: "axxl-light", size: tall, horizontalSizeClass: .compact, contentSize: .accessibilityExtraExtraExtraLarge)]
+            : tabVariants
+        for variant in variants {
+            let suite = "PogoHome.tests.deviceCardRendering.\(UUID().uuidString)"
+            defer { UserDefaults.standard.removePersistentDomain(forName: suite) }
+            let models = Self.makeDeviceCardModels(language: language, defaultsSuite: suite)
+            let navigator = AppNavigator()
+            navigator.selectedTab = .devices
+            let view = AppRootView()
+                .environment(models.app)
+                .environment(models.appleHome)
+                .environment(navigator)
+            try await render(view, variant: variant, to: outputDirectory.appendingPathComponent("\(platform)-\(language)-device-cards-\(variant.name).png"), paged: true)
+        }
+    }
+
     // MARK: - Rendering
 
-    private func render(_ view: some View, variant: Variant, to url: URL) async throws {
+    /// `paged`: one PNG per screenful of the screen's list, named `<url>-p<n>.png`.
+    private func render(_ view: some View, variant: Variant, to url: URL, paged: Bool = false) async throws {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         #if targetEnvironment(macCatalyst)
         // A Mac window's size is the scene's; resize the scene itself.
@@ -279,13 +312,36 @@ final class AdaptiveScreenRenderingTests: XCTestCase {
         let bounds = window.bounds
         let format = UIGraphicsImageRendererFormat(for: window.traitCollection)
         format.scale = 2
-        let image = UIGraphicsImageRenderer(bounds: bounds, format: format).image { _ in
-            _ = window.drawHierarchy(in: bounds, afterScreenUpdates: true)
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
         }
-        window.isHidden = true
-        window.rootViewController = nil
-        let data = try XCTUnwrap(image.pngData())
-        try data.write(to: url)
+        func draw(to url: URL) throws {
+            let image = UIGraphicsImageRenderer(bounds: bounds, format: format).image { _ in
+                _ = window.drawHierarchy(in: bounds, afterScreenUpdates: true)
+            }
+            try XCTUnwrap(image.pngData()).write(to: url)
+        }
+        guard paged else { return try draw(to: url) }
+        let scrollView = Self.scrollViews(in: window).max { $0.contentSize.height < $1.contentSize.height }
+        let base = url.deletingPathExtension().lastPathComponent
+        var page = 1
+        while true {
+            try draw(to: url.deletingLastPathComponent().appendingPathComponent("\(base)-p\(page).png"))
+            guard let scrollView, page < 40 else { break }
+            let maxOffset = scrollView.contentSize.height + scrollView.adjustedContentInset.bottom - scrollView.bounds.height
+            let current = scrollView.contentOffset.y
+            guard current < maxOffset - 1 else { break }
+            // Overlap a little, so no card falls between two pages.
+            scrollView.setContentOffset(CGPoint(x: 0, y: min(current + scrollView.bounds.height * 0.7, maxOffset)), animated: false)
+            window.layoutIfNeeded()
+            try await Task.sleep(for: .milliseconds(300))
+            page += 1
+        }
+    }
+
+    private static func scrollViews(in view: UIView) -> [UIScrollView] {
+        ((view as? UIScrollView).map { [$0] } ?? []) + view.subviews.flatMap { scrollViews(in: $0) }
     }
 
     // MARK: - Fixtures
@@ -356,6 +412,80 @@ final class AdaptiveScreenRenderingTests: XCTestCase {
         )
         model.enable()
         return (app, model)
+    }
+
+    /// Seven modules for `testRenderDeviceCards`: four chained on an online Power Base, one on an
+    /// offline Base and two the hub lists without a Base (no chain position). No Apple Home.
+    private static func makeDeviceCardModels(language: String, defaultsSuite: String) -> (app: AppModel, appleHome: AppleHomeModel) {
+        func text(_ ko: String, _ en: String, _ es: String) -> String {
+            language == "en" ? en : language == "es" ? es : ko
+        }
+        let study = Room(id: UUID(), name: text("컴퓨터 방", "Computer Room", "Sala del ordenador"), symbolName: "desktopcomputer", sortOrder: 0)
+        let longRoom = Room(
+            id: UUID(),
+            name: text("2층 남쪽 베란다 옆 작은 작업실 겸 서재", "Small Upstairs Workshop and Study by the South Balcony", "Pequeño taller y estudio junto al balcón sur de la planta alta"),
+            symbolName: "books.vertical.fill", sortOrder: 1
+        )
+        // Not among the rooms: the card says "방 미지정".
+        let noRoom = UUID()
+        let gas = text("SGP41 가스 센서", "SGP41 Gas Sensor", "Sensor de gases SGP41")
+        let particles = text("PMS5003 미세먼지 센서", "PMS5003 Particle Sensor", "Sensor de partículas PMS5003")
+        let long = text(
+            "안방 창가 온습도·조도 통합 측정 모듈 2호",
+            "Master Bedroom Window Temperature, Humidity and Light Module No. 2",
+            "Módulo de temperatura, humedad y luz de la ventana del dormitorio principal n.º 2"
+        )
+        let light = text("조도 센서", "Light Sensor", "Sensor de luz")
+        let climate = text("온습도 센서", "Climate Sensor", "Sensor de clima")
+
+        let baseA = "a0a0a0fffe000001"
+        let baseB = "b0b0b0fffe000002"
+        let readings = MockSensorFixtures.modules(referenceDate: Date()).map(\.readings)
+        func identifier(_ number: Int) -> String { String(format: "744dbdfffe65%04x", number) }
+        func module(_ number: Int, _ name: String, room: UUID, isOnline: Bool = true, base: String?, parent: String?) -> SensorModule {
+            SensorModule(
+                id: UUID(uuidString: String(format: "8A3B1C10-00%02d-4000-8000-0000000000%02d", number, number))!,
+                name: name,
+                hardwareIdentifier: identifier(number),
+                roomID: room,
+                readings: readings[number % readings.count],
+                isOnline: isOnline,
+                lastSeen: Date(),
+                powerBaseIdentifier: base,
+                parentIdentifier: parent
+            )
+        }
+        let modules = [
+            module(1, gas, room: study.id, base: baseA, parent: baseA),
+            module(2, particles, room: study.id, base: baseA, parent: identifier(1)),
+            module(3, long, room: longRoom.id, base: baseA, parent: identifier(2)),
+            module(4, light, room: noRoom, isOnline: false, base: baseA, parent: identifier(3)),
+            module(5, climate, room: study.id, isOnline: false, base: baseB, parent: baseB),
+            module(6, light, room: longRoom.id, base: nil, parent: nil),
+            module(7, long, room: noRoom, base: nil, parent: nil),
+        ]
+        let snapshot = HomeSnapshot(
+            timestamp: Date(),
+            rooms: [study, longRoom],
+            modules: modules,
+            powerBases: [
+                PowerBase(hardwareIdentifier: baseA, isOnline: true, moduleCount: 4, onlineModuleCount: 3),
+                PowerBase(hardwareIdentifier: baseB, isOnline: false, moduleCount: 1, onlineModuleCount: 0),
+            ],
+            reportsPowerBases: true
+        )
+        let app = AppModel(
+            dataSource: StaticSensorDataSource(snapshot: snapshot),
+            initialSnapshot: snapshot,
+            configurationStore: InMemoryHomeConfigurationStore(rooms: [study, longRoom])
+        )
+        app.start()
+        let appleHome = AppleHomeModel(
+            provider: PreviewAppleHomeProvider(snapshot: AppleHomeSnapshot(accessState: .ready, homes: [], accessories: [])),
+            defaults: UserDefaults(suiteName: defaultsSuite) ?? .standard
+        )
+        appleHome.enable()
+        return (app, appleHome)
     }
 
     /// A POGO home on two Power Bases — the second offline — plus the preview Apple Home.
