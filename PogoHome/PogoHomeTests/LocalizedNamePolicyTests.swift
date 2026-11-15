@@ -124,7 +124,7 @@ final class LocalizedNamePolicyTests: XCTestCase {
         let raw = "744dbdfffe65d357"
         let moduleID = ModuleIdentity.stableUUID(forRawIdentifier: raw)
         let store = InMemoryHomeConfigurationStore(language: .english)
-        let englishDescriptor = ModuleCatalog.descriptor(forRawIdentifier: raw, apiRole: nil, language: .english)
+        let englishDescriptor = ModuleCatalog.descriptor(forRawIdentifier: raw, apiRole: nil, sensorBitmap: 0x78, language: .english)
         let module = SensorModule(
             id: moduleID,
             name: englishDescriptor.displayName,
@@ -141,7 +141,7 @@ final class LocalizedNamePolicyTests: XCTestCase {
             configurationStore: store,
             language: .english
         )
-        XCTAssertEqual(model.module(with: moduleID)?.name, "SGP41 Gas Sensor")
+        XCTAssertEqual(model.module(with: moduleID)?.name, "VOC/NOx Gas Sensor")
 
         try await model.updateModule(id: moduleID, customName: "창가 센서", roomID: HomeConfigurationDefaults.livingRoomID)
         XCTAssertEqual(model.module(with: moduleID)?.name, "창가 센서")

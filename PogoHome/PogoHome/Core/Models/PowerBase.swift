@@ -27,14 +27,15 @@ nonisolated struct PowerBase: Identifiable, Hashable, Sendable {
     /// both as they were when the user confirmed (`removalBinding`): the hub then carries the
     /// request out only for that registration, and at most once. `nil` from a hub that takes no
     /// such request (Linux bridge 0.4.2 and earlier), and for a Base it cannot remove.
-    let removalSerial: Int?
+    /// `Int64`, not `Int`: the hub counts in 32 bits unsigned (`PowerBaseRemovalBinding.serialRange`).
+    let removalSerial: Int64?
 
     init(
         hardwareIdentifier: String, isOnline: Bool, moduleCount: Int, onlineModuleCount: Int,
         management: PowerBaseManagementSupport = .unknown,
         eraseConfirmation: PowerBaseEraseConfirmation = .unspecified,
         record: String? = nil,
-        removalSerial: Int? = nil
+        removalSerial: Int64? = nil
     ) {
         let raw = hardwareIdentifier.lowercased()
         self.id = PowerBaseIdentity.stableUUID(forRawIdentifier: raw)

@@ -366,12 +366,15 @@ nonisolated enum PowerBaseRemovalError: Error, Equatable, Sendable {
 nonisolated struct PowerBaseRemovalBinding: Hashable, Sendable {
     /// `PowerBase.record`: 32 lower-case hex digits.
     let record: String
-    /// `PowerBase.removalSerial`.
-    let serial: Int
+    /// `PowerBase.removalSerial`. 64 bits wide on every device: the hub's count is an unsigned
+    /// 32-bit number, and `Int` is 32 bits on an Apple Watch with a 32-bit ABI (arm64_32).
+    let serial: Int64
 
-    /// What the hub's `removal_serial` can be: a count that fits 32 bits.
-    static func isValidSerial(_ value: Int) -> Bool {
-        value >= 0 && value <= Int(UInt32.max)
+    /// What the hub's `removal_serial` can be: a count that fits 32 bits, unsigned.
+    static let serialRange: ClosedRange<Int64> = 0...4_294_967_295
+
+    static func isValidSerial(_ value: Int64) -> Bool {
+        serialRange.contains(value)
     }
 
     var isValid: Bool {

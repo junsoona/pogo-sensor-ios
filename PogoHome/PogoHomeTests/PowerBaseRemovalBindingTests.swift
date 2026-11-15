@@ -87,8 +87,9 @@ final class PowerBaseRemovalBindingWireTests: XCTestCase {
         let badID = await refusal(binding: good, requestID: "5A")
         XCTAssertEqual(badID, .rejected("invalid_request_id"))
         XCTAssertTrue(good.isValid)
-        XCTAssertFalse(PowerBaseRemovalBinding(record: F.record, serial: Int(UInt32.max) + 1).isValid)
-        XCTAssertTrue(PowerBaseRemovalBinding(record: F.record, serial: Int(UInt32.max)).isValid)
+        // 64-bit numbers on every device: `Int(UInt32.max)` stops a program whose `Int` is 32 bits.
+        XCTAssertFalse(PowerBaseRemovalBinding(record: F.record, serial: Int64(UInt32.max) + 1).isValid)
+        XCTAssertTrue(PowerBaseRemovalBinding(record: F.record, serial: Int64(UInt32.max)).isValid)
     }
 
     func testTheHubsRefusalsOfARequestAreReadAsWhatTheyAre() {
@@ -116,7 +117,7 @@ final class PowerBaseRemovalBindingPresentationTests: XCTestCase {
     private typealias T = PowerBaseManagementText
     private typealias F = ForgetFixtures
 
-    private func base(record: String? = F.record, serial: Int? = 0, management: PowerBaseManagementSupport = .supported) -> PowerBase {
+    private func base(record: String? = F.record, serial: Int64? = 0, management: PowerBaseManagementSupport = .supported) -> PowerBase {
         PowerBase(hardwareIdentifier: F.base, isOnline: true, moduleCount: 1, onlineModuleCount: 1, management: management, record: record, removalSerial: serial)
     }
 
@@ -212,7 +213,7 @@ final class PowerBaseRemovalBindingControllerTests: XCTestCase {
         controller.targetDidChange(RemovalFixtures.target())
     }
 
-    private func listed(record: String?, serial: Int? = 0) -> [PowerBase] {
+    private func listed(record: String?, serial: Int64? = 0) -> [PowerBase] {
         [PowerBase(hardwareIdentifier: base, isOnline: true, moduleCount: 1, onlineModuleCount: 1, management: .supported, record: record, removalSerial: serial)]
     }
 
@@ -244,6 +245,23 @@ final class PowerBaseRemovalBindingControllerTests: XCTestCase {
         XCTAssertEqual(sent.map(\.binding), [first, PowerBaseRemovalBinding(record: F.record, serial: 1)], "what the user was shown, each time")
         XCTAssertTrue(sent.allSatisfy { PowerBaseRemovalID.isValid($0.requestID) })
         XCTAssertNotEqual(sent[0].requestID, sent[1].requestID, "a new confirmation is a new request")
+    }
+
+    /// The hub counts in 32 bits unsigned: a count beyond `Int32.max` is requested as it is, and a
+    /// request without an answer is sent again with the same number.
+    func testARequestCarriesASerialFromTheUpperHalfOfTheHubsRange() async throws {
+        let high = PowerBaseRemovalBinding(record: F.record, serial: 4_294_967_295)
+        XCTAssertEqual(listed(record: F.record, serial: 4_294_967_295).first?.removalBinding, high)
+        hub.scriptRequest(.failure(.unreachable("timeout")))
+        controller.requestRemoval(of: base, binding: high)
+        try await settled()
+        XCTAssertEqual(controller.action(for: base), .resultUnknown)
+        hub.scriptRequest(.success(job(.pending)))
+        controller.retryRemoval(of: base)
+        try await waitUntil { self.hub.sentRequests.count == 2 }
+        try await settled()
+        XCTAssertEqual(hub.sentRequests.map(\.binding), [high, high])
+        XCTAssertEqual(hub.sentRequests[0].requestID, hub.sentRequests[1].requestID, "the same request")
     }
 
     func testARequestWithoutAnAnswerIsKeptAndSentAgainExactlyAsItWas() async throws {
@@ -574,7 +592,7 @@ final class AppModelRemovalBindingTests: XCTestCase {
     }
 
     /// The Base with two sensors, registered under `record`, with `serial` removals asked of it.
-    private func home(record: String = F.record, serial: Int = 0, removals: [String] = []) -> Data {
+    private func home(record: String = F.record, serial: Int64 = 0, removals: [String] = []) -> Data {
         let base = F.baseJSON(online: true, moduleCount: 2, record: record)
             .replacingOccurrences(of: "\"removal_serial\":0", with: "\"removal_serial\":\(serial)")
         return D.snapshot(
@@ -604,6 +622,32 @@ final class AppModelRemovalBindingTests: XCTestCase {
         XCTAssertFalse(device.model.isRegistryRecovering, "\(message): not recovering", file: file, line: line)
         XCTAssertNil(state.removal, "\(message): no job is shown for it", file: file, line: line)
         XCTAssertEqual(state.removalBinding, PowerBaseRemovalBinding(record: F.laterRecord, serial: 0), "\(message): a removal of it would name it", file: file, line: line)
+    }
+
+    /// The hub's count as the JSON the hub writes, through the real data source, mapper and
+    /// `AppModel`, to the sheet and into the request: every number of the hub's range is kept as
+    /// it is, also the upper half that a 32-bit `Int` cannot hold.
+    func testTheSerialTheHubListsIsShownAndRequestedAsItIsAcrossItsWholeRange() async throws {
+        let device = try await startDevice(first: home())
+        for serial: Int64 in [0, 1, 2_147_483_647, 2_147_483_648, 4_294_967_295] {
+            try await deliver(home(serial: serial), to: device)
+            let shown = try XCTUnwrap(sheetState(device).removalBinding, "\(serial)")
+            XCTAssertEqual(shown, PowerBaseRemovalBinding(record: F.record, serial: serial))
+            XCTAssertEqual(sheetState(device).availability, .available, "\(serial)")
+            let before = device.removalHub.sentRequests.count
+            device.removalHub.scriptRequest(.failure(.staleRecord))
+            device.removals.requestRemoval(of: F.base, binding: shown)
+            try await waitUntil { device.removalHub.sentRequests.count == before + 1 }
+            try await settled(device)
+            XCTAssertEqual(device.removalHub.sentRequests.last?.binding, shown, "\(serial)")
+        }
+        // A number that is no count of the hub's: nothing is offered, and the Base stays listed.
+        for serial: Int64 in [-1, 4_294_967_296] {
+            try await deliver(home(serial: serial), to: device)
+            XCTAssertNil(sheetState(device).removalBinding, "\(serial)")
+            XCTAssertEqual(device.model.snapshot.powerBases.map(\.record), [F.record], "\(serial)")
+            XCTAssertEqual(device.model.snapshot.modules.count, 2, "\(serial)")
+        }
     }
 
     // MARK: The reviewed order

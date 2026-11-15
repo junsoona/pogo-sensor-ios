@@ -18,6 +18,23 @@
         }
       }
     },
+    "'Power Base 삭제'는 Power Base가 다시 연결되면 저장된 연결 정보까지 지웁니다. '허브 목록에서 제거'는 되돌릴 수 없으며, 다시 사용하려면 'Power Base 추가'에서 새로 등록해야 합니다." : {
+      "comment" : "Power Base management: under the 'remove from hub list' button -- the difference from the removal, that it cannot be undone, and how to use the Base again",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Remove Power Base” also erases the stored connection information once the Power Base connects again. “Remove from Hub List” can’t be undone; to use the Power Base again, register it anew in “Add Power Base”."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“Eliminar Power Base” también borra la información de conexión guardada cuando la Power Base vuelve a conectarse. “Quitar de la lista del hub” no se puede deshacer; para volver a usarla, regístrala de nuevo en “Añadir Power Base”."
+          }
+        }
+      }
+    },
     "‘허브 찾기’로 같은 네트워크의 센서 허브를 찾거나, 허브의 주소를 직접 입력하세요." : {
       "comment" : "Settings footer while connecting by a typed address",
       "localizations" : {
@@ -238,6 +255,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Encendido de %@"
+          }
+        }
+      }
+    },
+    "%@ 허브 목록에서 제거" : {
+      "comment" : "Power Base management: title of the confirmation for taking a Power Base out of the hub's list; the argument is the Power Base's label",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove %@ from Hub List"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitar %@ de la lista del hub"
+          }
+        }
+      }
+    },
+    "%@ 허브 목록에서 제거됨" : {
+      "comment" : "Power Base management: short notice when the hub took the Power Base out of its list; the argument is the Power Base's label",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ removed from hub list"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ quitada de la lista del hub"
           }
         }
       }
@@ -1378,40 +1429,6 @@
         }
       }
     },
-    "이 화면을 열면 Bluetooth로 재등록을 기다리는 Power Base를 자동으로 찾습니다. 찾기가 시작되지 않았다면 위 버튼을 누르세요. BOOT 버튼을 5초 누른 Power Base만 나타납니다." : {
-      "comment" : "Re-enroll: footer while the automatic search has not started; only a board whose BOOT button was held shows up",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opening this screen automatically looks over Bluetooth for a Power Base that is waiting to be registered again. If the search has not started, tap the button above. Only a Power Base whose BOOT button was held for 5 seconds shows up."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Al abrir esta pantalla se busca automáticamente por Bluetooth la Power Base que espera volver a registrarse. Si la búsqueda no ha empezado, pulsa el botón de arriba. Solo aparece una Power Base cuyo botón BOOT se haya mantenido pulsado 5 segundos."
-          }
-        }
-      }
-    },
-    "이 화면이 열려 있는 동안 Bluetooth로 자동으로 찾습니다. 찾는 것만으로는 Power Base의 재등록 창이 열리지 않고 아무것도 지워지지 않습니다. 위 순서대로 BOOT 버튼을 5초 누른 Power Base만 여기에 나타납니다." : {
-      "comment" : "Re-enroll: footer of the scan list; the automatic search neither opens the board's window nor erases anything",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "While this screen is open, it looks over Bluetooth automatically. Looking alone does not make a Power Base wait to be registered again and erases nothing. Only a Power Base whose BOOT button was held for 5 seconds, as in the steps above, shows up here."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mientras esta pantalla está abierta, busca automáticamente por Bluetooth. Buscar no hace que una Power Base espere volver a registrarse ni borra nada. Aquí solo aparece una Power Base cuyo botón BOOT se haya mantenido pulsado 5 segundos, como indican los pasos de arriba."
-          }
-        }
-      }
-    },
     "brand.appName" : {
       "comment" : "The app's name, a proper noun: 조각보 홈 in Korean, Jogakbo Home in other languages; never translated",
       "localizations" : {
@@ -1699,23 +1716,6 @@
         }
       }
     },
-    "이 정보는 기기마다 따로 저장되고 다른 기기와 동기화되지 않습니다. 같은 이름을 함께 쓰려면 ‘허브 설정 공유’를 켜세요. Apple 홈의 기기와 방 이름은 Apple 홈에서 가져오므로 어느 기기에서나 같습니다." : {
-      "comment" : "Settings footer: what stays on this device",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This information is saved separately on each device and isn’t synced. To use the same names on other devices, turn on “Hub Settings Sharing”. Apple Home device and room names come from Apple Home, so they’re the same everywhere."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esta información se guarda por separado en cada dispositivo y no se sincroniza. Para usar los mismos nombres en otros dispositivos, activa “Compartir ajustes del hub”. Los nombres de dispositivos y habitaciones de Apple Home vienen de Apple Home, así que son iguales en todas partes."
-          }
-        }
-      }
-    },
     "iPhone과 연결하는 중…" : {
       "comment" : "Watch: no settings yet; the link to the iPhone is still being set up",
       "localizations" : {
@@ -1886,90 +1886,6 @@
         }
       }
     },
-    "허브가 아직 어떤 Power Base의 신호도 받지 못했습니다." : {
-      "comment" : "No Power Base heard yet",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The hub hasn't heard from any Power Base yet."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El hub aún no ha recibido señal de ninguna Power Base."
-          }
-        }
-      }
-    },
-    "허브가 인식한 Power Base" : {
-      "comment" : "Section header",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Power Bases the hub sees"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Power Bases que ve el hub"
-          }
-        }
-      }
-    },
-    "허브에 연결되어 있지 않아 새 Power Base를 확인할 수 없습니다." : {
-      "comment" : "Not connected",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not connected to the hub, so a new Power Base can't be detected."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No hay conexión con el hub, así que no se puede detectar una nueva Power Base."
-          }
-        }
-      }
-    },
-    "OTBR(조각보 허브)를 Apple 홈에 추가하면 같은 센서가 Apple 홈과 조각보 센서에 각각 표시됩니다. 같은 조각보 센서를 고르면 조각보 홈에서 이 Apple 홈 기기를 숨깁니다. Apple 홈에서는 아무것도 삭제되지 않습니다." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "If the OTBR (the Jogakbo hub) is added to Apple Home, the same sensor appears both in Apple Home and under Jogakbo sensors. Choose the same Jogakbo sensor to hide this Apple Home device in Jogakbo Home. Nothing is removed from Apple Home."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Si el OTBR (el hub Jogakbo) se añade a Apple Home, el mismo sensor aparece en Apple Home y en los sensores Jogakbo. Elige el mismo sensor Jogakbo para ocultar este dispositivo de Apple Home en Jogakbo Home. No se elimina nada de Apple Home."
-          }
-        }
-      }
-    },
-    "OTBR에서 Thread Active Dataset과 허브 주소(Mesh-Local EID)를 확인합니다." : {
-      "comment" : "Registration step",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "On the OTBR, get the Thread Active Dataset and the hub address (Mesh-Local EID)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "En el OTBR, obtén el Active Dataset de Thread y la dirección del hub (Mesh-Local EID)."
-          }
-        }
-      }
-    },
     "Live 모드는 같은 Wi-Fi에 있는 OTBR(조각보 허브)에 연결합니다. Apple 홈 기기는 위의 ‘Apple 홈’에서 따로 켭니다. 집·방·기기 이름을 다른 기기와 함께 쓰려면 ‘허브 설정 공유’에서 이 기기를 연결하세요." : {
       "comment" : "Settings: about Live mode and hub settings sharing",
       "localizations" : {
@@ -2076,7 +1992,92 @@
         }
       }
     },
+    "NOx 가스 센서" : {
+      "comment" : "Default module name from current advertised sensor channels; no exact hardware model is inferred.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NOx Gas Sensor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor de gases NOx"
+          }
+        }
+      }
+    },
+    "OTBR(조각보 허브)를 Apple 홈에 추가하면 같은 센서가 Apple 홈과 조각보 센서에 각각 표시됩니다. 같은 조각보 센서를 고르면 조각보 홈에서 이 Apple 홈 기기를 숨깁니다. Apple 홈에서는 아무것도 삭제되지 않습니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If the OTBR (the Jogakbo hub) is added to Apple Home, the same sensor appears both in Apple Home and under Jogakbo sensors. Choose the same Jogakbo sensor to hide this Apple Home device in Jogakbo Home. Nothing is removed from Apple Home."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Si el OTBR (el hub Jogakbo) se añade a Apple Home, el mismo sensor aparece en Apple Home y en los sensores Jogakbo. Elige el mismo sensor Jogakbo para ocultar este dispositivo de Apple Home en Jogakbo Home. No se elimina nada de Apple Home."
+          }
+        }
+      }
+    },
+    "OTBR(조각보 허브)만 찾습니다. 고른 허브는 확인을 마친 뒤에 연결됩니다." : {
+      "comment" : "Hub discovery list footer",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only OTBRs (Jogakbo hubs) are listed. A hub you choose is checked before the app connects to it."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo se muestran OTBR (hubs Jogakbo). El hub que elijas se comprueba antes de conectarse."
+          }
+        }
+      }
+    },
+    "OTBR에서 Thread Active Dataset과 허브 주소(Mesh-Local EID)를 확인합니다." : {
+      "comment" : "Registration step",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the OTBR, get the Thread Active Dataset and the hub address (Mesh-Local EID)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En el OTBR, obtén el Active Dataset de Thread y la dirección del hub (Mesh-Local EID)."
+          }
+        }
+      }
+    },
+    "OTBR에서 허브 서비스 계정으로 ‘pogohome-hubctl --state-dir <상태 디렉터리> pair’를 실행해 만든 12자리 연결 코드를 입력하세요. 코드는 한 번만, 정해진 시간 동안 쓸 수 있습니다. 이 기기 이름은 허브의 기기 목록에 표시됩니다." : {
+      "comment" : "Shared settings setup: where the pairing code comes from",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the 12-character connection code created on the OTBR by running “pogohome-hubctl --state-dir <state directory> pair” as the hub service’s account. A code works once, for a limited time. This device’s name appears in the hub’s device list."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduce el código de conexión de 12 caracteres creado en el OTBR al ejecutar “pogohome-hubctl --state-dir <directorio de estado> pair” con la cuenta del servicio del hub. Un código sirve una sola vez y por tiempo limitado. El nombre de este dispositivo aparece en la lista de dispositivos del hub."
+          }
+        }
+      }
+    },
     "PM1/PM2.5/PM10 센서 · depth 2" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2093,6 +2094,7 @@
       }
     },
     "PMS5003 미세먼지 센서" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2495,53 +2497,53 @@
         }
       }
     },
-    "Power Base를 삭제하고 있습니다. 이 단계에서는 취소할 수 없습니다." : {
-      "comment" : "Power Base removal: in progress",
+    "Power Base가 다시 연결되면 삭제됩니다. 앱을 닫아도 요청은 허브에 남으며, 그 전에는 취소할 수 있습니다." : {
+      "comment" : "Power Base removal: waiting for an offline Base",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Power Base is being removed. It can’t be cancelled at this stage."
+            "value" : "The Power Base is removed when it connects again. The request stays on the hub even if you close the app, and it can be cancelled until then."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La Power Base se está eliminando. En esta fase no se puede cancelar."
+            "value" : "La Power Base se elimina cuando vuelva a conectarse. La solicitud sigue en el hub aunque cierres la app, y hasta entonces se puede cancelar."
           }
         }
       }
     },
-    "삭제 뒤 Power Base 가까이에서 '삭제 확인'을 한 번 해야 완료됩니다." : {
-      "comment" : "Power Base management: confirmation dialog, a Base whose removal has to be confirmed once near it afterwards",
+    "Power Base가 다시 연결되어 목록에서 제거하지 않았습니다. 지우려면 'Power Base 삭제'를 사용하세요." : {
+      "comment" : "Power Base management failure of 'remove from hub list': the hub hears the Base again",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Afterwards, confirm the removal once near the Power Base with “Confirm Removal” to complete it."
+            "value" : "The Power Base connected again, so it wasn’t removed from the list. To remove it, use “Remove Power Base”."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Después, confirma la eliminación una vez cerca de la Power Base con “Confirmar eliminación” para completarla."
+            "value" : "La Power Base volvió a conectarse, así que no se quitó de la lista. Para eliminarla, usa “Eliminar Power Base”."
           }
         }
       }
     },
-    "Power Base와 센서는 목록에서 빠졌지만, 삭제가 끝났는지는 아직 확인되지 않았습니다. Power Base 가까이에서 아래 '삭제 확인'을 하면 완료됩니다." : {
-      "comment" : "Power Base removal: out of the hub's lists, not confirmed; how to complete it",
+    "Power Base가 아직 삭제를 마치지 못했습니다. 전원을 껐다 켠 뒤 다시 확인하세요. 그사이 다시 등록을 시작한 Power Base는 여기서 확인할 수 없습니다." : {
+      "comment" : "Confirm removal failure: the board has no receipt",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Power Base and its sensors are off the list, but it isn’t confirmed yet that the removal finished. Use “Confirm Removal” below near the Power Base to complete it."
+            "value" : "The Power Base hasn’t finished the removal yet. Turn it off and on, then confirm again. A Power Base on which a new registration was started in the meantime can’t be confirmed here."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La Power Base y sus sensores ya no están en la lista, pero aún no está confirmado que la eliminación haya terminado. Usa “Confirmar eliminación” abajo, cerca de la Power Base, para completarla."
+            "value" : "La Power Base aún no ha terminado la eliminación. Apágala y enciéndela y vuelve a confirmar. Una Power Base en la que se inició un nuevo registro entretanto no se puede confirmar aquí."
           }
         }
       }
@@ -2593,23 +2595,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Si la Power Base ya terminó la eliminación, puedes completarla cerca de ella con “Confirmar eliminación” abajo."
-          }
-        }
-      }
-    },
-    "삭제했습니다. 다시 사용하려면 'Power Base 추가'에서 새로 등록하세요." : {
-      "comment" : "Power Base removal: completed",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Removed. To use it again, register it anew in “Add Power Base”."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eliminada. Para volver a usarla, regístrala de nuevo en “Añadir Power Base”."
           }
         }
       }
@@ -2750,6 +2735,23 @@
         }
       }
     },
+    "Power Base는 확인했지만 허브에 전달하지 못했습니다. 허브에 연결된 뒤 '허브에 다시 보내기'를 누르세요. 이 화면을 벗어나면 처음부터 다시 확인해야 합니다." : {
+      "comment" : "Confirm removal failure: the receipt was read but the hub could not be reached",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Power Base was confirmed, but the result couldn’t be delivered to the hub. When the hub is reachable, tap “Send to Hub Again”. If you leave this screen, you’ll have to confirm from the start."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se confirmó la Power Base, pero no se pudo entregar el resultado al hub. Cuando haya conexión con el hub, pulsa “Enviar de nuevo al hub”. Si sales de esta pantalla, tendrás que confirmar desde el principio."
+          }
+        }
+      }
+    },
     "Power Base를 등록하려면 설정의 '허브 찾기'에서 허브를 선택해야 합니다." : {
       "comment" : "Power Base setup: no hub picked in Find hubs",
       "localizations" : {
@@ -2784,6 +2786,23 @@
         }
       }
     },
+    "Power Base를 삭제하고 있습니다. 이 단계에서는 취소할 수 없습니다." : {
+      "comment" : "Power Base removal: in progress",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Power Base is being removed. It can’t be cancelled at this stage."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La Power Base se está eliminando. En esta fase no se puede cancelar."
+          }
+        }
+      }
+    },
     "Power Base를 삭제하려면 설정의 '허브 찾기'에서 허브를 선택해야 합니다." : {
       "comment" : "Power Base management: no hub picked in Find hubs",
       "localizations" : {
@@ -2797,57 +2816,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Para eliminar una Power Base, elige un hub en “Buscar hubs” en Ajustes."
-          }
-        }
-      }
-    },
-    "삭제 결과를 오랫동안 확인하지 못했습니다. 아직 삭제된 것이 아니며 취소할 수도 없습니다. Power Base가 다시 연결되면 허브가 결과를 확인합니다." : {
-      "comment" : "Power Base removal: the outcome cannot be confirmed",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The result of the removal hasn’t been confirmed for a long time. It isn’t removed yet, and it can’t be cancelled. When the Power Base connects again, the hub will check the result."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hace mucho que no se confirma el resultado de la eliminación. Aún no está eliminada y no se puede cancelar. Cuando la Power Base vuelva a conectarse, el hub comprobará el resultado."
-          }
-        }
-      }
-    },
-    "허브 목록에서는 제거됐습니다. 그 전에 보낸 삭제 명령이 Power Base에서 실행됐는지는 확인되지 않았습니다. Power Base가 응답하면 허브가 결과를 확인하고, 다시 등록하면 이 기록은 사라집니다." : {
-      "comment" : "Power Base removal: the Base is out of the hub's list for certain; whether the delete command sent before that was carried out on the Power Base is not confirmed; what ends this record",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "It was removed from the hub’s list. Whether the removal command sent before that was carried out on the Power Base isn’t confirmed. If the Power Base answers, the hub will check the result; if you register it again, this record goes away."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Se quitó de la lista del hub. No está confirmado si la orden de eliminación enviada antes se ejecutó en la Power Base. Si la Power Base responde, el hub comprobará el resultado; si la registras de nuevo, este registro desaparece."
-          }
-        }
-      }
-    },
-    "Power Base가 아직 삭제를 마치지 못했습니다. 전원을 껐다 켠 뒤 다시 확인하세요. 그사이 다시 등록을 시작한 Power Base는 여기서 확인할 수 없습니다." : {
-      "comment" : "Confirm removal failure: the board has no receipt",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Power Base hasn’t finished the removal yet. Turn it off and on, then confirm again. A Power Base on which a new registration was started in the meantime can’t be confirmed here."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La Power Base aún no ha terminado la eliminación. Apágala y enciéndela y vuelve a confirmar. Una Power Base en la que se inició un nuevo registro entretanto no se puede confirmar aquí."
           }
         }
       }
@@ -2869,19 +2837,19 @@
         }
       }
     },
-    "Power Base는 확인했지만 허브에 전달하지 못했습니다. 허브에 연결된 뒤 '허브에 다시 보내기'를 누르세요. 이 화면을 벗어나면 처음부터 다시 확인해야 합니다." : {
-      "comment" : "Confirm removal failure: the receipt was read but the hub could not be reached",
+    "Power Base와 센서는 목록에서 빠졌지만, 삭제가 끝났는지는 아직 확인되지 않았습니다. Power Base 가까이에서 아래 '삭제 확인'을 하면 완료됩니다." : {
+      "comment" : "Power Base removal: out of the hub's lists, not confirmed; how to complete it",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Power Base was confirmed, but the result couldn’t be delivered to the hub. When the hub is reachable, tap “Send to Hub Again”. If you leave this screen, you’ll have to confirm from the start."
+            "value" : "The Power Base and its sensors are off the list, but it isn’t confirmed yet that the removal finished. Use “Confirm Removal” below near the Power Base to complete it."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Se confirmó la Power Base, pero no se pudo entregar el resultado al hub. Cuando haya conexión con el hub, pulsa “Enviar de nuevo al hub”. Si sales de esta pantalla, tendrás que confirmar desde el principio."
+            "value" : "La Power Base y sus sensores ya no están en la lista, pero aún no está confirmado que la eliminación haya terminado. Usa “Confirmar eliminación” abajo, cerca de la Power Base, para completarla."
           }
         }
       }
@@ -3193,6 +3161,7 @@
       }
     },
     "SGP41 가스 센서" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3242,7 +3211,42 @@
         }
       }
     },
+    "VOC 가스 센서" : {
+      "comment" : "Default module name from current advertised sensor channels; no exact hardware model is inferred.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VOC Gas Sensor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor de gases COV"
+          }
+        }
+      }
+    },
+    "VOC/NOx 가스 센서" : {
+      "comment" : "Default module name from current advertised sensor channels; no exact hardware model is inferred.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VOC/NOx Gas Sensor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor de gases COV/NOx"
+          }
+        }
+      }
+    },
     "VOC/NOx 센서 · depth 1" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3923,23 +3927,6 @@
         }
       }
     },
-    "삭제 미확인" : {
-      "comment" : "Power Base removal state: the Base was taken out of the hub's list after the delete command went out; whether the Power Base erased anything is not confirmed",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Removal Unconfirmed"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eliminación sin confirmar"
-          }
-        }
-      }
-    },
     "계단" : {
       "localizations" : {
         "en" : {
@@ -3952,6 +3939,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Escalera"
+          }
+        }
+      }
+    },
+    "계속 찾고 있습니다. Power Base가 나타나면 여기에 표시됩니다." : {
+      "comment" : "Power Base setup: under the nothing-found advice; the search goes on",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still looking. A Power Base will be listed here when it shows up."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La búsqueda continúa. Cuando aparezca una Power Base, se mostrará aquí."
           }
         }
       }
@@ -4158,6 +4162,40 @@
         }
       }
     },
+    "그사이 이 Power Base가 다시 등록되어 목록에서 제거하지 않았습니다. 목록을 새로 확인하세요." : {
+      "comment" : "Power Base management failure of 'remove from hub list': the Base was registered again meanwhile",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Power Base was registered again in the meantime, so it wasn’t removed from the list. Check the list again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta Power Base se registró de nuevo entretanto, así que no se quitó de la lista. Vuelve a revisar la lista."
+          }
+        }
+      }
+    },
+    "그사이 이 Power Base의 등록이나 삭제 요청 상태가 바뀌어 삭제를 요청하지 않았습니다. 목록을 새로 확인한 뒤 다시 시도하세요." : {
+      "comment" : "Power Base management failure: the Base was registered again, or a removal was asked of it and ended, after this device read the list; nothing was requested",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Power Base’s registration or its removal request changed in the meantime, so no removal was requested. Check the list again, then try again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El registro de esta Power Base o su solicitud de eliminación cambió entretanto, así que no se solicitó la eliminación. Revisa la lista de nuevo e inténtalo otra vez."
+          }
+        }
+      }
+    },
     "기기" : {
       "localizations" : {
         "en" : {
@@ -4302,22 +4340,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Editar dispositivo"
-          }
-        }
-      }
-    },
-    "조각보 홈에서 이 기기를 숨기고, 기기 목록과 방 화면 아래 ‘조각보 센서와 같은 Apple 홈 기기’에 모아 둡니다. Apple 홈에서는 아무것도 삭제되지 않습니다." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This device is hidden in Jogakbo Home and kept under “Apple Home devices that are also Jogakbo sensors” at the bottom of the device list and room screens. Nothing is removed from Apple Home."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Este dispositivo se oculta en Jogakbo Home y se agrupa en “dispositivos de Apple Home que también son sensores Jogakbo”, al final de la lista de dispositivos y de las pantallas de habitaciones. No se elimina nada de Apple Home."
           }
         }
       }
@@ -4958,6 +4980,23 @@
         }
       }
     },
+    "다시 사용하려면 새로 등록해야 합니다." : {
+      "comment" : "Power Base management: confirmation dialog, a removed Base has to be registered again to be used",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To use it again, you’ll need to register it anew."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para volver a usarla, tendrás que registrarla de nuevo."
+          }
+        }
+      }
+    },
     "다시 시도" : {
       "comment" : "Power Base setup: back to the start for another attempt\nWatch: try reading Apple Home again",
       "localizations" : {
@@ -4988,6 +5027,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reintentando. Comprueba que el hub esté encendido y la dirección de la API"
+          }
+        }
+      }
+    },
+    "다시 요청" : {
+      "comment" : "Power Base management: sends the removal request that got no answer again, unchanged",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask Again"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pedir otra vez"
           }
         }
       }
@@ -5060,7 +5116,7 @@
       }
     },
     "다시 확인" : {
-      "comment" : "Shared settings: check with the hub again",
+      "comment" : "Power Base management: sends the 'remove from hub list' request that got no answer again\nShared settings: check with the hub again",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5156,6 +5212,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "En espera"
+          }
+        }
+      }
+    },
+    "대기 중인 삭제 요청은 취소됩니다." : {
+      "comment" : "Power Base management: confirmation for taking a Power Base out of the hub's list, when a removal is still waiting",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The pending removal request is cancelled."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La solicitud de eliminación pendiente se cancela."
           }
         }
       }
@@ -5376,23 +5449,6 @@
         }
       }
     },
-    "삭제 확인 필요" : {
-      "comment" : "Power Base removal state: the Base is out of the hub's lists; someone has to confirm near it that the removal finished",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirmation Needed"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Falta confirmar"
-          }
-        }
-      }
-    },
     "등록된 기기 없음" : {
       "comment" : "Room card: no devices",
       "localizations" : {
@@ -5523,23 +5579,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Registro cancelado"
-          }
-        }
-      }
-    },
-    "확인은 Bluetooth로 하며, Power Base의 아무것도 바꾸지 않습니다." : {
-      "comment" : "Confirm removal: Bluetooth is used; confirming changes nothing",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirming uses Bluetooth and changes nothing on the Power Base."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La confirmación usa Bluetooth y no cambia nada en la Power Base."
           }
         }
       }
@@ -6095,6 +6134,23 @@
         }
       }
     },
+    "목록에서 제거" : {
+      "comment" : "Power Base management: confirms taking the Power Base out of the hub's list",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from List"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitar de la lista"
+          }
+        }
+      }
+    },
     "미디어룸" : {
       "localizations" : {
         "en" : {
@@ -6158,6 +6214,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Partículas PM10"
+          }
+        }
+      }
+    },
+    "미세먼지 센서" : {
+      "comment" : "Default module name from current advertised sensor channels; no exact hardware model is inferred.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Particle Sensor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor de partículas"
           }
         }
       }
@@ -6628,74 +6701,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Al pulsar el botón se usa Bluetooth para buscar esta Power Base."
-          }
-        }
-      }
-    },
-    "이 화면을 열면 Bluetooth로 주변의 등록되지 않은 Power Base를 자동으로 찾습니다. 찾기가 시작되지 않았다면 위 버튼을 누르세요." : {
-      "comment" : "Power Base setup: footer while the automatic search has not started; the button above starts it by hand",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opening this screen automatically looks over Bluetooth for unregistered Power Bases nearby. If the search has not started, tap the button above."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Al abrir esta pantalla se buscan automáticamente por Bluetooth las Power Bases sin registrar que haya cerca. Si la búsqueda no ha empezado, pulsa el botón de arriba."
-          }
-        }
-      }
-    },
-    "이 화면이 열려 있는 동안 Bluetooth로 주변의 등록되지 않은 Power Base를 자동으로 찾습니다. 찾는 것만으로는 Power Base에 연결하거나 등록하지 않습니다." : {
-      "comment" : "Power Base setup: footer of the scan list; the search is automatic and only looks",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "While this screen is open, it automatically looks over Bluetooth for unregistered Power Bases nearby. Looking alone does not connect to a Power Base or register it."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mientras esta pantalla está abierta, busca automáticamente por Bluetooth las Power Bases sin registrar que haya cerca. Buscar no conecta con ninguna Power Base ni la registra."
-          }
-        }
-      }
-    },
-    "계속 찾고 있습니다. Power Base가 나타나면 여기에 표시됩니다." : {
-      "comment" : "Power Base setup: under the nothing-found advice; the search goes on",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Still looking. A Power Base will be listed here when it shows up."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La búsqueda continúa. Cuando aparezca una Power Base, se mostrará aquí."
-          }
-        }
-      }
-    },
-    "지금은 찾고 있지 않습니다. 아래 '다시 찾기'를 누르세요." : {
-      "comment" : "Power Base setup: the list is empty and no search is running (after the app was away or the search stopped)",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not looking right now. Tap “Search Again” below."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ahora no se está buscando. Pulsa «Buscar de nuevo» abajo."
           }
         }
       }
@@ -7187,6 +7192,23 @@
         }
       }
     },
+    "삭제 결과를 오랫동안 확인하지 못했습니다. 아직 삭제된 것이 아니며 취소할 수도 없습니다. Power Base가 다시 연결되면 허브가 결과를 확인합니다." : {
+      "comment" : "Power Base removal: the outcome cannot be confirmed",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The result of the removal hasn’t been confirmed for a long time. It isn’t removed yet, and it can’t be cancelled. When the Power Base connects again, the hub will check the result."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hace mucho que no se confirma el resultado de la eliminación. Aún no está eliminada y no se puede cancelar. Cuando la Power Base vuelva a conectarse, el hub comprobará el resultado."
+          }
+        }
+      }
+    },
     "삭제 대기" : {
       "comment" : "Power Base removal state: stored on the hub, waiting for the Power Base",
       "localizations" : {
@@ -7204,6 +7226,23 @@
         }
       }
     },
+    "삭제 뒤 Power Base 가까이에서 '삭제 확인'을 한 번 해야 완료됩니다." : {
+      "comment" : "Power Base management: confirmation dialog, a Base whose removal has to be confirmed once near it afterwards",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afterwards, confirm the removal once near the Power Base with “Confirm Removal” to complete it."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Después, confirma la eliminación una vez cerca de la Power Base con “Confirmar eliminación” para completarla."
+          }
+        }
+      }
+    },
     "삭제 명령이 이미 Power Base로 전달됐을 수 있어 취소할 수 없습니다." : {
       "comment" : "Power Base management failure: the job can no longer be cancelled",
       "localizations" : {
@@ -7217,6 +7256,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Puede que la orden de eliminación ya haya llegado a la Power Base, así que no se puede cancelar."
+          }
+        }
+      }
+    },
+    "삭제 미확인" : {
+      "comment" : "Power Base removal state: the Base was taken out of the hub's list after the delete command went out; whether the Power Base erased anything is not confirmed",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removal Unconfirmed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminación sin confirmar"
           }
         }
       }
@@ -7306,23 +7362,6 @@
         }
       }
     },
-    "Power Base가 다시 연결되면 삭제됩니다. 앱을 닫아도 요청은 허브에 남으며, 그 전에는 취소할 수 있습니다." : {
-      "comment" : "Power Base removal: waiting for an offline Base",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Power Base is removed when it connects again. The request stays on the hub even if you close the app, and it can be cancelled until then."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La Power Base se elimina cuando vuelva a conectarse. La solicitud sigue en el hub aunque cierres la app, y hasta entonces se puede cancelar."
-          }
-        }
-      }
-    },
     "삭제 전에 다시 등록됨" : {
       "comment" : "Power Base removal state: the board was enrolled again first",
       "localizations" : {
@@ -7336,6 +7375,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Registrada de nuevo antes de eliminarse"
+          }
+        }
+      }
+    },
+    "삭제 중" : {
+      "comment" : "Power Base removal state: the removal is under way and not confirmed yet (the command is with the board, or the board is erasing and reporting by itself)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removing"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminando"
           }
         }
       }
@@ -7357,6 +7413,40 @@
         }
       }
     },
+    "삭제 확인 필요" : {
+      "comment" : "Power Base removal state: the Base is out of the hub's lists; someone has to confirm near it that the removal finished",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmation Needed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falta confirmar"
+          }
+        }
+      }
+    },
+    "삭제가 끝났는지 아직 확인되지 않았습니다. Power Base 가까이에서 설정 코드로 확인하면 삭제가 완료됩니다." : {
+      "comment" : "Confirm removal: what this screen is for",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It isn’t confirmed yet that the removal finished. Confirm it near the Power Base with its setup code to complete the removal."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no está confirmado que la eliminación haya terminado. Confírmalo cerca de la Power Base con su código de configuración para completar la eliminación."
+          }
+        }
+      }
+    },
     "삭제가 확인되기 전에 이 Power Base가 다시 등록되어, 이전 삭제 요청은 더 이상 적용되지 않습니다." : {
       "comment" : "Power Base removal: superseded by a new enrollment before the erase was confirmed",
       "localizations" : {
@@ -7370,23 +7460,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Esta Power Base se registró de nuevo antes de que se confirmara la eliminación, así que la solicitud anterior ya no se aplica."
-          }
-        }
-      }
-    },
-    "삭제하면 연결된 센서도 기기 목록과 Apple 홈에서 사라지고 방 지정이 해제됩니다. 센서 모듈에 저장된 정보는 지워지지 않습니다. 다시 사용하려면 'Power Base 추가'에서 새로 등록하세요." : {
-      "comment" : "Power Base management: under the delete button -- what a removal does to the sensors and their rooms, and that the Base has to be registered again",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Removing a Power Base also removes its sensors from the device list and from Apple Home and clears their room assignments. Information stored on sensor modules is not erased. To use it again, register it anew in “Add Power Base”."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Al eliminar una Power Base, sus sensores también desaparecen de la lista de dispositivos y de Apple Home, y se quitan sus habitaciones asignadas. La información guardada en los módulos de sensor no se borra. Para volver a usarla, regístrala de nuevo en “Añadir Power Base”."
           }
         }
       }
@@ -7408,6 +7481,23 @@
         }
       }
     },
+    "삭제를 마무리하고 있습니다. 따로 할 일은 없으며, 끝나면 목록에서 사라집니다." : {
+      "comment" : "Power Base removal: out of the hub's lists and finishing by itself; nothing to do, not complete yet",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The removal is finishing. There’s nothing you need to do; it leaves the list when it’s done."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La eliminación está terminando. No tienes que hacer nada; saldrá de la lista cuando acabe."
+          }
+        }
+      }
+    },
     "삭제를 확인하지 못했습니다" : {
       "comment" : "Confirm removal: failure title",
       "localizations" : {
@@ -7421,6 +7511,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No se confirmó la eliminación"
+          }
+        }
+      }
+    },
+    "삭제하면 연결된 센서도 기기 목록과 Apple 홈에서 사라지고 방 지정이 해제됩니다. 센서 모듈에 저장된 정보는 지워지지 않습니다. 다시 사용하려면 'Power Base 추가'에서 새로 등록하세요." : {
+      "comment" : "Power Base management: under the delete button -- what a removal does to the sensors and their rooms, and that the Base has to be registered again",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removing a Power Base also removes its sensors from the device list and from Apple Home and clears their room assignments. Information stored on sensor modules is not erased. To use it again, register it anew in “Add Power Base”."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al eliminar una Power Base, sus sensores también desaparecen de la lista de dispositivos y de Apple Home, y se quitan sus habitaciones asignadas. La información guardada en los módulos de sensor no se borra. Para volver a usarla, regístrala de nuevo en “Añadir Power Base”."
+          }
+        }
+      }
+    },
+    "삭제했습니다. 다시 사용하려면 'Power Base 추가'에서 새로 등록하세요." : {
+      "comment" : "Power Base removal: completed",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed. To use it again, register it anew in “Add Power Base”."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminada. Para volver a usarla, regístrala de nuevo en “Añadir Power Base”."
           }
         }
       }
@@ -7704,6 +7828,7 @@
       }
     },
     "새 센서 모듈" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -8321,6 +8446,23 @@
         }
       }
     },
+    "센서 모듈" : {
+      "comment" : "Default module name from current advertised sensor channels; no exact hardware model is inferred.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor Module"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Módulo de sensores"
+          }
+        }
+      }
+    },
     "센서 모듈은 Power Base에 끼우면 자동으로 페어링되므로 따로 추가할 필요가 없습니다." : {
       "comment" : "Add-device footer",
       "localizations" : {
@@ -8740,6 +8882,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Humedad"
+          }
+        }
+      }
+    },
+    "습도 센서" : {
+      "comment" : "Default module name from current advertised sensor channels; no exact hardware model is inferred.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Humidity Sensor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor de humedad"
           }
         }
       }
@@ -9642,23 +9801,6 @@
         }
       }
     },
-    "연결된 허브가 Power Base 정보를 보내지 않습니다. 새 Power Base를 확인하려면 허브를 업데이트해야 합니다." : {
-      "comment" : "Bridge too old",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The connected hub doesn't report Power Bases. Update the hub to see a new Power Base."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El hub conectado no informa de Power Bases. Actualiza el hub para ver una nueva Power Base."
-          }
-        }
-      }
-    },
     "연결된 센서 %lld개" : {
       "comment" : "Power Base management: number of sensors under the Power Base (plural)",
       "localizations" : {
@@ -9732,6 +9874,40 @@
         }
       }
     },
+    "연결된 허브가 '허브 목록에서 제거'를 지원하지 않습니다. 허브를 업데이트해야 합니다." : {
+      "comment" : "Power Base management failure of 'remove from hub list': the hub is too old",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The connected hub doesn’t support “Remove from Hub List”. The hub needs to be updated."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub conectado no admite “Quitar de la lista del hub”. Hay que actualizar el hub."
+          }
+        }
+      }
+    },
+    "연결된 허브가 Power Base 정보를 보내지 않습니다. 새 Power Base를 확인하려면 허브를 업데이트해야 합니다." : {
+      "comment" : "Bridge too old",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The connected hub doesn't report Power Bases. Update the hub to see a new Power Base."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub conectado no informa de Power Bases. Actualiza el hub para ver una nueva Power Base."
+          }
+        }
+      }
+    },
     "연결된 허브가 삭제 확인을 받는 기능을 지원하지 않습니다. 허브를 업데이트해야 합니다." : {
       "comment" : "Confirm removal failure: the hub has no receipt route",
       "localizations" : {
@@ -9779,6 +9955,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Conectado"
+          }
+        }
+      }
+    },
+    "연결이 끊긴 Power Base를 이 허브의 목록에서만 지금 지웁니다. Power Base에 저장된 연결 정보는 지워지지 않습니다." : {
+      "comment" : "Power Base management: above the 'remove from hub list' button -- what it does and what it does not do",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Takes a disconnected Power Base off this hub’s list right now, and only there. The connection information stored on the Power Base is not erased."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quita ahora una Power Base desconectada de la lista de este hub, y solo de ahí. La información de conexión guardada en la Power Base no se borra."
           }
         }
       }
@@ -10043,6 +10236,23 @@
         }
       }
     },
+    "온도 센서" : {
+      "comment" : "Default module name from current advertised sensor channels; no exact hardware model is inferred.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperature Sensor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensor de temperatura"
+          }
+        }
+      }
+    },
     "온라인" : {
       "comment" : "Connection state value",
       "localizations" : {
@@ -10146,6 +10356,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No hay sensores Jogakbo en línea"
+          }
+        }
+      }
+    },
+    "온습도 센서" : {
+      "comment" : "Default module name from current advertised sensor channels; no exact hardware model is inferred.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperature & Humidity"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temperatura y humedad"
           }
         }
       }
@@ -10553,23 +10780,6 @@
         }
       }
     },
-    "삭제가 끝났는지 아직 확인되지 않았습니다. Power Base 가까이에서 설정 코드로 확인하면 삭제가 완료됩니다." : {
-      "comment" : "Confirm removal: what this screen is for",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "It isn’t confirmed yet that the removal finished. Confirm it near the Power Base with its setup code to complete the removal."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aún no está confirmado que la eliminación haya terminado. Confírmalo cerca de la Power Base con su código de configuración para completar la eliminación."
-          }
-        }
-      }
-    },
     "이 Power Base는 이미 등록되어 있거나 연결하는 중입니다. 기기 목록을 확인하세요." : {
       "comment" : "Power Base setup failure: the board is not waiting for enrollment",
       "localizations" : {
@@ -10600,6 +10810,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Esta Power Base ya está conectada al hub. Revisa la lista de dispositivos."
+          }
+        }
+      }
+    },
+    "이 Power Base는 이제 허브의 목록에 없습니다." : {
+      "comment" : "Power Base management failure of 'remove from hub list': the hub does not list the Base (any more)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Power Base is no longer on the hub’s list."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta Power Base ya no está en la lista del hub."
           }
         }
       }
@@ -10760,6 +10987,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Introduce el código de configuración de 26 caracteres de esta Power Base. El código solo se usa en esta pantalla y no se guarda."
+          }
+        }
+      }
+    },
+    "이 Power Base의 등록이 진행 중이라 지금은 목록에서 제거할 수 없습니다. 등록이 끝난 뒤 다시 시도하세요." : {
+      "comment" : "Power Base management failure of 'remove from hub list': an enrollment is running",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Power Base is being registered right now, so it can’t be removed from the list. Try again when registration has finished."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta Power Base se está registrando ahora, así que no se puede quitar de la lista. Inténtalo de nuevo cuando termine el registro."
           }
         }
       }
@@ -11406,6 +11650,23 @@
         }
       }
     },
+    "이 정보는 기기마다 따로 저장되고 다른 기기와 동기화되지 않습니다. 같은 이름을 함께 쓰려면 ‘허브 설정 공유’를 켜세요. Apple 홈의 기기와 방 이름은 Apple 홈에서 가져오므로 어느 기기에서나 같습니다." : {
+      "comment" : "Settings footer: what stays on this device",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This information is saved separately on each device and isn’t synced. To use the same names on other devices, turn on “Hub Settings Sharing”. Apple Home device and room names come from Apple Home, so they’re the same everywhere."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta información se guarda por separado en cada dispositivo y no se sincroniza. Para usar los mismos nombres en otros dispositivos, activa “Compartir ajustes del hub”. Los nombres de dispositivos y habitaciones de Apple Home vienen de Apple Home, así que son iguales en todas partes."
+          }
+        }
+      }
+    },
     "이 프로젝트의 이름도 여기에서 시작했습니다. 서로 다른 천 조각이 하나의 보자기가 되듯, 여러 센서 모듈이 연결되어 하나의 블록을 이룬다는 뜻을 담았습니다." : {
       "comment" : "About the name: why the project is named after it",
       "localizations" : {
@@ -11549,6 +11810,23 @@
         }
       }
     },
+    "이 허브의 목록에서 Power Base와 센서를 제거합니다. Power Base에 저장된 연결 정보는 지워지지 않습니다." : {
+      "comment" : "Power Base management: confirmation for taking a Power Base out of the hub's list -- what it does and that the Power Base's own stored connection is not erased",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This removes the Power Base and its sensors from this hub’s list. The connection information stored on the Power Base is not erased."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto quita la Power Base y sus sensores de la lista de este hub. La información de conexión guardada en la Power Base no se borra."
+          }
+        }
+      }
+    },
     "이 화면을 연 뒤 새로 나타난 Power Base" : {
       "comment" : "Section header",
       "localizations" : {
@@ -11562,6 +11840,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Power Bases que aparecieron desde que se abrió esta pantalla"
+          }
+        }
+      }
+    },
+    "이 화면을 열면 Bluetooth로 재등록을 기다리는 Power Base를 자동으로 찾습니다. 찾기가 시작되지 않았다면 위 버튼을 누르세요. BOOT 버튼을 5초 누른 Power Base만 나타납니다." : {
+      "comment" : "Re-enroll: footer while the automatic search has not started; only a board whose BOOT button was held shows up",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opening this screen automatically looks over Bluetooth for a Power Base that is waiting to be registered again. If the search has not started, tap the button above. Only a Power Base whose BOOT button was held for 5 seconds shows up."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al abrir esta pantalla se busca automáticamente por Bluetooth la Power Base que espera volver a registrarse. Si la búsqueda no ha empezado, pulsa el botón de arriba. Solo aparece una Power Base cuyo botón BOOT se haya mantenido pulsado 5 segundos."
+          }
+        }
+      }
+    },
+    "이 화면을 열면 Bluetooth로 주변의 등록되지 않은 Power Base를 자동으로 찾습니다. 찾기가 시작되지 않았다면 위 버튼을 누르세요." : {
+      "comment" : "Power Base setup: footer while the automatic search has not started; the button above starts it by hand",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opening this screen automatically looks over Bluetooth for unregistered Power Bases nearby. If the search has not started, tap the button above."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al abrir esta pantalla se buscan automáticamente por Bluetooth las Power Bases sin registrar que haya cerca. Si la búsqueda no ha empezado, pulsa el botón de arriba."
+          }
+        }
+      }
+    },
+    "이 화면이 열려 있는 동안 Bluetooth로 자동으로 찾습니다. 찾는 것만으로는 Power Base의 재등록 창이 열리지 않고 아무것도 지워지지 않습니다. 위 순서대로 BOOT 버튼을 5초 누른 Power Base만 여기에 나타납니다." : {
+      "comment" : "Re-enroll: footer of the scan list; the automatic search neither opens the board's window nor erases anything",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "While this screen is open, it looks over Bluetooth automatically. Looking alone does not make a Power Base wait to be registered again and erases nothing. Only a Power Base whose BOOT button was held for 5 seconds, as in the steps above, shows up here."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mientras esta pantalla está abierta, busca automáticamente por Bluetooth. Buscar no hace que una Power Base espere volver a registrarse ni borra nada. Aquí solo aparece una Power Base cuyo botón BOOT se haya mantenido pulsado 5 segundos, como indican los pasos de arriba."
+          }
+        }
+      }
+    },
+    "이 화면이 열려 있는 동안 Bluetooth로 주변의 등록되지 않은 Power Base를 자동으로 찾습니다. 찾는 것만으로는 Power Base에 연결하거나 등록하지 않습니다." : {
+      "comment" : "Power Base setup: footer of the scan list; the search is automatic and only looks",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "While this screen is open, it automatically looks over Bluetooth for unregistered Power Bases nearby. Looking alone does not connect to a Power Base or register it."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mientras esta pantalla está abierta, busca automáticamente por Bluetooth las Power Bases sin registrar que haya cerca. Buscar no conecta con ninguna Power Base ni la registra."
           }
         }
       }
@@ -11786,6 +12132,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Traslada una Power Base registrada a otro hub. Funciona sin el hub anterior, con el botón BOOT y el código de configuración de la Power Base."
+          }
+        }
+      }
+    },
+    "이미 보낸 삭제 요청은 그대로 남습니다." : {
+      "comment" : "Power Base management: confirmation for taking a Power Base out of the hub's list, when a removal's command may already be with the Power Base",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The removal request that was already sent stays as it is."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La solicitud de eliminación ya enviada se queda como está."
           }
         }
       }
@@ -12645,23 +13008,6 @@
         }
       }
     },
-    "OTBR(조각보 허브)만 찾습니다. 고른 허브는 확인을 마친 뒤에 연결됩니다." : {
-      "comment" : "Hub discovery list footer",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Only OTBRs (Jogakbo hubs) are listed. A hub you choose is checked before the app connects to it."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Solo se muestran OTBR (hubs Jogakbo). El hub que elijas se comprueba antes de conectarse."
-          }
-        }
-      }
-    },
     "조각보 센서가 아직 측정값을 보내지 않았습니다. 값이 들어오면 여기에 표시됩니다." : {
       "localizations" : {
         "en" : {
@@ -12864,6 +13210,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Para ver este dispositivo en Jogakbo Home, conecta Apple Home."
+          }
+        }
+      }
+    },
+    "조각보 홈에서 이 기기를 숨기고, 기기 목록과 방 화면 아래 ‘조각보 센서와 같은 Apple 홈 기기’에 모아 둡니다. Apple 홈에서는 아무것도 삭제되지 않습니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device is hidden in Jogakbo Home and kept under “Apple Home devices that are also Jogakbo sensors” at the bottom of the device list and room screens. Nothing is removed from Apple Home."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este dispositivo se oculta en Jogakbo Home y se agrupa en “dispositivos de Apple Home que también son sensores Jogakbo”, al final de la lista de dispositivos y de las pantallas de habitaciones. No se elimina nada de Apple Home."
           }
         }
       }
@@ -13119,23 +13481,6 @@
         }
       }
     },
-    "지금은 연결이 끊겨 있어 '삭제 대기'로 남고, Power Base가 다시 연결되면 삭제됩니다." : {
-      "comment" : "Power Base management: confirmation dialog, offline Base -- the request waits; names the state shown meanwhile",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "It isn’t connected right now, so this stays “Removal Pending” and the Power Base is removed when it connects again."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ahora no está conectada, así que queda en “Eliminación pendiente” y la Power Base se elimina cuando vuelva a conectarse."
-          }
-        }
-      }
-    },
     "지금은 시뮬레이션 데이터를 보고 있습니다. Power Base를 등록하려면 설정에서 실제 허브를 선택하세요." : {
       "comment" : "Power Base setup: the app shows simulated data",
       "localizations" : {
@@ -13153,19 +13498,36 @@
         }
       }
     },
-    "지우기" : {
-      "comment" : "Re-enroll: the destructive action of the final confirmation dialog",
+    "지우기 요청은 이미 Power Base로 보냈지만 결과를 받지 못했습니다. 지워졌을 수도, 아닐 수도 있습니다. 취소된 것이 아닙니다." : {
+      "comment" : "Re-enroll result: the command was sent, the answer was lost; not cancelled",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Erase"
+            "value" : "The erase request was already sent to the Power Base, but no result came back. The registration may or may not have been erased. It was not cancelled."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Borrar"
+            "value" : "La solicitud de borrado ya se envió a la Power Base, pero no llegó ningún resultado. Puede que el registro se haya borrado o puede que no. No se canceló."
+          }
+        }
+      }
+    },
+    "지우지 않고 그만두기" : {
+      "comment" : "Re-enroll: leaves the confirmation without erasing anything",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Without Erasing"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salir sin borrar"
           }
         }
       }
@@ -13199,6 +13561,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Estás viendo datos simulados, así que no se puede eliminar una Power Base."
+          }
+        }
+      }
+    },
+    "지금은 연결이 끊겨 있어 '삭제 대기'로 남고, Power Base가 다시 연결되면 삭제됩니다." : {
+      "comment" : "Power Base management: confirmation dialog, offline Base -- the request waits; names the state shown meanwhile",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It isn’t connected right now, so this stays “Removal Pending” and the Power Base is removed when it connects again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ahora no está conectada, así que queda en “Eliminación pendiente” y la Power Base se elimina cuando vuelva a conectarse."
+          }
+        }
+      }
+    },
+    "지금은 찾고 있지 않습니다. 아래 '다시 찾기'를 누르세요." : {
+      "comment" : "Power Base setup: the list is empty and no search is running (after the app was away or the search stopped)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not looking right now. Tap “Search Again” below."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ahora no se está buscando. Pulsa «Buscar de nuevo» abajo."
+          }
+        }
+      }
+    },
+    "지우기" : {
+      "comment" : "Re-enroll: the destructive action of the final confirmation dialog",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erase"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar"
           }
         }
       }
@@ -13237,23 +13650,6 @@
         }
       }
     },
-    "지우기 요청은 이미 Power Base로 보냈지만 결과를 받지 못했습니다. 지워졌을 수도, 아닐 수도 있습니다. 취소된 것이 아닙니다." : {
-      "comment" : "Re-enroll result: the command was sent, the answer was lost; not cancelled",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The erase request was already sent to the Power Base, but no result came back. The registration may or may not have been erased. It was not cancelled."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La solicitud de borrado ya se envió a la Power Base, pero no llegó ningún resultado. Puede que el registro se haya borrado o puede que no. No se canceló."
-          }
-        }
-      }
-    },
     "지우기 전 확인" : {
       "comment" : "Re-enroll step: waiting for the user's explicit confirmation",
       "localizations" : {
@@ -13267,23 +13663,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Confirmar antes de borrar"
-          }
-        }
-      }
-    },
-    "지우지 않고 그만두기" : {
-      "comment" : "Re-enroll: leaves the confirmation without erasing anything",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stop Without Erasing"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Salir sin borrar"
           }
         }
       }
@@ -14361,6 +14740,40 @@
         }
       }
     },
+    "허브 목록에서 제거" : {
+      "comment" : "Power Base management: section header and button -- takes an offline Power Base out of this hub's list; this is not the removal",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from Hub List"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitar de la lista del hub"
+          }
+        }
+      }
+    },
+    "허브 목록에서는 제거됐습니다. 그 전에 보낸 삭제 명령이 Power Base에서 실행됐는지는 확인되지 않았습니다. Power Base가 응답하면 허브가 결과를 확인하고, 다시 등록하면 이 기록은 사라집니다." : {
+      "comment" : "Power Base removal: the Base is out of the hub's list for certain; whether the delete command sent before that was carried out on the Power Base is not confirmed; what ends this record",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It was removed from the hub’s list. Whether the removal command sent before that was carried out on the Power Base isn’t confirmed. If the Power Base answers, the hub will check the result; if you register it again, this record goes away."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se quitó de la lista del hub. No está confirmado si la orden de eliminación enviada antes se ejecutó en la Power Base. Si la Power Base responde, el hub comprobará el resultado; si la registras de nuevo, este registro desaparece."
+          }
+        }
+      }
+    },
     "허브 설정 공유" : {
       "comment" : "Settings section title: sharing home settings through the hub",
       "localizations" : {
@@ -14497,346 +14910,6 @@
         }
       }
     },
-    "허브의 삭제 기록이 가득 차 더 삭제할 수 없습니다. 이전에 삭제한 Power Base를 다시 등록하면 자리가 생깁니다. 아무것도 삭제되지 않았습니다." : {
-      "comment" : "Power Base management failure: the hub's list of removed Power Bases is full",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The hub’s record of removed Power Bases is full, so no more can be removed. Room is made when a Power Base that was removed earlier is registered again. Nothing was removed."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El registro de Power Bases eliminadas del hub está lleno, así que no se pueden eliminar más. Se libera sitio cuando se registra de nuevo una Power Base eliminada antes. No se eliminó nada."
-          }
-        }
-      }
-    },
-    "허브 목록에서 제거" : {
-      "comment" : "Power Base management: section header and button -- takes an offline Power Base out of this hub's list; this is not the removal",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove from Hub List"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quitar de la lista del hub"
-          }
-        }
-      }
-    },
-    "연결이 끊긴 Power Base를 이 허브의 목록에서만 지금 지웁니다. Power Base에 저장된 연결 정보는 지워지지 않습니다." : {
-      "comment" : "Power Base management: above the 'remove from hub list' button -- what it does and what it does not do",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Takes a disconnected Power Base off this hub’s list right now, and only there. The connection information stored on the Power Base is not erased."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quita ahora una Power Base desconectada de la lista de este hub, y solo de ahí. La información de conexión guardada en la Power Base no se borra."
-          }
-        }
-      }
-    },
-    "'Power Base 삭제'는 Power Base가 다시 연결되면 저장된 연결 정보까지 지웁니다. '허브 목록에서 제거'는 되돌릴 수 없으며, 다시 사용하려면 'Power Base 추가'에서 새로 등록해야 합니다." : {
-      "comment" : "Power Base management: under the 'remove from hub list' button -- the difference from the removal, that it cannot be undone, and how to use the Base again",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“Remove Power Base” also erases the stored connection information once the Power Base connects again. “Remove from Hub List” can’t be undone; to use the Power Base again, register it anew in “Add Power Base”."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“Eliminar Power Base” también borra la información de conexión guardada cuando la Power Base vuelve a conectarse. “Quitar de la lista del hub” no se puede deshacer; para volver a usarla, regístrala de nuevo en “Añadir Power Base”."
-          }
-        }
-      }
-    },
-    "목록에서 제거" : {
-      "comment" : "Power Base management: confirms taking the Power Base out of the hub's list",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove from List"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quitar de la lista"
-          }
-        }
-      }
-    },
-    "허브에 목록에서 제거를 요청하는 중입니다." : {
-      "comment" : "Power Base management: the 'remove from hub list' request is under way",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Asking the hub to remove it from its list."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pidiendo al hub que la quite de su lista."
-          }
-        }
-      }
-    },
-    "허브의 응답을 받지 못해 목록에서 제거됐는지 알 수 없습니다. 다시 확인해도 안전합니다." : {
-      "comment" : "Power Base management: no answer to the 'remove from hub list' request; asking again is safe",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The hub didn’t answer, so it isn’t known whether it was removed from the list. It’s safe to check again."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El hub no respondió, así que no se sabe si se quitó de la lista. Es seguro volver a comprobarlo."
-          }
-        }
-      }
-    },
-    "%@ 허브 목록에서 제거" : {
-      "comment" : "Power Base management: title of the confirmation for taking a Power Base out of the hub's list; the argument is the Power Base's label",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove %@ from Hub List"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quitar %@ de la lista del hub"
-          }
-        }
-      }
-    },
-    "이 허브의 목록에서 Power Base와 센서를 제거합니다. Power Base에 저장된 연결 정보는 지워지지 않습니다." : {
-      "comment" : "Power Base management: confirmation for taking a Power Base out of the hub's list -- what it does and that the Power Base's own stored connection is not erased",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This removes the Power Base and its sensors from this hub’s list. The connection information stored on the Power Base is not erased."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esto quita la Power Base y sus sensores de la lista de este hub. La información de conexión guardada en la Power Base no se borra."
-          }
-        }
-      }
-    },
-    "대기 중인 삭제 요청은 취소됩니다." : {
-      "comment" : "Power Base management: confirmation for taking a Power Base out of the hub's list, when a removal is still waiting",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The pending removal request is cancelled."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La solicitud de eliminación pendiente se cancela."
-          }
-        }
-      }
-    },
-    "이미 보낸 삭제 요청은 그대로 남습니다." : {
-      "comment" : "Power Base management: confirmation for taking a Power Base out of the hub's list, when a removal's command may already be with the Power Base",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The removal request that was already sent stays as it is."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La solicitud de eliminación ya enviada se queda como está."
-          }
-        }
-      }
-    },
-    "%@ 허브 목록에서 제거됨" : {
-      "comment" : "Power Base management: short notice when the hub took the Power Base out of its list; the argument is the Power Base's label",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ removed from hub list"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ quitada de la lista del hub"
-          }
-        }
-      }
-    },
-    "허브가 이 기기의 연결 정보를 확인하지 못했습니다. 설정에서 허브에 다시 연결한 뒤 시도하세요. 아무것도 바뀌지 않았습니다." : {
-      "comment" : "Power Base management failure of 'remove from hub list': not authorized",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The hub couldn’t verify this device’s connection. Connect to the hub again in Settings, then try again. Nothing was changed."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El hub no pudo verificar la conexión de este dispositivo. Vuelve a conectarte al hub en Ajustes e inténtalo de nuevo. No se cambió nada."
-          }
-        }
-      }
-    },
-    "연결된 허브가 '허브 목록에서 제거'를 지원하지 않습니다. 허브를 업데이트해야 합니다." : {
-      "comment" : "Power Base management failure of 'remove from hub list': the hub is too old",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The connected hub doesn’t support “Remove from Hub List”. The hub needs to be updated."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El hub conectado no admite “Quitar de la lista del hub”. Hay que actualizar el hub."
-          }
-        }
-      }
-    },
-    "이 Power Base는 이제 허브의 목록에 없습니다." : {
-      "comment" : "Power Base management failure of 'remove from hub list': the hub does not list the Base (any more)",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This Power Base is no longer on the hub’s list."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esta Power Base ya no está en la lista del hub."
-          }
-        }
-      }
-    },
-    "Power Base가 다시 연결되어 목록에서 제거하지 않았습니다. 지우려면 'Power Base 삭제'를 사용하세요." : {
-      "comment" : "Power Base management failure of 'remove from hub list': the hub hears the Base again",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The Power Base connected again, so it wasn’t removed from the list. To remove it, use “Remove Power Base”."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La Power Base volvió a conectarse, así que no se quitó de la lista. Para eliminarla, usa “Eliminar Power Base”."
-          }
-        }
-      }
-    },
-    "그사이 이 Power Base가 다시 등록되어 목록에서 제거하지 않았습니다. 목록을 새로 확인하세요." : {
-      "comment" : "Power Base management failure of 'remove from hub list': the Base was registered again meanwhile",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This Power Base was registered again in the meantime, so it wasn’t removed from the list. Check the list again."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esta Power Base se registró de nuevo entretanto, así que no se quitó de la lista. Vuelve a revisar la lista."
-          }
-        }
-      }
-    },
-    "이 Power Base의 등록이 진행 중이라 지금은 목록에서 제거할 수 없습니다. 등록이 끝난 뒤 다시 시도하세요." : {
-      "comment" : "Power Base management failure of 'remove from hub list': an enrollment is running",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This Power Base is being registered right now, so it can’t be removed from the list. Try again when registration has finished."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esta Power Base se está registrando ahora, así que no se puede quitar de la lista. Inténtalo de nuevo cuando termine el registro."
-          }
-        }
-      }
-    },
-    "허브의 삭제 기록이 가득 차 목록에서 제거할 수 없습니다. 이전에 삭제한 Power Base를 다시 등록하면 자리가 생깁니다. 아무것도 바뀌지 않았습니다." : {
-      "comment" : "Power Base management failure of 'remove from hub list': the hub's list of removed Power Bases is full",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The hub’s record of removed Power Bases is full, so it can’t be removed from the list. Registering a previously removed Power Base again makes room. Nothing was changed."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El registro de Power Bases eliminadas del hub está lleno, así que no se puede quitar de la lista. Si registras de nuevo una Power Base eliminada antes, se libera espacio. No se cambió nada."
-          }
-        }
-      }
-    },
-    "허브가 지금은 요청을 받을 수 없습니다. 잠시 뒤 다시 시도하세요. 아무것도 바뀌지 않았습니다." : {
-      "comment" : "Power Base management failure of 'remove from hub list': hub busy, not ready, or the request was not accepted",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The hub can’t take the request right now. Try again in a moment. Nothing was changed."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El hub no puede recibir la solicitud ahora. Inténtalo de nuevo en un momento. No se cambió nada."
-          }
-        }
-      }
-    },
     "허브가 다른 기기의 Power Base 등록을 처리하고 있습니다. 끝난 뒤 다시 시도하세요." : {
       "comment" : "Power Base setup failure: another device's enrollment session is running",
       "localizations" : {
@@ -14850,6 +14923,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "El hub está gestionando el registro de una Power Base desde otro dispositivo. Inténtalo de nuevo cuando termine."
+          }
+        }
+      }
+    },
+    "허브가 삭제 결과를 확인하지 못했습니다. Power Base가 삭제를 마쳤다면 가까이에서 설정 코드로 확인해 완료할 수 있습니다. 마치지 않았다면 아무것도 바뀌지 않습니다." : {
+      "comment" : "Confirm removal: what this screen is for when the hub never heard the result of the removal",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub couldn’t confirm the result of the removal. If the Power Base finished it, you can complete the removal near the Power Base with its setup code. If it didn’t, nothing changes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub no pudo confirmar el resultado de la eliminación. Si la Power Base la terminó, puedes completarla cerca de ella con su código de configuración. Si no, no cambia nada."
           }
         }
       }
@@ -14901,6 +14991,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Se muestra cuando el hub envíe valores"
+          }
+        }
+      }
+    },
+    "허브가 아직 어떤 Power Base의 신호도 받지 못했습니다." : {
+      "comment" : "No Power Base heard yet",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub hasn't heard from any Power Base yet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub aún no ha recibido señal de ninguna Power Base."
           }
         }
       }
@@ -14973,23 +15080,6 @@
         }
       }
     },
-    "허브가 삭제 결과를 확인하지 못했습니다. Power Base가 삭제를 마쳤다면 가까이에서 설정 코드로 확인해 완료할 수 있습니다. 마치지 않았다면 아무것도 바뀌지 않습니다." : {
-      "comment" : "Confirm removal: what this screen is for when the hub never heard the result of the removal",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The hub couldn’t confirm the result of the removal. If the Power Base finished it, you can complete the removal near the Power Base with its setup code. If it didn’t, nothing changes."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El hub no pudo confirmar el resultado de la eliminación. Si la Power Base la terminó, puedes completarla cerca de ella con su código de configuración. Si no, no cambia nada."
-          }
-        }
-      }
-    },
     "허브가 이 Power Base의 삭제 확인을 받아들이지 않았습니다. 다른 허브에 등록됐던 Power Base이거나, 그사이 다시 등록된 Power Base일 수 있습니다." : {
       "comment" : "Power Base management failure: the hub could not verify the release receipt",
       "localizations" : {
@@ -15007,23 +15097,6 @@
         }
       }
     },
-    "그사이 이 Power Base의 등록이나 삭제 요청 상태가 바뀌어 삭제를 요청하지 않았습니다. 목록을 새로 확인한 뒤 다시 시도하세요." : {
-      "comment" : "Power Base management failure: the Base was registered again, or a removal was asked of it and ended, after this device read the list; nothing was requested",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This Power Base’s registration or its removal request changed in the meantime, so no removal was requested. Check the list again, then try again."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El registro de esta Power Base o su solicitud de eliminación cambió entretanto, así que no se solicitó la eliminación. Revisa la lista de nuevo e inténtalo otra vez."
-          }
-        }
-      }
-    },
     "허브가 이 기기의 연결 정보를 확인하지 못했습니다. 설정에서 허브에 다시 연결한 뒤 시도하세요. Power Base에는 아무것도 전달하지 않았습니다." : {
       "comment" : "Power Base setup failure: this device is not (or no longer) paired with the hub",
       "localizations" : {
@@ -15037,6 +15110,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "El hub no pudo verificar la información de conexión de este dispositivo. Vuelve a conectarte al hub en Ajustes e inténtalo de nuevo. No se envió nada a la Power Base."
+          }
+        }
+      }
+    },
+    "허브가 이 기기의 연결 정보를 확인하지 못했습니다. 설정에서 허브에 다시 연결한 뒤 시도하세요. 아무것도 바뀌지 않았습니다." : {
+      "comment" : "Power Base management failure of 'remove from hub list': not authorized",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub couldn’t verify this device’s connection. Connect to the hub again in Settings, then try again. Nothing was changed."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub no pudo verificar la conexión de este dispositivo. Vuelve a conectarte al hub en Ajustes e inténtalo de nuevo. No se cambió nada."
           }
         }
       }
@@ -15075,6 +15165,23 @@
         }
       }
     },
+    "허브가 인식한 Power Base" : {
+      "comment" : "Section header",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Power Bases the hub sees"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Power Bases que ve el hub"
+          }
+        }
+      }
+    },
     "허브가 지금 설정을 처리할 수 없습니다. 허브 관리자가 확인해야 합니다." : {
       "comment" : "Pairing: hub storage unavailable",
       "localizations" : {
@@ -15105,6 +15212,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "El hub no puede aceptar una solicitud de eliminación ahora. Inténtalo de nuevo en un momento. No se eliminó nada."
+          }
+        }
+      }
+    },
+    "허브가 지금은 요청을 받을 수 없습니다. 잠시 뒤 다시 시도하세요. 아무것도 바뀌지 않았습니다." : {
+      "comment" : "Power Base management failure of 'remove from hub list': hub busy, not ready, or the request was not accepted",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub can’t take the request right now. Try again in a moment. Nothing was changed."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub no puede recibir la solicitud ahora. Inténtalo de nuevo en un momento. No se cambió nada."
           }
         }
       }
@@ -15279,6 +15403,23 @@
         }
       }
     },
+    "허브에 목록에서 제거를 요청하는 중입니다." : {
+      "comment" : "Power Base management: the 'remove from hub list' request is under way",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asking the hub to remove it from its list."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pidiendo al hub que la quite de su lista."
+          }
+        }
+      }
+    },
     "허브에 사용할 수 있는 연결 코드가 없습니다. 이미 사용했거나 폐기된 코드입니다. 허브에서 새 코드를 만드세요." : {
       "comment" : "Pairing: no code waiting on the hub",
       "localizations" : {
@@ -15313,19 +15454,19 @@
         }
       }
     },
-    "다시 요청" : {
-      "comment" : "Power Base management: sends the removal request that got no answer again, unchanged",
+    "허브에 연결되어 있지 않아 새 Power Base를 확인할 수 없습니다." : {
+      "comment" : "Not connected",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ask Again"
+            "value" : "Not connected to the hub, so a new Power Base can't be detected."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pedir otra vez"
+            "value" : "No hay conexión con el hub, así que no se puede detectar una nueva Power Base."
           }
         }
       }
@@ -15428,23 +15569,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Solicitando la cancelación al hub."
-          }
-        }
-      }
-    },
-    "OTBR에서 허브 서비스 계정으로 ‘pogohome-hubctl --state-dir <상태 디렉터리> pair’를 실행해 만든 12자리 연결 코드를 입력하세요. 코드는 한 번만, 정해진 시간 동안 쓸 수 있습니다. 이 기기 이름은 허브의 기기 목록에 표시됩니다." : {
-      "comment" : "Shared settings setup: where the pairing code comes from",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enter the 12-character connection code created on the OTBR by running “pogohome-hubctl --state-dir <state directory> pair” as the hub service’s account. A code works once, for a limited time. This device’s name appears in the hub’s device list."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Introduce el código de conexión de 12 caracteres creado en el OTBR al ejecutar “pogohome-hubctl --state-dir <directorio de estado> pair” con la cuenta del servicio del hub. Un código sirve una sola vez y por tiempo limitado. El nombre de este dispositivo aparece en la lista de dispositivos del hub."
           }
         }
       }
@@ -15602,6 +15726,40 @@
         }
       }
     },
+    "허브의 삭제 기록이 가득 차 더 삭제할 수 없습니다. 이전에 삭제한 Power Base를 다시 등록하면 자리가 생깁니다. 아무것도 삭제되지 않았습니다." : {
+      "comment" : "Power Base management failure: the hub's list of removed Power Bases is full",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub’s record of removed Power Bases is full, so no more can be removed. Room is made when a Power Base that was removed earlier is registered again. Nothing was removed."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El registro de Power Bases eliminadas del hub está lleno, así que no se pueden eliminar más. Se libera sitio cuando se registra de nuevo una Power Base eliminada antes. No se eliminó nada."
+          }
+        }
+      }
+    },
+    "허브의 삭제 기록이 가득 차 목록에서 제거할 수 없습니다. 이전에 삭제한 Power Base를 다시 등록하면 자리가 생깁니다. 아무것도 바뀌지 않았습니다." : {
+      "comment" : "Power Base management failure of 'remove from hub list': the hub's list of removed Power Bases is full",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub’s record of removed Power Bases is full, so it can’t be removed from the list. Registering a previously removed Power Base again makes room. Nothing was changed."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El registro de Power Bases eliminadas del hub está lleno, así que no se puede quitar de la lista. Si registras de nuevo una Power Base eliminada antes, se libera espacio. No se cambió nada."
+          }
+        }
+      }
+    },
     "허브의 설정을 확인하는 중…" : {
       "comment" : "Shared settings setup: reading the hub's settings",
       "localizations" : {
@@ -15619,19 +15777,19 @@
         }
       }
     },
-    "허브의 응답을 받지 못했습니다. 등록이 시작됐는지 아직 알 수 없습니다." : {
-      "comment" : "Power Base setup progress: the request to the hub got no answer",
+    "허브의 응답을 받지 못해 목록에서 제거됐는지 알 수 없습니다. 다시 확인해도 안전합니다." : {
+      "comment" : "Power Base management: no answer to the 'remove from hub list' request; asking again is safe",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The hub didn’t answer. It isn’t known yet whether the registration started."
+            "value" : "The hub didn’t answer, so it isn’t known whether it was removed from the list. It’s safe to check again."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El hub no respondió. Aún no se sabe si el registro empezó."
+            "value" : "El hub no respondió, así que no se sabe si se quitó de la lista. Es seguro volver a comprobarlo."
           }
         }
       }
@@ -15649,6 +15807,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "El hub no respondió, así que no se sabe si la solicitud le llegó. Es seguro pedirlo otra vez."
+          }
+        }
+      }
+    },
+    "허브의 응답을 받지 못했습니다. 등록이 시작됐는지 아직 알 수 없습니다." : {
+      "comment" : "Power Base setup progress: the request to the hub got no answer",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The hub didn’t answer. It isn’t known yet whether the registration started."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El hub no respondió. Aún no se sabe si el registro empezó."
           }
         }
       }
@@ -16059,6 +16234,23 @@
         }
       }
     },
+    "확인은 Bluetooth로 하며, Power Base의 아무것도 바꾸지 않습니다." : {
+      "comment" : "Confirm removal: why Bluetooth is needed; reading changes nothing",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirming uses Bluetooth and changes nothing on the Power Base."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La confirmación usa Bluetooth y no cambia nada en la Power Base."
+          }
+        }
+      }
+    },
     "확인이 필요한 Apple 홈 기기" : {
       "localizations" : {
         "en" : {
@@ -16205,57 +16397,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sensor ambiental"
-          }
-        }
-      }
-    },
-    "삭제 중" : {
-      "comment" : "Power Base removal state: the removal is under way and not confirmed yet (the command is with the board, or the board is erasing and reporting by itself)",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Removing"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eliminando"
-          }
-        }
-      }
-    },
-    "삭제를 마무리하고 있습니다. 따로 할 일은 없으며, 끝나면 목록에서 사라집니다." : {
-      "comment" : "Power Base removal: out of the hub's lists and finishing by itself; nothing to do, not complete yet",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The removal is finishing. There’s nothing you need to do; it leaves the list when it’s done."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La eliminación está terminando. No tienes que hacer nada; saldrá de la lista cuando acabe."
-          }
-        }
-      }
-    },
-    "다시 사용하려면 새로 등록해야 합니다." : {
-      "comment" : "Power Base management: confirmation dialog, a removed Base has to be registered again to be used",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To use it again, you’ll need to register it anew."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Para volver a usarla, tendrás que registrarla de nuevo."
           }
         }
       }

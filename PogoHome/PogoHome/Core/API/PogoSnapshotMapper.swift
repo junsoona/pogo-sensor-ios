@@ -60,7 +60,12 @@ nonisolated enum PogoSnapshotMapper {
                 ModuleIdentity.isValidRawIdentifier($0) ? $0 : nil
             }
 
-            let descriptor = ModuleCatalog.descriptor(forRawIdentifier: raw, apiRole: moduleDTO.role)
+            let descriptor = ModuleCatalog.descriptor(
+                forRawIdentifier: raw,
+                apiRole: moduleDTO.role,
+                sensorBitmap: moduleDTO.sensorBitmap,
+                readingKinds: moduleDTO.readings.map(\.kindRaw)
+            )
             usedRoomIDs.insert(descriptor.room.id)
 
             let readings: [SensorReading] = moduleDTO.readings.compactMap { readingDTO in
@@ -81,6 +86,7 @@ nonisolated enum PogoSnapshotMapper {
                     hardwareIdentifier: raw,
                     roomID: descriptor.room.id,
                     readings: readings,
+                    representativeSensorKind: descriptor.representativeSensorKind,
                     isOnline: moduleDTO.online,
                     lastSeen: generatedAt,
                     roleDescription: descriptor.roleDescription,

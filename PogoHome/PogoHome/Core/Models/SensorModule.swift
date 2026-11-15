@@ -9,6 +9,7 @@ nonisolated struct SensorModule: Identifiable, Hashable, Sendable {
     let hardwareIdentifier: String?
     let roomID: UUID
     let readings: [SensorReading]
+    let representativeSensorKind: SensorKind?
     let isOnline: Bool
     let lastSeen: Date
     /// Optional human-readable role, e.g. "환경 모듈", shown as secondary text in lists.
@@ -27,6 +28,7 @@ nonisolated struct SensorModule: Identifiable, Hashable, Sendable {
         hardwareIdentifier: String? = nil,
         roomID: UUID,
         readings: [SensorReading],
+        representativeSensorKind: SensorKind? = nil,
         isOnline: Bool,
         lastSeen: Date,
         roleDescription: String? = nil,
@@ -39,6 +41,7 @@ nonisolated struct SensorModule: Identifiable, Hashable, Sendable {
         self.hardwareIdentifier = hardwareIdentifier
         self.roomID = roomID
         self.readings = readings
+        self.representativeSensorKind = representativeSensorKind
         self.isOnline = isOnline
         self.lastSeen = lastSeen
         self.roleDescription = roleDescription
@@ -50,6 +53,11 @@ nonisolated struct SensorModule: Identifiable, Hashable, Sendable {
     var isDirectlyOnPowerBase: Bool {
         guard let powerBaseIdentifier, let parentIdentifier else { return false }
         return powerBaseIdentifier == parentIdentifier
+    }
+
+    var representativeSensorSymbolName: String {
+        let kind = representativeSensorKind ?? readings.min { $0.kind.sortOrder < $1.kind.sortOrder }?.kind
+        return kind?.symbolName ?? "sensor.fill"
     }
 
     var sortedReadings: [SensorReading] {

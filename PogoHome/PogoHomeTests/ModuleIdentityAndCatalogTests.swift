@@ -28,38 +28,54 @@ final class ModuleIdentityAndCatalogTests: XCTestCase {
         XCTAssertNotEqual(a, b)
     }
 
-    func testKnownModulesResolveToCatalogEntries() {
-        let sgp41 = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d357", apiRole: "SGP41", language: .korean)
-        XCTAssertEqual(sgp41.displayName, "SGP41 가스 센서")
-        XCTAssertEqual(sgp41.room, ModuleCatalog.unspecifiedRoom(in: .korean))
-
-        let pms5003 = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d07a", apiRole: "PMS5003", language: .korean)
-        XCTAssertEqual(pms5003.displayName, "PMS5003 미세먼지 센서")
+    func testBoardIdentifiersDoNotDetermineTheSensorType() {
+        for raw in ["744dbdfffe65d357", "744dbdfffe65d07a", "deadbeefcafef00d"] {
+            let climate = ModuleCatalog.descriptor(forRawIdentifier: raw, apiRole: "leaf", sensorBitmap: 6, language: .korean)
+            XCTAssertEqual(climate.displayName, "온습도 센서")
+            XCTAssertEqual(climate.room, ModuleCatalog.unspecifiedRoom(in: .korean))
+            XCTAssertEqual(climate.roleDescription, "leaf")
+        }
     }
 
-    /// Product names and roles are app-provided, so they follow the app language; the model
-    /// number and the API's `depth` field name stay as-is.
-    func testProductNamesAreLocalizedButKeepTechnicalIdentifiers() {
-        let english = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d357", apiRole: nil, language: .english)
-        XCTAssertEqual(english.displayName, "SGP41 Gas Sensor")
-        XCTAssertEqual(english.roleDescription, "VOC/NOx sensor · depth 1")
+    func testSupportedChannelProfilesUseCategoryNamesWithoutGuessingModels() {
+        let names = [2: "온도 센서", 4: "습도 센서", 6: "온습도 센서", 1: "조도 센서",
+                     0x18: "VOC 가스 센서", 0x60: "NOx 가스 센서", 0x78: "VOC/NOx 가스 센서", 0x380: "미세먼지 센서"]
+        for (bitmap, expected) in names {
+            let descriptor = ModuleCatalog.descriptor(forRawIdentifier: "0102030405060708", apiRole: nil, sensorBitmap: bitmap, language: .korean)
+            XCTAssertEqual(descriptor.displayName, expected)
+        }
+    }
+
+    func testCategoryNamesAreLocalized() {
+        let english = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d357", apiRole: nil, sensorBitmap: 6, language: .english)
+        XCTAssertEqual(english.displayName, "Temperature & Humidity")
         XCTAssertEqual(english.room.name, "Unassigned")
-
-        let spanish = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d07a", apiRole: nil, language: .spanish)
-        XCTAssertEqual(spanish.displayName, "Sensor de partículas PMS5003")
-        XCTAssertEqual(spanish.room.name, "Sin asignar")
-        XCTAssertEqual(spanish.room.id, ModuleCatalog.unspecifiedRoomID, "the fallback room id never depends on language")
+        let spanish = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d07a", apiRole: nil, sensorBitmap: 0x380, language: .spanish)
+        XCTAssertEqual(spanish.displayName, "Sensor de partículas")
+        XCTAssertEqual(spanish.room.id, ModuleCatalog.unspecifiedRoomID)
     }
 
-    func testUnknownModuleFallsBackToNewSensorModuleInUnspecifiedRoom() {
-        let descriptor = ModuleCatalog.descriptor(forRawIdentifier: "deadbeefcafef00d", apiRole: "mystery", language: .korean)
-        XCTAssertEqual(descriptor.displayName, "새 센서 모듈")
-        XCTAssertEqual(descriptor.room, ModuleCatalog.unspecifiedRoom(in: .korean))
-        XCTAssertEqual(descriptor.roleDescription, "mystery", "the hub's own role string is passed through untranslated")
+    func testUnknownCapabilitiesUseGenericNameAndPreserveRole() {
+        for bitmap in [nil, 0, -1, 0xffff, 0x10006, 0x387] as [Int?] {
+            let descriptor = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d357", apiRole: "mystery", sensorBitmap: bitmap, language: .korean)
+            XCTAssertEqual(descriptor.displayName, "센서 모듈")
+            XCTAssertEqual(descriptor.roleDescription, "mystery")
+        }
     }
 
-    func testCatalogLookupIsCaseInsensitive() {
-        let descriptor = ModuleCatalog.descriptor(forRawIdentifier: "744DBDFFFE65D357", apiRole: nil, language: .korean)
-        XCTAssertEqual(descriptor.displayName, "SGP41 가스 센서")
+    func testMissingBitmapFallsBackToEveryRawReadingKind() {
+        let gas = ModuleCatalog.descriptor(forRawIdentifier: "0102030405060708", apiRole: nil, readingKinds: ["voc_raw", "voc_index", "nox_raw", "nox_index"], language: .korean)
+        XCTAssertEqual(gas.displayName, "VOC/NOx 가스 센서")
+        let mixed = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d357", apiRole: nil, readingKinds: ["temperature", "humidity", "future_kind"], language: .korean)
+        XCTAssertEqual(mixed.displayName, "센서 모듈", "unrecognized kinds must not be silently discarded for naming")
+    }
+
+    func testPresentBitmapWinsOverMissingOrStaleReadings() {
+        let descriptor = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d357", apiRole: nil, sensorBitmap: 6,
+                                                 readingKinds: ["voc_raw", "voc_index"], language: .korean)
+        XCTAssertEqual(descriptor.displayName, "온습도 센서")
+        let unknown = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d357", apiRole: nil, sensorBitmap: 0x8006,
+                                              readingKinds: ["temperature", "humidity"], language: .korean)
+        XCTAssertEqual(unknown.displayName, "센서 모듈")
     }
 }

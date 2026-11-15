@@ -272,7 +272,7 @@ nonisolated struct URLSessionPowerBaseRemovalTransport: PowerBaseRemovalTranspor
     private struct RequestBody: Encodable {
         let power_base_uuid: String
         let record: String
-        let removal_serial: Int
+        let removal_serial: Int64
         let request_id: String
     }
 

@@ -11,6 +11,117 @@
 - 설정 코드, QR의 내용, 토큰, 보드·허브 식별값은 적지 않는다. 아래의 EUI-64와 코드는 모두 공개된 가짜
   값이다.
 
+## 센서 역할 변경 후 기본 이름 (2026-11-09, `1.3.6 (19)`)
+
+### 원인과 수정
+
+과거 가스 센서로 쓰던 보드를 온습도 센서로 전환하자 실제 온습도 값은 도착하지만 가스 센서 이름이 남았다.
+`ModuleCatalog`가 두 보드 ID에 제품 이름과 depth 설명을 고정해 두고, 매퍼가 현재 채널 정보를 이름 판정에
+전달하지 않던 것이 원인이다. 고정 ID 목록을 없애고 `sensor_bitmap`을 우선 사용한다. API가 비트맵을 생략한 경우에만
+원본 reading kind 전체를 사용하며, 알 수 없는 채널을 먼저 버린 뒤 이름을 추측하지 않는다. 미지 비트·혼합 구성은
+일반 센서 모듈로 표시한다. 현재 API는 실제 모델 번호를 전달하지 않아 SHT41/SHT45 등의 정확한 모델은 추정하지 않는다.
+
+제품 이름은 언어에 맞게 갱신하고, 사용자 이름·방 저장/적용 경로는 바꾸지 않았다. 기존 Watch 숫자 폭 수정 파일과
+해당 검사는 바이트 단위로 보존했다. 번역 파일은 기존 936개 항목을 보존하고 새 기본 이름 8개의 영어·스페인어만
+추가했다. 앱 1.3.6 (19), 허브·보드·API·BLE·저장 형식 변경 없음. 커밋·푸시·기기 설치 없음.
+
+### 실행한 검증
+
+- 같은 재현 소스로 실제 매퍼와 모델을 직접 컴파일해 실행: 수정 전은 가스 센서 이름을 반환하여 exit 1,
+  수정 후는 온습도 센서 이름을 반환하여 exit 0. 두 번 모두 온습도 reading 2개를 유지했다. adapter는 없다.
+- 실제 제품 소스 13개를 Swift 6 모드로 직접 컴파일한 Mac 호스트 실행: **131개 검사, 실패 0**.
+  세 언어, 과거 두 보드와 새 보드, 같은 보드의 가스→온습도→미세먼지 전환, 오프라인/샘플 없음, 상태 오류,
+  이전 허브의 비트맵 누락, 미지 reading kind·미지 비트·혼합 구성과 읽기 순서/중복을 검사했다.
+  호스트 실행에 쓴 번역 리소스는 현재 xcstrings에서 생성했다. 실제 SwiftUI 앱 실행이 아니다.
+- 같은 실제 공통 소스 13개를 iOS Simulator arm64, Watch arm64_32, Watch arm64 대상으로 각각 모듈 컴파일해
+  모두 통과했다. 전체 앱·확장·화면을 빌드하거나 실행한 것은 아니다.
+- 앱 버전 도구 check: 6개 타깃의 1.3.6 (19) 일치. 기존 번역 항목 내용 보존 검사, 변경 test 파일 Swift 구문 검사,
+  `git diff --check` 통과.
+- 회귀 XCTest 10개를 새로 추가했고 기존 catalog/decoder/이름 정책 검사를 새 동작에 맞췄다. 이 XCTest 실행 완료로
+  세지 않는다. 사용자 이름·방 유지의 새 AppModel 회귀도 전체 앱 실행이 필요하다.
+
+### 실패·한계와 후속 실행
+
+- 첫 Xcode 시도는 clang/SwiftPM 캐시 쓰기 제한으로 실패했다. 해당 경로 권한을 추가한 뒤에는 SwiftPM manifest의
+  `sandbox-exec: sandbox_apply: Operation not permitted`로 실패했다. CoreSimulator 연결도 거부되어 두 iPhone의
+  시뮬레이터 검사, 전체 앱 빌드·화면 렌더링, arm64_32 Watch 빌드, 서명 후보·실물 설치는 완료하지 않았다.
+- 별도 호스트 검사 도구의 첫 컴파일은 호출 인자/actor 표기 오류로 실패했고 도구를 수정한 뒤 131개를 통과했다.
+  제품 소스는 그 수정에 따라 바꾸지 않았다. 기존 XCTest를 수동 호스트 실행하려던 추가 시도는 Swift XCTest overlay
+  검색 경로 문제로 컴파일되지 않아 결과로 세지 않았다.
+- 현재 API가 모델 번호를 전하지 않으므로 화면의 기본 제품 이름은 정확한 모델명이 아닌 센서 종류다. 명시적으로
+  과거 모델 이름을 사용자 이름으로 저장했다면 자동으로 바꾸지 않는다. 이름을 비우면 현재 센서 종류로 돌아간다.
+- 현재 소스는 미커밋 변경을 포함하므로 정식 release/검증된 설치 후보라고 하지 않는다. 실제 두 iPhone과 Watch에서의
+  검증·설치 여부는 별도 기록해야 한다.
+- 일반 Mac 터미널에서 `~/Documents/Codex/pogo-app-sensor-names-20261109/verify_in_terminal.command`를 실행하면
+  13 mini·16 Pro Max 시뮬레이터의 관련 검사를 수행한다. `--watch`는 미서명 arm64_32/arm64 Watch 빌드를,
+  `--device`는 미서명 iPhone 후보 빌드를 더한다. 실제 기기에는 설치하지 않는다. 이 후속 스크립트는 구문·CLI 검사만
+  했고 전체 실행은 하지 못했다. 실행한 소스 전후 식별값과 결과는 새로운 시각별 폴더에 저장한다.
+
+증거: `~/Documents/Codex/pogo-app-sensor-names-20261109/`. 변경 전 파일·상태는 `before/`, `baseline.json`,
+재현과 131개 결과는 `host/*-run.log`, Xcode 제한은 `build-for-testing*.log`에 있다. 원본 사용자 시험 로그는 수정하지 않았다.
+
+## Series 7 Watch 앱의 실행 직후 종료 (2026-10-11, `1.3.5 (18)`)
+
+실제 Apple Watch Series 7(watchOS 26.6, arm64_32)에서 Watch 앱이 Xcode Run과 앱 아이콘 모두 실행 직후 종료된 결함의
+수정이다. **앱만 바꿨다.** 허브(Linux bridge 0.5.0)와 보드, 허브 API, BLE 규약, 앱의 저장 형식, 화면과 문구는 그대로다.
+
+**이 절의 어느 것도 실제 Watch·iPhone의 결과가 아니다.** 근거는 넷으로 나뉘고 서로를 대신하지 않는다 — ① **호스트의
+32비트 재현**: 64비트 `Int`로 도는 XCTest 안에서 `Int32`로 보인 것 ② **arm64_32 빌드를 읽은 것**: 실제 Watch용으로
+컴파일한 실행 파일의 디스어셈블(실행한 것이 아니다) ③ **시뮬레이터**(iPhone, 그리고 64비트 Watch)의 XCTest와 앱 실행
+④ **실물**: 하지 않았다.
+
+### 무엇이 바뀌었나
+
+- `removal_serial`(허브에서 32비트 unsigned, 0…4294967295)을 wire 형식(`PogoPowerBaseDTO`) → 모델(`PowerBase`) → 요청이
+  싣는 값(`PowerBaseRemovalBinding`) → 요청 본문(`RequestBody`)까지 `Int64`로 다룬다. 범위는
+  `PowerBaseRemovalBinding.serialRange` 하나다. 이전의 `value <= Int(UInt32.max)`는 `Int`가 32비트인 기기에서 값과 상관없이
+  멈췄다.
+- 범위 안의 값은 그대로, −1과 4294967296 이상은 이전과 같이 "허브가 말하지 않은 것"(Base는 남고 삭제만 제안하지 않는다),
+  정수가 아닌 값은 이전과 같이 손상된 응답이다.
+- 같은 snapshot의 `registry_generation`, 모듈의 `generation`·`last_seq`, reading의 `sample_seq`도 `Int64`로 읽는다(앱이 쓰지
+  않는 값. arm64_32에서 2147483648 이상이면 snapshot이 거절되던 경로. 실제 허브가 그런 값을 낸 것을 본 것은 아니다).
+
+### 기준
+
+| | |
+|---|---|
+| 저장소 | `main`, `cd0a2ab3a27eb5c5b78c7c7b14cba4a4d88dc89b`, 커밋하지 않은 작업 트리. 시작 시 변경은 `Localizable.xcstrings` 하나(이전부터 있던 것), 미추적 0, stage 0, index SHA-256 `c8690b1a…7350`: 작업 지시와 증거 파일이 적은 값과 같았다 |
+| 버전 | `1.3.4 (17)` → **`1.3.5 (18)`** (PATCH: 결함 수정. 빌드 번호 18은 기존 manifest·문서·태그에 없었다). 여섯 타깃 모두 `Version.xcconfig`에서 받는다 |
+| 도구 | Xcode 27.0 (27A266a), Swift 6.4, watchOS SDK 27.0, iOS SDK 27.0 |
+
+### 수정 전의 근거 (실행 파일을 읽은 것)
+
+- crash 기록과 UUID가 같은 Watch Debug 실행 파일(`fcec797f-…`, 1.3.4 (17), arm64_32): `isValidSerial(Int)`은 부호 비트가
+  꺼진(음수가 아닌) 모든 값에서 `_assertionFailure` 호출 뒤 `brk #1`로 간다. crash 기록의 첫 프레임이 바로 그 `brk`의 주소다.
+- 수정 전 소스(`HEAD`)를 다시 빌드한 arm64_32 Release와, 기존 `1.3.4 (17)` 서명 후보의 Watch 실행 파일: 같은 검사가
+  `PogoSnapshotMapper.map`에 인라인돼 있고 `tbz w8, #31` → `brk #1`("Not enough bits to represent the passed value")이다.
+
+### 무엇을 어떻게 확인했나
+
+| 구분 | 내용 | 결과 |
+|---|---|---|
+| arm64_32 빌드 (읽은 것) | scheme `PogoHomeWatch`, `generic/platform=watchOS`, arm64_32 + arm64, 서명 없음, Debug와 Release | 둘 다 빌드 성공. Debug: `isValidSerial(Int64)`이 `ClosedRange<Int64>.contains`를 부르고 `brk`가 없다. Release: 인라인된 자리가 부호 검사 + 64비트 비교(`0xFFFFFFFF`)이고 `brk`가 없다 |
+| 호스트의 32비트 재현 | XCTest 안에서 `Int32(exactly: UInt32.max) == nil`, `Int32`로 2147483648을 decode하면 오류 | 통과. arm64_32 코드를 실행한 것이 아니다 |
+| iPhone 시뮬레이터 | 13 mini·16 Pro Max(iOS 27.0), 관련 39개 class 338건: 새 `RemovalSerialWidthTests`·`WatchStartSnapshotTests`, 삭제 결속·요청·재등록·snapshot 순서·Watch 동기화 | 두 기기 모두 338건 통과(최종 트리) |
+| 값 | −1, 0, 1, 2147483647, 2147483648, 4294967295, 4294967296, `Int64`의 양 끝, 문자열·소수·bool·배열·64비트를 넘는 수, 없는 값, `null`, 삭제를 지원하지 않는 Base | snapshot JSON → mapper → 모델 → 요청 본문 → 다시 읽기. 허브의 답은 Mac에서 빌드한 실제 허브 0.5.0 서버의 응답 바이트(삭제 지원 Base, `removal_serial` 0) |
+| Watch 시뮬레이터 (64비트) | Watch 앱의 실제 `WatchHubClient`로 loopback의 그 허브 서버와, 그 답에 센서 둘을 넣는 대역 서버를 읽는 7건 | 첫 실행 6/7(허브 하네스가 10분 무명령으로 스스로 끝난 뒤였다), 다시 띄워 7/7 |
+| Watch 앱 실행 (64비트 시뮬레이터) | 새 시뮬레이터에 Debug 앱 설치 → 실행 → 종료 → 다시 실행 | 실행마다 직접 확인 1회, "정상 · 온라인 2/2 · 집 네트워크에서 직접 확인", 두 센서 값 저장 |
+| 대조 | 제품 코드를 한 곳씩 바꾼 사본 14개(범위 축소·확대, 상한·하한 제거, clamp, 32비트 절단, `Int`로 되돌림 등)에 같은 검사 | 14개 모두 검사가 실패로 잡았다 |
+| 전체 | 13 mini에서 전체 1,370건 | 1,342 통과, 27 skip(환경 변수가 필요한 렌더링·live 검사), **1 실패**: `PowerBaseLocalResetControllerTests`의 한 건(보드를 닫는 기록이 단언보다 늦게 도착). 이번에 바꾸지 않은 BLE 로컬 초기화 검사이고, 수정 전 `HEAD` 트리에서도 같은 부하에서 같은 class의 한 건이 같은 식으로 실패했다. 검사 당시 다른 작업의 빌드로 Mac의 부하가 매우 높았다 |
+
+### 하지 않은 것, 남은 것
+
+- **실제 Series 7에서 실행하지 않았다.** 이 결함은 실제 arm64_32 Watch에서만 나타나고, 실행 파일에서 멈추는 명령이 없어진
+  것은 실행되는 것을 본 것이 아니다.
+- **서명한 설치 후보를 만들지 않았다**(사용자 요청으로 남은 검사와 함께 생략). manifest, 서명 검증, 후보의 arm64_32 확인도
+  없다. 프로파일은 오프라인으로만 봤다: iOS용 네 프로파일의 만료는 2026-10-18 13:11–13:12 UTC, Watch 앱·Watch 위젯
+  프로파일에 기기 4대, iPhone 앱·위젯 프로파일에 3대.
+- 실제 허브(Linux)·Wi-Fi, 실제 iPhone과의 WatchConnectivity, Watch 위젯, Mac Catalyst·iPad 빌드, en/es 실행, 실제 허브 서버에
+  대한 삭제 요청 live 검사(`PowerBaseRemovalLiveNetworkTests`)는 이번에 실행하지 않았다.
+- Watch가 함께 컴파일하는 Apple Home 코드의 `Int(Double)` 변환(HomeKit 값)은 그대로다. 근거가 있는 결함이 아니라 점검에서
+  본 것이다.
+- 기록과 도구: `~/esp-builds/pogowatchserial_20261011_results/`(저장소 밖).
+
 ## event stream의 실제 수신 (2026-10-11, `1.3.4 (17)`)
 
 아래 절(`1.3.3 (16)`)의 작업이 찾고 독립 검토가 재현한 결함의 수정이다: 실제 연결에서 허브의 event가 한 번도 적용되지

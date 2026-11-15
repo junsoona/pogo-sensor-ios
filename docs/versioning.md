@@ -104,6 +104,17 @@ POGO_BUILD_KIND = unknown
   번호다). **앱만의 변경이다**: Linux bridge 0.5.0·Power Base 0.3.0·module 0.1.1·RCP 0.1.0, 허브 API, BLE 규약, 앱의
   저장 형식은 그대로다. 화면과 문구도 그대로이고, 화면이 허브를 따라가는 빠르기만 달라진다(5초 간격의 `GET` →
   허브가 event를 보내는 대로. `GET`은 남아 있다). 이것도 개발 빌드만 있는 버전이다.
+- 같은 날 실제 Apple Watch Series 7(arm64_32)에서 Watch 앱이 실행 직후 종료되는 결함(허브의 32비트 unsigned 값
+  `removal_serial`의 범위 검사가 32비트 `Int`에서 멈추는 것)을 고치면서 `1.3.5 (18)`이 됐다(결함 수정: PATCH. 새 기기용
+  후보: 다음 빌드 번호. 18은 처음 쓰는 번호다 — 기존 산출물의 manifest와 문서, 태그에 없음을 확인했다). **앱만의
+  변경이다**: Linux bridge 0.5.0·Power Base 0.3.0·module 0.1.1·RCP 0.1.0, 허브 API(필드 이름·숫자의 뜻·요청 본문), BLE
+  규약, 앱의 저장 형식은 그대로다. 그 숫자들을 담는 앱 안의 타입만 64비트 고정 폭이 됐다. 화면과 문구도 그대로다. 이것도
+  개발 빌드만 있는 버전이다.
+- 2026-11-09에 센서 역할을 바꿔도 이전 보드 이름이 남는 표시 결함을 고치면서 `1.3.6 (19)`로 올렸다.
+  기존 동작의 수정이므로 PATCH이며, 새 기기용 빌드를 구별하기 위해 빌드 번호를 18에서 19로 올렸다.
+  보드 ID 대신 현재 수신 채널 정보로 기본 이름을 정한다. API가 모델 번호를 보내지 않으므로 종류 이름을 사용하고,
+  사용자 지정 이름과 방은 보존한다. API·BLE·저장 형식, 펌웨어·허브 버전은 그대로다. 구현·호스트 검증까지만 완료했고
+  전체 앱 빌드·서명 후보·설치는 완료하지 않았다.
 - `POGO_BUILD_*`의 기본값은 `unknown`이다. Xcode에서 그냥 빌드한 앱은 소스 식별 정보를 "알 수
   없음"으로 표시한다. 값은 추정하지 않는다.
 
@@ -161,7 +172,7 @@ POGO_BUILD_KIND = unknown
 ## 도구
 
 ```bash
-PogoHome/Scripts/pogo_app_version.py versions        # app 1.3.4 (17)
+PogoHome/Scripts/pogo_app_version.py versions        # app 1.3.5 (18)
 PogoHome/Scripts/pogo_app_version.py check           # 모든 타깃이 Version.xcconfig만 쓰는가
 PogoHome/Scripts/pogo_app_version.py identity        # commit, dirty, 지문, 빌드 식별자
 PogoHome/Scripts/pogo_app_version.py settings        # 이번 빌드에 넘길 POGO_BUILD_* 값

@@ -8,7 +8,9 @@ import Foundation
 nonisolated struct PogoSnapshotDTO: Decodable, Hashable, Sendable {
     let schemaVersion: Int
     let generatedAtUnixMs: Int64
-    let registryGeneration: Int
+    /// `Int64`, not `Int`: the hub counts in 64 bits, and `Int` is 32 bits on an Apple Watch with
+    /// a 32-bit ABI (arm64_32), where a larger number would fail the decoding of the whole snapshot.
+    let registryGeneration: Int64
     /// Added to API v1 by the multi-Power-Base milestone (additive; `schema_version` stays 1).
     /// `nil` when the bridge predates it — distinct from `[]`, "no Power Base heard from yet".
     let powerBases: [PogoPowerBaseDTO]?
@@ -73,8 +75,10 @@ nonisolated struct PogoPowerBaseDTO: Decodable, Hashable, Sendable {
     let record: String?
     /// Added later (additive), with `management` `"supported"`: how many removals were asked of
     /// the listed registration so far. `nil` from a hub whose removal request names the Base
-    /// alone (Linux bridge 0.4.2 and earlier).
-    let removalSerial: Int?
+    /// alone (Linux bridge 0.4.2 and earlier). The hub's number is 32 bits unsigned, so it is
+    /// read as `Int64` on every device (`Int` is 32 bits on arm64_32) and checked against
+    /// `PowerBaseRemovalBinding.serialRange` by `PowerBase`.
+    let removalSerial: Int64?
 
     enum CodingKeys: String, CodingKey {
         case uuid, online, management, record
@@ -100,8 +104,9 @@ nonisolated struct PogoModuleDTO: Decodable, Hashable, Sendable {
     let depth: Int
     let role: String?
     let sensorBitmap: Int?
-    let generation: Int?
-    let lastSeq: Int?
+    /// 32 bits unsigned at the hub, like `lastSeq` and a reading's `sampleSeq`: `Int64` here.
+    let generation: Int64?
+    let lastSeq: Int64?
     let readings: [PogoReadingDTO]
 
     enum CodingKeys: String, CodingKey {
@@ -126,7 +131,7 @@ nonisolated struct PogoReadingDTO: Decodable, Hashable, Sendable {
     /// Raw `status` string from the wire, preserved verbatim; see `mappedStatus` for the
     /// safe, lossy mapping into the UI's `SensorStatus`.
     let statusRaw: String
-    let sampleSeq: Int?
+    let sampleSeq: Int64?
 
     enum CodingKeys: String, CodingKey {
         case kindRaw = "kind"

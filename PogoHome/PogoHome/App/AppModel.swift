@@ -693,6 +693,7 @@ final class AppModel {
                 hardwareIdentifier: module.hardwareIdentifier,
                 roomID: roomID,
                 readings: module.readings,
+                representativeSensorKind: module.representativeSensorKind,
                 isOnline: module.isOnline,
                 lastSeen: module.lastSeen,
                 roleDescription: module.roleDescription,

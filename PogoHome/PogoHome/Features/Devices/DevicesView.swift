@@ -468,7 +468,7 @@ private struct DevicesListDetail: View {
         )
         let roomName = room?.name ?? String(localized: "방 미지정", comment: "Device card: module has no room")
         return SplitListRow(
-            symbolName: SymbolAvailability.resolvedName(for: room?.symbolName ?? "sensor.fill"),
+            symbolName: SymbolAvailability.resolvedName(for: module.representativeSensorSymbolName),
             tint: isVerified && module.isOnline ? .blue : .gray,
             title: module.name,
             subtitle: "\(roomName) · \(status)",
@@ -740,7 +740,7 @@ private struct DeviceCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                IconCircle(systemName: SymbolAvailability.resolvedName(for: room?.symbolName ?? "sensor.fill"), diameter: 38, background: tint)
+                IconCircle(systemName: SymbolAvailability.resolvedName(for: module.representativeSensorSymbolName), diameter: 38, background: tint)
                 Spacer()
                 Image(
                     systemName: isCurrentStateVerified

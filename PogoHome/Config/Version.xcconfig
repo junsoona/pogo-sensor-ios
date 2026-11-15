@@ -15,8 +15,8 @@
 //
 // These numbers change only by editing this file on purpose. No build raises them, and no build
 // rewrites the project file.
-MARKETING_VERSION = 1.3.4
-CURRENT_PROJECT_VERSION = 17
+MARKETING_VERSION = 1.3.6
+CURRENT_PROJECT_VERSION = 19
 
 // Build identity, shown in Settings > App Info > Build Details and written into the app's
 // Info.plist (PogoBuild* keys). Scripts/pogo_app_version.py build passes the real values on the

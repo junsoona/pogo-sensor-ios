@@ -65,6 +65,7 @@ nonisolated enum PogoGlanceRefresher {
                 hardwareIdentifier: module.hardwareIdentifier,
                 roomID: label.roomName.flatMap { roomIDsByName[$0] } ?? module.roomID,
                 readings: module.readings,
+                representativeSensorKind: module.representativeSensorKind,
                 isOnline: module.isOnline,
                 lastSeen: module.lastSeen,
                 roleDescription: module.roleDescription,

@@ -171,14 +171,16 @@ final class BrandNamingTests: XCTestCase {
         XCTAssertEqual(WatchSettingsKeys.selectedValueIDs, "pogohome.watch.selectedValueIDs")
     }
 
-    /// Sensor types and hardware models stay distinguishable under the new brand.
+    /// Sensor categories follow current capabilities; board IDs and brand do not imply models.
     func testSensorModelsAndKindsKeepTheirNames() {
         for language in AppLanguage.supported {
-            let gas = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d357", apiRole: nil, language: language)
-            let dust = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d07a", apiRole: nil, language: language)
-            XCTAssertTrue(gas.displayName.contains("SGP41"), "\(language): \(gas.displayName)")
-            XCTAssertTrue(dust.displayName.contains("PMS5003"), "\(language): \(dust.displayName)")
-            XCTAssertFalse(gas.displayName.contains("조각보"), "a model name isn't replaced by the brand")
+            let gas = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d357", apiRole: nil, sensorBitmap: 0x78, language: language)
+            let dust = ModuleCatalog.descriptor(forRawIdentifier: "744dbdfffe65d07a", apiRole: nil, sensorBitmap: 0x380, language: language)
+            XCTAssertTrue(gas.displayName.contains("NOx"))
+            XCTAssertNotEqual(gas.displayName, dust.displayName)
+            XCTAssertFalse(gas.displayName.contains("SGP41"), "the wire does not identify the hardware model")
+            XCTAssertFalse(dust.displayName.contains("PMS5003"))
+            XCTAssertFalse(gas.displayName.contains("조각보"))
         }
         XCTAssertNotEqual(SensorKind.temperature.displayName, SensorKind.humidity.displayName)
     }
