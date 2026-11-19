@@ -51,7 +51,7 @@ struct SensorCard: View {
     }
 
     private var sensorIcon: some View {
-        IconCircle(systemName: reading.kind.symbolName, diameter: 36, background: PogoTheme.color(for: reading.kind))
+        IconCircle(systemName: reading.kind.symbolName, diameter: 36, background: PogoTheme.sensorIconBackground(for: reading.kind))
     }
 }
 

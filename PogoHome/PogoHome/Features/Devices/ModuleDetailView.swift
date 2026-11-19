@@ -76,7 +76,12 @@ struct ModuleDetailView: View {
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
             : AnyLayout(HStackLayout(spacing: 12))
         return layout {
-            IconCircle(systemName: SymbolAvailability.resolvedName(for: room?.symbolName ?? "square.grid.2x2"), diameter: 48, relativeTo: .title3)
+            IconCircle(
+                systemName: SymbolAvailability.resolvedName(for: module.representativeSensorSymbolName),
+                diameter: 48,
+                background: PogoTheme.sensorIconBackground(for: module.representativeSensorKind),
+                relativeTo: .title3
+            )
 
             VStack(alignment: .leading, spacing: 4) {
                 // Beside the device list the pane's header already names it.

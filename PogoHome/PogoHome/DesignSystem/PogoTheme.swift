@@ -1,5 +1,13 @@
 import SwiftUI
 
+/// Colors used in the Jogakbo logo and on Jogakbo device icons.
+enum JogakboPalette {
+    static let coral = Color(red: 1.00, green: 0.43, blue: 0.43)
+    static let marigold = Color(red: 0.99, green: 0.71, blue: 0.08)
+    static let leaf = Color(red: 0.34, green: 0.71, blue: 0.43)
+    static let patches = [coral, marigold, leaf]
+}
+
 /// Shared layout constants and status colors so features stay visually consistent
 /// without a full custom design system.
 enum PogoTheme {
@@ -44,13 +52,8 @@ enum PogoTheme {
     /// Wide layouts (iPad, Mac) show status cards side by side from this content width on.
     static let wideDashboardMinimumWidth: CGFloat = 640
 
-    static func color(for kind: SensorKind) -> Color {
-        switch kind.category {
-        case .climate: return .orange
-        case .airQuality: return .teal
-        case .light: return .yellow
-        case .gas: return .indigo
-        }
+    static func sensorIconBackground(for kind: SensorKind?) -> Color {
+        kind?.category == .airQuality ? JogakboPalette.leaf : JogakboPalette.marigold
     }
 
     /// Color is always paired with an SF Symbol and text elsewhere (`StatusBadge`),

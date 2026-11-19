@@ -290,8 +290,8 @@ private struct DashboardModuleRow: View {
             isPowerBaseOffline: snapshot.isOfflineBecausePowerBaseIsOffline(module)
         )
         DashboardListRow(
-            symbolName: SymbolAvailability.resolvedName(for: room?.symbolName ?? "sensor.fill"),
-            tint: isCurrentStateVerified && module.isOnline ? .blue : .gray
+            symbolName: SymbolAvailability.resolvedName(for: module.representativeSensorSymbolName),
+            tint: PogoTheme.sensorIconBackground(for: module.representativeSensorKind)
         ) {
             Text(verbatim: module.name)
             Text(verbatim: "\(roomName) · \(status)")
@@ -362,7 +362,7 @@ private struct DashboardReadingRow: View {
     let reading: SensorReading
 
     var body: some View {
-        DashboardListRow(symbolName: reading.kind.symbolName, tint: PogoTheme.color(for: reading.kind)) {
+        DashboardListRow(symbolName: reading.kind.symbolName, tint: PogoTheme.sensorIconBackground(for: reading.kind)) {
             if dynamicTypeSize.isAccessibilitySize {
                 Text(verbatim: reading.kind.displayName)
                 value

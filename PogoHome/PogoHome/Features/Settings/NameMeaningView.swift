@@ -50,14 +50,6 @@ struct NameMeaningView: View {
     }
 }
 
-/// The colors of the logo's lettering.
-private enum JogakboPalette {
-    static let coral = Color(red: 1.00, green: 0.43, blue: 0.43)
-    static let marigold = Color(red: 0.99, green: 0.71, blue: 0.08)
-    static let leaf = Color(red: 0.34, green: 0.71, blue: 0.43)
-    static let patches = [coral, marigold, leaf]
-}
-
 /// The running stitch of the logo's lettering.
 private let runningStitch = StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [5, 4])
 

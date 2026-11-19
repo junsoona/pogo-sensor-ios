@@ -414,12 +414,9 @@ private struct DevicesListDetail: View {
                     }
                 } header: {
                     HStack(alignment: .center, spacing: 8) {
+                        IconCircle.powerBase(diameter: 24)
                         VStack(alignment: .leading, spacing: 2) {
-                            Label {
-                                Text(verbatim: base.shortLabel)
-                            } icon: {
-                                Image(systemName: "powerplug.fill")
-                            }
+                            Text(verbatim: base.shortLabel)
                             Text(PowerBaseConnectionText.summary(of: base))
                                 .font(.caption)
                                 .foregroundStyle(appModel.isPowerBaseStateVerified && !base.isOnline ? Color.red : Color.secondary)
@@ -469,7 +466,7 @@ private struct DevicesListDetail: View {
         let roomName = room?.name ?? String(localized: "방 미지정", comment: "Device card: module has no room")
         return SplitListRow(
             symbolName: SymbolAvailability.resolvedName(for: module.representativeSensorSymbolName),
-            tint: isVerified && module.isOnline ? .blue : .gray,
+            tint: PogoTheme.sensorIconBackground(for: module.representativeSensorKind),
             title: module.name,
             subtitle: "\(roomName) · \(status)",
             isSubtitleAlert: isVerified && !module.isOnline
@@ -627,7 +624,7 @@ struct PowerBaseHeader: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            IconCircle(systemName: "powerplug.fill", diameter: 34, background: isCurrentStateVerified && base.isOnline ? .indigo : .gray)
+            IconCircle.powerBase(diameter: 34)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: base.shortLabel)
                     .font(.title3.weight(.semibold))
@@ -727,8 +724,6 @@ private struct DeviceCard: View {
     /// Between the room, the chain position and the status: a wrapped line stays with its own.
     @ScaledMetric(relativeTo: .caption) private var detailGap: CGFloat = 2
 
-    private var tint: Color { isCurrentStateVerified && module.isOnline ? .blue : .gray }
-
     private var roomName: String {
         room?.name ?? String(localized: "방 미지정", comment: "Device card: module has no room")
     }
@@ -740,7 +735,11 @@ private struct DeviceCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                IconCircle(systemName: SymbolAvailability.resolvedName(for: module.representativeSensorSymbolName), diameter: 38, background: tint)
+                IconCircle(
+                    systemName: SymbolAvailability.resolvedName(for: module.representativeSensorSymbolName),
+                    diameter: 38,
+                    background: PogoTheme.sensorIconBackground(for: module.representativeSensorKind)
+                )
                 Spacer()
                 Image(
                     systemName: isCurrentStateVerified

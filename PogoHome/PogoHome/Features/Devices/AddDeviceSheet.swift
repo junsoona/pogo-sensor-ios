@@ -22,7 +22,9 @@ struct AddDeviceSheet: View {
                     NavigationLink {
                         PowerBaseSetupView(onFinished: { dismiss() })
                     } label: {
-                        SheetIconRow(systemImage: "powerplug.fill", iconStyle: .tint) {
+                        SheetIconRow {
+                            IconCircle.powerBase(diameter: 24)
+                        } content: {
                             Text("Power Base 추가")
                             Text("새 Power Base를 Bluetooth로 찾아 설정 코드로 허브에 등록합니다.")
                                 .font(.caption)

@@ -168,7 +168,9 @@ struct PowerBaseReleaseConfirmationContent: View {
 
     private var introSection: some View {
         Section {
-            SheetIconRow(systemImage: "powerplug.fill", iconStyle: .tint) {
+            SheetIconRow {
+                IconCircle.powerBase(diameter: 24)
+            } content: {
                 Text(verbatim: label)
                     .font(.headline)
                     .sheetParagraph()

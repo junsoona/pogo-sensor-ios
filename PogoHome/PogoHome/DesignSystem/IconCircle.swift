@@ -10,6 +10,11 @@ import UIKit
 /// the circle and its own measured proportions — so it keeps an inner margin at every size
 /// while the neighbouring text keeps scaling normally.
 struct IconCircle: View {
+    static func powerBase(diameter: CGFloat) -> some View {
+        IconCircle(systemName: "powerplug.fill", diameter: diameter, background: JogakboPalette.coral)
+            .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + $0.height * 0.2 }
+    }
+
     /// Largest symbol point size ÷ circle diameter — what a roughly square symbol gets.
     static let symbolRatio: CGFloat = 0.46
     /// The box a symbol's drawn bounds must fit in, as fractions of the diameter. Its

@@ -42,6 +42,7 @@ nonisolated struct SensorModule: Identifiable, Hashable, Sendable {
         self.roomID = roomID
         self.readings = readings
         self.representativeSensorKind = representativeSensorKind
+            ?? readings.min { $0.kind.sortOrder < $1.kind.sortOrder }?.kind
         self.isOnline = isOnline
         self.lastSeen = lastSeen
         self.roleDescription = roleDescription
@@ -56,8 +57,7 @@ nonisolated struct SensorModule: Identifiable, Hashable, Sendable {
     }
 
     var representativeSensorSymbolName: String {
-        let kind = representativeSensorKind ?? readings.min { $0.kind.sortOrder < $1.kind.sortOrder }?.kind
-        return kind?.symbolName ?? "sensor.fill"
+        representativeSensorKind?.symbolName ?? "sensor.fill"
     }
 
     var sortedReadings: [SensorReading] {

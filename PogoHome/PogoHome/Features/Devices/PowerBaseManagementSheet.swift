@@ -172,7 +172,9 @@ struct PowerBaseManagementContent: View {
 
     private var statusSection: some View {
         Section {
-            SheetIconRow(systemImage: "powerplug.fill", iconStyle: .tint) {
+            SheetIconRow {
+                IconCircle.powerBase(diameter: 24)
+            } content: {
                 Text(verbatim: state.label)
                     .font(.headline)
                     .sheetParagraph()

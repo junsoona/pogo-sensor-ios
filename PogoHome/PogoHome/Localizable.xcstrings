@@ -124,7 +124,7 @@
       }
     },
     "%@ %@" : {
-      "comment" : "Apple Home tile: a value's label followed by the value\nSensor value followed by its unit, e.g. 23.4 °C",
+      "comment" : "Sensor value followed by its unit, e.g. 23.4 °C",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -464,7 +464,7 @@
       }
     },
     "Apple 홈" : {
-      "comment" : "Dashboard status source: Apple Home\nSource badge of an Apple Home room",
+      "comment" : "Dashboard status source: Apple Home",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3474,6 +3474,22 @@
         }
       }
     },
+    "값" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Values"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valores"
+          }
+        }
+      }
+    },
     "가스 센서" : {
       "comment" : "Mock data module role",
       "localizations" : {
@@ -3521,22 +3537,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Detectado"
-          }
-        }
-      }
-    },
-    "값" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Values"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Valores"
           }
         }
       }
@@ -4779,7 +4779,7 @@
       }
     },
     "꺼짐" : {
-      "comment" : "Apple Home in PogoHome: turned off\nApple Home: off",
+      "comment" : "Apple Home: off",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4796,7 +4796,7 @@
       }
     },
     "끄기" : {
-      "comment" : "Apple Home control button\nControl Center action hint: turn off",
+      "comment" : "Control Center action hint: turn off",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4813,7 +4813,7 @@
       }
     },
     "끄는 중…" : {
-      "comment" : "Apple Home control: turning off\nControl Center value: turning off, not confirmed yet",
+      "comment" : "Control Center value: turning off, not confirmed yet",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -4998,7 +4998,7 @@
       }
     },
     "다시 시도" : {
-      "comment" : "Power Base setup: back to the start for another attempt\nWatch: try reading Apple Home again",
+      "comment" : "Watch: try reading Apple Home again",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -5734,7 +5734,7 @@
       }
     },
     "마지막 확인 %@" : {
-      "comment" : "Apple Home accessory: when a value was last read (relative time)\nWidget: when the app last confirmed old or unverified data",
+      "comment" : "Widget: when the app last confirmed old or unverified data",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7125,7 +7125,7 @@
       }
     },
     "사용할 수 없음" : {
-      "comment" : "Control Center value: the target can't be used\nWidget: Apple Home unsupported on this device",
+      "comment" : "Control Center value: the target can't be used",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -9288,7 +9288,7 @@
       }
     },
     "알 수 없음" : {
-      "comment" : "Apple Home: the device reports an unknown value\nBuild details: a value the build did not record",
+      "comment" : "Apple Home: the device reports an unknown value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -9456,7 +9456,7 @@
       }
     },
     "업데이트 지연" : {
-      "comment" : "Attention reason\nSensor status: no fresh reading",
+      "comment" : "Sensor status: no fresh reading",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -9943,7 +9943,7 @@
       }
     },
     "연결됨" : {
-      "comment" : "Connection status\nPower Base state: the bridge hears it",
+      "comment" : "Connection status",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -10145,7 +10145,7 @@
       }
     },
     "오프라인" : {
-      "comment" : "Attention reason\nConnection state value\nDevice card status",
+      "comment" : "Attention reason",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -13498,56 +13498,6 @@
         }
       }
     },
-    "지우기 요청은 이미 Power Base로 보냈지만 결과를 받지 못했습니다. 지워졌을 수도, 아닐 수도 있습니다. 취소된 것이 아닙니다." : {
-      "comment" : "Re-enroll result: the command was sent, the answer was lost; not cancelled",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The erase request was already sent to the Power Base, but no result came back. The registration may or may not have been erased. It was not cancelled."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La solicitud de borrado ya se envió a la Power Base, pero no llegó ningún resultado. Puede que el registro se haya borrado o puede que no. No se canceló."
-          }
-        }
-      }
-    },
-    "지우지 않고 그만두기" : {
-      "comment" : "Re-enroll: leaves the confirmation without erasing anything",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stop Without Erasing"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Salir sin borrar"
-          }
-        }
-      }
-    },
-    "집" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Home"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hogar"
-          }
-        }
-      }
-    },
     "지금은 시뮬레이션 데이터를 보고 있어 Power Base를 삭제할 수 없습니다." : {
       "comment" : "Power Base management: simulated data",
       "localizations" : {
@@ -13650,6 +13600,23 @@
         }
       }
     },
+    "지우기 요청은 이미 Power Base로 보냈지만 결과를 받지 못했습니다. 지워졌을 수도, 아닐 수도 있습니다. 취소된 것이 아닙니다." : {
+      "comment" : "Re-enroll result: the command was sent, the answer was lost; not cancelled",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The erase request was already sent to the Power Base, but no result came back. The registration may or may not have been erased. It was not cancelled."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La solicitud de borrado ya se envió a la Power Base, pero no llegó ningún resultado. Puede que el registro se haya borrado o puede que no. No se canceló."
+          }
+        }
+      }
+    },
     "지우기 전 확인" : {
       "comment" : "Re-enroll step: waiting for the user's explicit confirmation",
       "localizations" : {
@@ -13663,6 +13630,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Confirmar antes de borrar"
+          }
+        }
+      }
+    },
+    "지우지 않고 그만두기" : {
+      "comment" : "Re-enroll: leaves the confirmation without erasing anything",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Without Erasing"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salir sin borrar"
           }
         }
       }
@@ -13782,6 +13766,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Progreso"
+          }
+        }
+      }
+    },
+    "집" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hogar"
           }
         }
       }
@@ -14357,7 +14357,7 @@
       }
     },
     "켜기" : {
-      "comment" : "Apple Home control button\nControl Center action hint: turn on",
+      "comment" : "Control Center action hint: turn on",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -14374,7 +14374,7 @@
       }
     },
     "켜는 중…" : {
-      "comment" : "Apple Home control: turning on\nControl Center value: turning on, not confirmed yet",
+      "comment" : "Control Center value: turning on, not confirmed yet",
       "localizations" : {
         "en" : {
           "stringUnit" : {
